@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+/build/
+/tools/
+/verification/tmp/
+/verification/cert_wd_*/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.bbl
+paper/*.blg
+/verification/summary-partial.json

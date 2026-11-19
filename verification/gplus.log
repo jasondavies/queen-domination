@@ -1,0 +1,7 @@
+$ sh -c ./.venv/bin/python code/pipeline.py build 8 5 --xcheck ; ./.venv/bin/python code/pipeline.py build 14 8 --xcheck
+{"n": 8, "g": 5, "pairs": {"0": 10, "1": 86, "2": 775}, "xcheck": {"0": {"stage1_v": true, "brute": true}, "1": {"stage1_v": true, "brute": true}, "2": {"stage1_v": true, "brute": true}}, "sets": 3764, "classes": 638, "monochromatic": 60, "seconds": 0.1}
+{"n": 14, "g": 8, "pairs": {"0": 28, "1": 28, "2": 73, "3": 34373, "4": 536698}, "xcheck": {"0": {"stage1_v": true}, "1": {"stage1_v": true}, "2": {"stage1_v": true}, "3": {"stage1_v": true}, "4": {"stage1_v": true}}, "sets": 63766, "classes": 588, "monochromatic": 207, "seconds": 282.9}
+
+[gate] ok   n = 8, g = 5: 638 classes, 871 pairs; stage1 = stage1_v = brute force on every z0
+[gate] ok   n = 14, g = 8: 588 classes, 571200 pairs; stage1 = stage1_v on every z0
+[gate] ok   2 cases

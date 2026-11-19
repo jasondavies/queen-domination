@@ -1,0 +1,41 @@
+{
+ "kamenetsky26": {
+  "queens": 14,
+  "undominated": 0
+ },
+ "ow27": {
+  "queens": 14,
+  "undominated": 0
+ },
+ "ow26": {
+  "queens": 14,
+  "undominated": 0,
+  "independent": true
+ },
+ "q28": {
+  "n": 28,
+  "queens": 15,
+  "on_board": true,
+  "undominated": 0
+ },
+ "q29": {
+  "n": 29,
+  "queens": 15,
+  "on_board": true,
+  "undominated": 0
+ },
+ "weakley30": {
+  "n": 30,
+  "queens": 15,
+  "on_board": true,
+  "undominated": 0,
+  "monochromatic": true
+ },
+ "q31": {
+  "n": 31,
+  "queens": 16,
+  "on_board": true,
+  "undominated": 0
+ },
+ "ok": true
+}

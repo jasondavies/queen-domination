@@ -1,0 +1,513 @@
+\pdfoutput=1
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\input{claims}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue,linkcolor=blue]{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\emergencystretch=3em
+\newcommand{\repo}{\url{https://github.com/jasondavies/queen-domination}}
+
+\title{The domination numbers of the $26\times26$ and $28\times28$ queen's graphs}
+\author{Jason Davies\thanks{\href{mailto:jason@jasondavies.com}{\nolinkurl{jason@jasondavies.com}}}}
+\date{November 20, 2026}
+
+\begin{document}
+
+\maketitle
+\begin{abstract}
+We show that $14$ queens are needed to occupy or attack every square of a $26\times26$ chessboard and
+$15$ queens for a $28\times28$ board, so $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$. These were the two
+smallest open cases of the queen domination problem (OEIS A075458); the previous bounds were
+$13\le\gamma(Q_{26})\le14$ and $14\le\gamma(Q_{28})\le15$. Together with known results for $n=27$ and
+$n=29,30,31$, the values of $\gamma(Q_n)$ are now known for all $n\le 31$. The proofs are
+computer-assisted. If $n/2$ queens dominate the $n\times n$ board, $z_q$ of them on squares of colour
+$q$, choose $n/2$ empty rows and $n/2$ empty columns. Every square of colour $q$ in both chosen sets is
+attacked along a diagonal, so these squares are covered by at most $z_q$ difference diagonals and at
+most $z_q$ sum diagonals of colour $q$. This is a constrained vertex cover problem in a small bipartite
+graph, and a matching bound prunes it well enough that the possible pairs (empty rows, empty columns)
+can be enumerated: up to symmetry there are $\clpairsTotal$ of them for $n=26$ and $\clpairsTotalXXVIII$
+for $n=28$. A second search shows that no $n/2$ queens avoiding the chosen rows and columns dominate the
+board, for any of these pairs. Both steps are certified by DRAT proofs checked with \texttt{drat-trim}:
+the enumeration through a cube-and-conquer refutation of the relaxation with every listed pair
+excluded, the second step by one refutation per pair. The lower bounds therefore depend on two short CNF
+encoders and the proof checker, and not on the search programs. The same pipeline reproduces all known
+values and isomorphism-class counts of minimum dominating sets of $Q_n$ for even $n\le 18$, and the
+known values for $n=20,22,24$.
+\end{abstract}
+
+\noindent\textbf{AI transparency statement.} The result, the computer-assisted proof, the code and
+this manuscript were produced by artificial intelligence. The human author initiated the broader
+research and directed the AI systems, but did not write the text and has not checked the arguments.
+Details are given at the end of the paper.
+
+\section{Introduction}
+
+The queen's graph $Q_n$ has the $n^2$ squares of the $n\times n$ board as vertices, two squares being
+adjacent when they share a row, a column or a diagonal. Its domination number $\gamma(Q_n)$ is the least
+number of queens that occupy or attack every square. The problem goes back to de~Jaenisch (1862) and
+is Problem~C18 in Guy's collection; see the surveys \cite{Cockayne,Watkins} and the introduction
+of~\cite{Weakley2022}. The general lower bound
+\[
+  \gamma(Q_n)\ \ge\ \tfrac{n-1}{2}
+\]
+was proved independently by Spencer (see~\cite{Cockayne}) and by Raghavan and Venkatesan~\cite{RV}, and
+equality holds only for $n\in\{3,11\}$~\cite{Weakley2002,FW}. In particular $\gamma(Q_n)\ge n/2$ for even
+$n$. For every $n\le120$ the value is known to be $\lceil n/2\rceil$ or $\lceil n/2\rceil+1$
+\cite{OW,Weakley2022}. Exact values were known for $n\le 25$, for $n=27$, and for $n=29,30,31$
+(Corollary~\ref{cor:oeis} below), as well as for some larger $n$. For $n\le25$ they come from constructions~\cite{OW,Kearse},
+from exhaustive searches by Kearse and Gibbons ($n\le19$)~\cite{Kearse} and by Bird ($n=20,22,24$, with a
+general-purpose dominating-set solver on 64 processors)~\cite{Bird}, and, for $n\le19$, from
+proof-producing SAT solving~\cite{RB}. Bird identified $n=26$ as the smallest open case. A $14$-queen
+dominating set of $Q_{26}$ was given by \"Osterg\aa rd and Weakley~\cite{OW}, who in fact found an
+independent one, and another appears in Kamenetsky's list of best known placements attached to OEIS
+A075458~\cite{OEIS}. So $13\le\gamma(Q_{26})\le 14$. The independent domination number of $Q_{26}$ is
+already known to be $14$~\cite{LMR}. For $n=28$, \"Osterg\aa rd and Weakley showed
+$i(Q_{28})\in\{14,15\}$~\cite{OW}, Langlois-R\'emillard, M\"ussig and Rold\'an computed $i(Q_{28})=15$~\cite{LMR},
+and so $14\le\gamma(Q_{28})\le15$; once $n=26$ is settled, $n=28$ is the smallest open case.
+
+For even $n=2k$ the question whether $\gamma(Q_n)=k$ is a tight one. Weakley~\cite{Weakley2022} calls a
+dominating set \emph{monochromatic} if all its squares have the same colour. He shows that a
+monochromatic $k$-set of $Q_{2k}$ forces $n\in\{4,12\}$ when $4\mid n$. When $n\equiv2\pmod 4$ it
+forces a Diophantine condition, which has no solution for $n=26$. He also shows that the colour classes
+of a bichromatic $k$-set have nearly equal sizes (for $k=14$: sizes $\{7,7\}$, or $\{6,8\}$ under further
+conditions), and he conjectures that bichromatic $k$-sets do not exist for $n>4$. So the
+open questions were whether $Q_{26}$ has a bichromatic $13$-dominating set and whether $Q_{28}$, where
+monochromatic $14$-sets are excluded because $4\mid28$, has a bichromatic $14$-dominating set. Our
+computation does not use these results: it treats all colour splits alike.
+
+\begin{theorem}\label{thm:main}
+$\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$. Equivalently, no $13$ queens dominate the $26\times26$
+board, and no $14$ queens dominate the $28\times28$ board.
+\end{theorem}
+
+\begin{corollary}\label{cor:oeis}
+The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 are known for all $n\le31$:
+\[
+  a(26)=a(27)=14,\qquad a(28)=a(29)=a(30)=15,\qquad a(31)=16 .
+\]
+The smallest open case is now $n=32$, where $\gamma(Q_{32})\in\{16,17\}$.
+\end{corollary}
+
+\begin{proof}
+By Corollary~2 of \"Osterg\aa rd and Weakley~\cite{OW}, $\gamma(Q_n)\ge n/2$ for $n<143$,
+$n\ne3,11$; this gives the lower bounds $14$, $15$, $15$, $16$ for $n=27,29,30,31$. The upper bounds come
+from explicit sets, whose domination our verification script checks directly.
+For $n=27$ we use the $14$-set of \"Osterg\aa rd and Weakley \cite[\S5]{OW}: in centred coordinates
+$-13,\dots,13$ it consists of the $13$ squares $(x,y)$ with $x=-12,-10,\dots,12$ and
+$y=6,-12,-6,8,0,-8,10,-2,4,12,-10,-4,2$ respectively, together with $(-9,-9)$.
+For $n=30$ we use Weakley's monochromatic $15$-set \cite[proof of Proposition~21]{Weakley2022}: in
+coordinates $-14,\dots,15$, the squares $(x,y)$ with $x=-13,-11,\dots,15$ and
+$y=1,-9,9,15,-11,-5,3,-3,13,11,7,-13,-7,-1,5$ respectively. None of its squares lies in the row or the
+column with coordinate $-14$; deleting them leaves a $29\times29$ board on which the same $15$ squares
+still dominate, so $\gamma(Q_{29})\le15$ (this value is also among those of~\cite{OW}). Adding a
+$31$st row and column and a queen at their intersection gives a $16$-set dominating $Q_{31}$.
+Finally $\gamma(Q_{32})\ge16$ and $\gamma(Q_{32})\le17$~\cite{Weakley2022}.
+\end{proof}
+
+Theorem~\ref{thm:main} also settles Weakley's Conjecture~4~\cite{Weakley2022} for $n=26$ and $n=28$,
+vacuously.
+
+Section~\ref{sec:relax} reduces the problem to a finite search, with complete proofs.
+Section~\ref{sec:comp} describes the search and the two computations, and Section~\ref{sec:cert} the
+DRAT certificates and what the proofs rest on. Section~\ref{sec:valid} reports the validation runs and the independent checks. The
+code, the records of the computation and a verification script are available online.\footnote{\repo}
+
+\section{A line relaxation}\label{sec:relax}
+
+Index rows and columns by $[0,n)=\{0,\dots,n-1\}$ and write $(r,x)$ for the square in row $r$ and
+column $x$. Its \emph{colour} is $r+x\bmod 2$. Its \emph{difference line} is $r-x$ and its \emph{sum
+line} is $r+x$. Since $r-x\equiv r+x\pmod 2$, all squares of a line have the same colour, which we call
+the colour of the line. A queen on $(r,x)$ lies on exactly one difference line and one sum line, both of
+its own colour, and attacks diagonally only squares of its own colour.
+
+Let $D$ be a dominating set of $Q_n$ with $|D|=g$, and let $z_0,z_1$ be the numbers of queens of
+colour $0$ and $1$. Put $s=n-g$. Since $D$ meets at most $g$ rows and at most $g$ columns, at least $s$
+rows and at least $s$ columns contain no queen.
+
+\begin{definition}
+For $A,B\subseteq[0,n)$ and $q\in\{0,1\}$ let $H_q(A,B)$ be the bipartite graph whose two vertex classes
+are the difference lines and the sum lines of colour $q$. Its edges are the squares $(r,x)\in A\times B$
+of colour $q$, the square $(r,x)$ joining the lines $r-x$ and $r+x$. For $z=(z_0,z_1)$ call $(A,B)$
+\emph{$z$-feasible} if, for $q=0,1$, $H_q(A,B)$ has a vertex cover consisting of at most $z_q$
+difference lines and at most $z_q$ sum lines.
+\end{definition}
+
+\begin{lemma}\label{lem:relax}
+If $A$ is a set of empty rows and $B$ a set of empty columns of $D$, then $(A,B)$ is $(z_0,z_1)$-feasible.
+\end{lemma}
+\begin{proof}
+A square $(r,x)\in A\times B$ is unoccupied, and no queen shares its row or its column. Hence it is
+attacked along a diagonal, by a queen which then has the colour of $(r,x)$. So the difference and sum
+lines of colour $q$ that carry a queen cover all edges of $H_q(A,B)$. There are at most $z_q$ of each
+kind, since each queen of colour $q$ lies on one line of each kind and queens of colour $1-q$ lie on no
+line of colour $q$.
+\end{proof}
+
+Feasibility is monotone: if $A'\subseteq A$ and $B'\subseteq B$, then $H_q(A',B')$ is a subgraph of
+$H_q(A,B)$, so every sub-pair of a feasible pair is feasible. A search that builds $A$ and $B$ element by
+element may therefore stop as soon as the partial pair is infeasible. Two certificates of
+infeasibility are used.
+\begin{enumerate}
+\item[(M)] \emph{Matching bound.} A vertex cover of $H_q$ has at least $\nu(H_q)$ vertices, where $\nu$
+is the matching number. So $\nu(H_q(A,B))>2z_q$ implies infeasibility. A matching of $H_q(A,B)$ is a set
+of colour-$q$ squares of $A\times B$, no two on a common diagonal.
+\item[(K)] \emph{Forced lines.} Distinct squares on one line lie on distinct lines of the other kind.
+So a line containing more than $z_q$ squares of the graph belongs to every admissible cover, as
+otherwise more than $z_q$ lines of the other kind would be needed. Removing forced lines, lowering the
+budgets and iterating, and then applying (M) to the remaining graph against the remaining total budget,
+gives a valid test.
+\end{enumerate}
+
+\begin{lemma}[symmetry]\label{lem:sym}
+Let $n$ be even and $\bar X=\{n-1-i:i\in X\}$.
+\begin{enumerate}
+\item The transpose $(r,x)\mapsto(x,r)$, the half-turn $(r,x)\mapsto(n-1-r,n-1-x)$ and the anti-transpose
+$(r,x)\mapsto(n-1-x,n-1-r)$ preserve colours. With the identity they form a group $K$ of order $4$. They
+map a dominating set with empty rows $A$ and empty columns $B$ to a dominating set with the same colour
+sizes and with empty rows and columns $(B,A)$, $(\bar A,\bar B)$ and $(\bar B,\bar A)$ respectively.
+\item $z$-feasibility of $(A,B)$ is invariant under this action of $K$.
+\item The reflection $(r,x)\mapsto(r,n-1-x)$ exchanges the two colours.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(1) The colour of the image square is $x+r$, $2n-2-(r+x)$ and $2n-2-(r+x)$ respectively, all
+$\equiv r+x$. The statement about empty lines is immediate. (2) The three maps send difference lines to
+difference lines ($r-x\mapsto x-r$, $x-r$, $r-x$) and sum lines to sum lines ($r+x\mapsto r+x$,
+$2n-2-(r+x)$, $2n-2-(r+x)$), preserving colours. Hence they induce isomorphisms $H_q(A,B)\cong
+H_q(\sigma(A,B))$ which respect the two vertex classes, and admissible covers correspond. (3) The image
+of $(r,x)$ has colour $r+n-1-x\equiv r+x+1$ because $n$ is even.
+\end{proof}
+
+\begin{proposition}\label{prop:complete}
+Let $n$ be even and $g<n$. Let $\mathcal L$ be a set of pairs $(A,B,z_0)$, with $|A|=|B|=s$ and
+$z_0\le\lfloor g/2\rfloor$, such that
+\begin{enumerate}
+\item[(a)] for every $z_0\le\lfloor g/2\rfloor$, every $(z_0,g-z_0)$-feasible pair of $s$-sets lies in
+the $K$-orbit of a pair $(A,B)$ with $(A,B,z_0)\in\mathcal L$, and
+\item[(b)] for every $(A,B,z_0)\in\mathcal L$, no set of $g$ queens contained in
+$([0,n)\setminus A)\times([0,n)\setminus B)$ with at most $z_0$ queens of colour $0$ and at most
+$g-z_0$ of colour $1$ dominates $Q_n$.
+\end{enumerate}
+Then $\gamma(Q_n)>g$.
+\end{proposition}
+\begin{proof}
+Suppose $D$ is a dominating $g$-set. After the reflection of Lemma~\ref{lem:sym}(3) if needed,
+$z_0(D)\le z_1(D)$, so $z_0(D)\le\lfloor g/2\rfloor$. Choose $s$-sets $A_0$, $B_0$ of empty rows and
+columns. By Lemma~\ref{lem:relax}, $(A_0,B_0)$ is $(z_0(D),z_1(D))$-feasible, so by (a) there are
+$\sigma\in K$ and $(A,B,z_0(D))\in\mathcal L$ with $\sigma(A_0,B_0)=(A,B)$. By Lemma~\ref{lem:sym}(1),
+$\sigma D$ is a dominating $g$-set with the same colour sizes whose queens avoid the rows $A$ and the
+columns $B$, contradicting~(b).
+\end{proof}
+
+\section{The computation}\label{sec:comp}
+
+\paragraph{Stage 1 (pairs).} A depth-first search decides membership of rows and columns in $A$ and $B$
+in the order row~$0$, column~$0$, row~$n{-}1$, column~$n{-}1$, row~$1$, column~$1$, \dots, from the
+outside in. It maintains a maximum matching of $H_0\cup H_1$ incrementally, prunes with (M) and~(K),
+and after every block of four decisions (rows and columns $t$ and $n-1-t$) discards prefixes that
+cannot extend to the canonical member of their $K$-orbit. The canonical member is the one whose
+sequence of block codes is lexicographically least, and the block code of an image depends only on the
+same block of the original, so this test is exact. At the leaves it decides the constrained vertex
+cover problem exactly, by branching. The output is a list of canonical feasible pairs. The search is
+split into parts by the index of the search node at depth~$16$ modulo the number of parts. For $n=26$
+there are $480$ parts per colour split; for $n=28$ there are $480$ parts for each $z_0\le4$ and $4\,800$
+for each $z_0\ge5$.
+
+\paragraph{Stage 2 (queens).} For each pair a branch-and-bound search finds all $g$-sets of queens
+inside the allowed region, with the prescribed colour sizes, that dominate the whole board. It picks an
+undominated square with the fewest available attackers and branches over those attackers, forbidding
+earlier siblings so that the branches partition the search space. It prunes with greedy packings of
+undominated squares whose sets of available attackers are pairwise disjoint, both overall and per colour.
+
+\paragraph{The case $n=26$.} Here $g=s=13$ and $z_0\in\{0,\dots,6\}$. Table~\ref{tab:26} lists the work.
+Stage~1 leaves canonical feasible pairs only for the split $(6,7)$, where there are $\clpairsSix$ of
+them, and for the monochromatic split $(0,13)$. In the latter case there is exactly one pair: $A$ is the
+set of odd rows and $B$ the set of even columns. This agrees with Weakley's structure
+theory~\cite{Weakley2022}, which the computation does not use. Stage~2 finds no dominating set for any
+of the $\clpairsTotal$ pairs. The SHA-256 hash of the survivor list begins with \texttt{\clsurvSha}.
+In total stage~1 took $\clhStageOne$ and stage~2 $\clhStageTwo$ CPU hours (single cores of a shared
+machine).
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{lrrrrrrrr}\toprule
+& \multicolumn{3}{c}{stage 1} & \multicolumn{3}{c}{stage 2} & \multicolumn{2}{c}{certificate}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-9}
+$(z_0,z_1)$ & nodes & pairs & CPU s & nodes & CPU s & sets & cubes & CPU s\\\midrule
+\clrowZa
+\clrowZb
+\clrowZc
+\clrowZd
+\clrowZe
+\clrowZf
+\clrowZg
+\bottomrule\end{tabular}
+\caption{The computation for $n=26$, $g=13$. Stage~1 and stage~2 are the search programs of
+Section~\ref{sec:comp}. The last two columns refer to the stage-1 certificate of
+Section~\ref{sec:cert}: the number of solved cubes and the CPU time of CaDiCaL plus \texttt{drat-trim}.
+Single-core CPU seconds on a shared machine.}\label{tab:26}
+\end{table}
+
+\paragraph{The case $n=28$.} Here $g=s=14$ and $z_0\in\{0,\dots,7\}$. Table~\ref{tab:28} lists the work
+for the $\clpartsXXVIII$ parts. Stage~1 leaves canonical feasible pairs only for the splits $(7,7)$
+($\clpairsSevenXXVIII$ pairs) and $(6,8)$ ($\clpairsSixXXVIII$ pairs), and for $(0,14)$ and $(1,13)$. In the
+last two cases there is again exactly one pair, $A$ the odd rows and $B$ the even columns, whose grid
+$A\times B$ consists of squares of a single colour. This again agrees with Weakley's results: by his
+Theorem~17 and Proposition~11~\cite{Weakley2022} a $14$-dominating set of $Q_{28}$ would have colour
+classes $\{7,7\}$ or $\{6,8\}$. Altogether there are $\clpairsTotalXXVIII$ pairs; the SHA-256 hash of the
+survivor list begins with \texttt{\clsurvShaXXVIII}. Stage~1 took $\clhStageOneXXVIII$ CPU hours. Of the
+parts, $\clcloudPartsXXVIII$ (all but $16$ of those with $z_0=7$, and $2673$ of those with $z_0=6$) were run on
+rented single-core cloud containers (Modal), compiled there from the same source inside a pinned
+Debian image. The cost was about US\$4. Every returned part was checked locally against its log and its
+SHA-256 hash before it was accepted, and the remaining parts, including $16$ that exceeded the time limit
+of the cloud calls, ran locally. The cloud cores were about $1.8$ times slower than the local ones, which
+inflates the CPU times of Table~\ref{tab:28}.
+
+For $n=28$ condition~(b) of Proposition~\ref{prop:complete} rests on the SAT check of
+Section~\ref{sec:cert} alone. The branch-and-bound search of stage~2 was run only on the
+$\clplacePairsXXVIII$ pairs with $z_0\in\{1,6\}$, in $\clplaceCpuXXVIII$\,s; it found no dominating set.
+Its running time has a heavy tail (up to $10^3$\,s for a single pair with $z_0=6$), so we did not run it
+on the $\clpairsSevenXXVIII$ pairs with $z_0=7$. On the pair with $z_0=0$ we stopped it after $3.6$ hours.
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{lrrrrrr}\toprule
+& \multicolumn{3}{c}{stage 1} & \multicolumn{2}{c}{certificate} & \multicolumn{1}{c}{SAT stage 2}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(lr){7-7}
+$(z_0,z_1)$ & nodes & pairs & CPU s & cubes & CPU s & CPU s\\\midrule
+\clrowYa
+\clrowYb
+\clrowYc
+\clrowYd
+\clrowYe
+\clrowYf
+\clrowYg
+\clrowYh
+\bottomrule\end{tabular}
+\caption{The computation for $n=28$, $g=14$. Stage~1 is the search program of Section~\ref{sec:comp};
+most of the stage-1 time for $(7,7)$ and part of it for $(6,8)$ was spent on slower cloud cores. The
+certificate columns refer to the stage-1 certificate of Section~\ref{sec:cert}, and the last column to
+the SAT check of condition~(b), each CaDiCaL plus \texttt{drat-trim}. Single-core CPU seconds.}\label{tab:28}
+\end{table}
+
+\section{Certificates}\label{sec:cert}
+
+The two searches of Section~\ref{sec:comp} are fast but intricate programs. Both conditions of
+Proposition~\ref{prop:complete} were therefore also established by SAT solving with proofs: CaDiCaL
+\clcadicalVersion~\cite{CaDiCaL} writes a DRAT proof of unsatisfiability for each formula and
+\texttt{drat-trim}~\cite{DRATtrim} checks it. The formulas are produced by two short encoders that do not
+share code with the search programs. Cardinality constraints use the sequential counter~\cite{Sinz}.
+
+\paragraph{Condition (b).} For each listed pair, the formula has one variable per allowed square, one
+clause per square of the board stating that some allowed square attacking it (or equal to it) carries a
+queen, and constraints that at most $z_q$ queens have colour~$q$. For $n=26$ all $\clpairsTotal$
+formulas are unsatisfiable, and all $\clpairsTotal$ proofs were verified. CaDiCaL took $\clsatSolve$\,s
+in total and \texttt{drat-trim} $\clsatCheck$\,s. The monochromatic pair is by far the hardest instance
+($\clsatMonoSolve$\,s and $\clsatMonoCheck$\,s); each other instance takes less than $\clsatOtherMax$\,s for
+each of the two steps. For $n=28$ all $\clpairsTotalXXVIII$ formulas are unsatisfiable and all proofs were
+verified, in $\clsatSolveXXVIII$\,s (CaDiCaL) and $\clsatCheckXXVIII$\,s (\texttt{drat-trim}). The hardest
+instance is again the pair whose grid has a single colour, here with $z_0=0$ ($\clsatMonoSolveXXVIII$\,s and
+$\clsatMonoCheckXXVIII$\,s); every other instance takes less than $\clsatOtherMaxXXVIII$\,s for each step.
+
+\paragraph{Condition (a).} Fix $z_0$. The formula $F_{z_0}$ has variables $a_r$ (row $r$ is in $A$), $b_x$
+(column $x$ is in $B$), $y_d$ (difference line $d$ in the cover) and $w_t$ (sum line $t$ in the cover), with the
+constraints $|A|=|B|=s$, at most $z_q$ chosen difference lines and at most $z_q$ chosen sum lines of
+colour~$q$, and, for every square, the clause $\neg a_r\vee\neg b_x\vee y_{r-x}\vee w_{r+x}$. The
+projections of its models to the variables $a,b$ are exactly the $z$-feasible pairs. For each listed
+pair $(A,B,z_0)$ and each of its four images $(P,Q)$ under $K$ we add the clause
+$\bigvee_{r\in P}\neg a_r\vee\bigvee_{x\in Q}\neg b_x$, which excludes $(P,Q)$. Condition~(a) for this
+$z_0$ says exactly that the resulting formula $F'_{z_0}$ is unsatisfiable.
+
+We refute $F'_{z_0}$ by cube and conquer~\cite{CubeConquer}, with a symmetry reduction. Fix the $4T$
+variables $a_t,a_{n-1-t},b_t,b_{n-1-t}$ ($t<T$) in all $16^T$ ways; these cubes cover all assignments.
+The group $K$ acts on the cubes, and $F'_{z_0}\wedge c$ is satisfiable if and only if
+$F'_{z_0}\wedge\sigma c$ is: the projections of the models of $F'_{z_0}$ form a $K$-invariant set of
+pairs, by Lemma~\ref{lem:sym}(2) and because the excluded set is a union of orbits. So it suffices to
+refute $F'_{z_0}\wedge c$ for one cube $c$ in each orbit. We used $T=2$ ($\clcubesSmall$ orbits) for
+$z_0\le5$ and $T=3$ ($\clcubesSix$ orbits) for $z_0=6$ and, for $n=28$, $z_0=7$. A short script checks
+that the orbits of the chosen cubes cover all $16^T$ cubes. Every cube formula was refuted and every
+proof verified. For $n=26$ this took $\clhCert$ CPU hours and the proofs were about $\clcertProofGB$\,GB in
+all. For $n=28$ it took $\clhCertXXVIII$ CPU hours; for $z_0=7$ the formula has $\clclausesSevenXXVIII$
+clauses, most of them exclusion clauses, the largest proof was $\clcertMaxProofGBXXVIII$\,GB and all proofs
+together about $\clcertProofGBXXVIII$\,GB. The proofs were deleted after checking. The encoder rebuilds the
+formulas deterministically, their SHA-256 hashes are recorded in the repository, and the verification
+script regenerates and checks a random sample of the proofs. For every $z_0\ge3$ and both $n$ the
+certificate took less CPU time than the stage-1 search itself (Tables~\ref{tab:26} and~\ref{tab:28}).
+
+\paragraph{What the proof rests on.} Theorem~\ref{thm:main} follows from Proposition~\ref{prop:complete},
+applied for $n=26$ and for $n=28$ with $\mathcal L$ the respective survivor list, and from the upper bounds
+of~\cite{OW,OEIS} for $n=26$ and of~\cite{LMR} and Section~\ref{sec:valid} for $n=28$. Its correctness depends on
+Lemmas~\ref{lem:relax} and~\ref{lem:sym} and Proposition~\ref{prop:complete}, which are proved above;
+on the two CNF encoders (\texttt{relax\_cnf} in \texttt{code/refcheck.py}, about 30 lines using the
+cardinality encodings of PySAT~\cite{PySAT}, and \texttt{build} in \texttt{code/sat\_place.py}, about 40
+lines); on the short enumeration of cube orbit representatives and its check that their
+orbits cover all $16^T$ cubes; and on \texttt{drat-trim}. It does not depend on the correctness of the
+two search programs, which serve only to produce the lists $\mathcal L$; in particular it does not depend
+on the cloud computations. As a check that the encoders are not too strong, every listed pair, for both
+$n$, satisfies $F_{z_0}$ without the exclusion clauses, the two known $14$-queen dominating sets of
+$Q_{26}$ satisfy the stage-2 encoding for $g=14$, and the $15$-queen dominating set of $Q_{28}$ below
+satisfies it for $g=15$.
+
+\section{Validation and independent checks}\label{sec:valid}
+
+\paragraph{Known values.} Table~\ref{tab:valid} shows the pipeline for $g=n/2$ and even $n\le18$. The
+numbers of $n/2$-dominating sets up to the dihedral symmetries agree with the
+literature~\cite{Bird,RB}, and for $n=8,14,16$ no $n/2$-set exists. The recorded runs for $n=20,22,24$
+($\clpairsrecTwenty$, $\clpairsrecTwentyTwo$ and $\clpairsrecTwentyFour$ feasible pairs) found no
+$n/2$-set, in agreement with~\cite{Bird}; the verification script reruns $n=20,22$ in its full mode.
+
+\begin{table}[ht]\centering
+\begin{tabular}{lrrrrrrrrrrrrr}\toprule
+$n$ & 4&6&8&10&12&14&16&18&20&22&24&26&28\\\midrule
+number of $n/2$-sets up to symmetry & \clvalFour&\clvalSix&\clvalEight&\clvalTen&\clvalTwelve&\clvalFourteen&\clvalSixteen&\clvalEighteen&0&0&0&\textbf{0}&\textbf{0}\\
+\bottomrule\end{tabular}
+\caption{Numbers of dominating sets of size $n/2$ of $Q_n$ up to the dihedral group, as found by the
+pipeline. The values for $n\le 24$ agree with~\cite{Bird,RB}; those for $n=26,28$ are Theorem~\ref{thm:main}.}\label{tab:valid}
+\end{table}
+
+All $n/2$-sets in Table~\ref{tab:valid} with $n>4$ are monochromatic. To test the pipeline on
+bichromatic sets, we also ran it with $g=\gamma(Q_n)=n/2+1$ for $n=8,14,16$, where minimum dominating
+sets are plentiful and mostly bichromatic. Stage~2 examined $\clpairsgpEight$, $\clpairsgpFourteen$ and
+$\clpairsgpSixteen$ feasible pairs and found $\clgpEight$, $\clgpFourteen$ and $\clgpSixteen$ classes. These
+agree with~\cite{RB}, and with~\cite{Bird} for $n=8,14$; for $n=16$ Bird lists $43$ classes, which
+Rostami and Bright corrected to $371$.
+
+\paragraph{Second implementations.} Stage~1 was reimplemented separately. The second program uses
+another decision order, breadth-first augmenting paths, only bound~(M), another exact cover algorithm
+and another canonical form. For every $n\le\clrefCompareMaxN$ and for $n=26$ the two programs produce
+the same set of orbits of feasible pairs; for $n=26$ the second program needed $\clvNodes$ nodes and
+$\clvCpu$\,s. For $n\le\clbruteMaxN$ both also agree with a test of every pair $(A,B)$, without pruning
+or symmetry. Stage~2 has the SAT check described above as its second implementation.
+
+For $n=28$ the second implementations were run only in part, since the certificates make the lower
+bound independent of all search programs. The second stage-1 program was run on every part with
+$z_0\le5$, where it finds the same orbits as stage~1 (the two single-colour pairs and nothing else), and
+on $\clvPartsSixXXVIII$ of the $4\,800$ parts with $z_0=6$, where its $\clvPairsSixXXVIII$ pairs are all among
+those found by stage~1; it needed $\clvNodesXXVIII$ nodes and $\clvCpuXXVIII$\,s. It was not run for
+$z_0=7$. The branch-and-bound search of stage~2 was run on the pairs with $z_0\in\{1,6\}$, as described in
+Section~\ref{sec:comp}.
+
+\paragraph{Independent referee checks.} An independent AI referee, not involved in writing the search
+programs, reviewed the proofs of Section~\ref{sec:relax} and the two stage-1 programs. It also wrote
+the program \texttt{code/refcheck.py}, which uses only SAT solving and shares no code with the search
+programs. This program enumerates all feasible pairs by incremental SAT solving with orbit-blocking clauses and finds the same
+orbit sets as stage~1 for every even $n\le\clrefCompareMaxN$ and every $z_0$. It runs a complete
+independent pipeline (SAT enumeration of pairs, then SAT enumeration of all dominating sets inside each
+region), which reproduces the class counts above for $n\le\clrefPipeMaxN$ and for $(n,g)=(8,5)$. It also
+enumerates all $g$-dominating sets directly, without the relaxation, in the cases with
+$n\le\clrefDirectMaxN$, again with the same counts. The referee also proposed the stage-1 certificate of
+Section~\ref{sec:cert}; the same certificate is produced in the verification run for $n=16$ and $n=18$.
+
+\paragraph{Upper bounds.} The verification script checks that Kamenetsky's $14$-queen set and the
+independent $14$-queen set of \"Osterg\aa rd and Weakley dominate $Q_{26}$, and that their $14$-queen
+set of Corollary~\ref{cor:oeis} dominates $Q_{27}$. For $n=28$ we found a $15$-queen dominating set by
+simulated annealing; it is in the repository, and the script checks it. (The value $i(Q_{28})=15$
+of~\cite{LMR} already gives $\gamma(Q_{28})\le15$.) The script also checks the sets used for $n=29,30,31$
+in the proof of Corollary~\ref{cor:oeis}.
+
+\section{Remarks}
+
+The relaxation of Lemma~\ref{lem:relax} keeps only the line structure of the squares that must be
+covered diagonally, yet it is strong enough that stage~1 leaves only $\clpairsTotal$ candidate pairs for
+$n=26$ and $\clpairsTotalXXVIII$ for $n=28$. The cost grows quickly: from $n=26$ to $n=28$ the stage-1
+search grew from $\clhStageOne$ to $\clhStageOneXXVIII$ CPU hours (part of the latter on slower cores), the
+number of pairs by a factor of about $11$, and the stage-1 certificate from $\clhCert$ to $\clhCertXXVIII$ CPU
+hours. The smallest open case is now $n=32$. There $4\mid n$, so again only bichromatic $16$-sets are
+possible~\cite{Weakley2022}. Extrapolating the growth from $n=26$ to $n=28$ over two more steps suggests
+some $10^3$ to $10^4$ CPU hours for the present method, so deciding $\gamma(Q_{32})\in\{16,17\}$ probably
+calls for a stronger relaxation, or for using structural results such as Proposition~11
+of~\cite{Weakley2022} as proved lemmas.
+
+\section*{Reproducibility}
+The repository\footnote{\repo} contains the C sources of both stages and of the second stage-1 program,
+the CNF encoders, the referee's checks, the driver used for the cloud runs, and for $n=26$ and $n=28$ the
+survivor lists, per-part SHA-256 manifests, the logs of the searches, the per-pair SAT records and the
+per-cube records of the stage-1 certificates. The script \texttt{scripts/verify.py} rebuilds everything
+and, in about twenty minutes on three cores, reruns the validation for small $n$, the referee's checks
+and the stage-1 certificate for $n=16,18$; checks the records and their hashes for $n=26$ and $n=28$,
+including the base formulas of both certificates, rebuilt from the survivor lists; checks the upper
+bounds; and reruns seeded random samples of the two computations against the records ($\clsampleParts$
+and $\clsamplePartsXXVIII$ stage-1 parts, SAT instances and certificate cubes). Every number quoted in this
+paper is generated from a file of claims that the script compares with the computed values. With
+\texttt{--full} it reruns the whole $n=26$ computation, and with \texttt{--heavy28} a larger part of the
+$n=28$ computation (about six CPU hours).
+
+\section*{Declaration of AI-generated research and authorship}
+This manuscript is the product of an AI-driven research process. During a broader investigation of
+open problems, initiated by the human author, an AI system identified this problem as a candidate,
+devised the method, wrote and ran the code for the computations, and wrote this manuscript. AI systems
+produced the results and their presentation, including the mathematical exposition, the computations
+and the organisation and writing of the text; the human author directed the AI systems but wrote no
+part of the manuscript. The system was Claude Opus~5.5 (Anthropic), used through Claude Code.
+
+The computational claims are reproduced by \texttt{scripts/verify.py}. At the time of writing, the
+mathematics and the code have been checked only by AI systems and by computer verification. These
+checks include an adversarial review by an independent AI referee, who re-derived the proofs of
+Section~\ref{sec:relax}, read the search programs, wrote the independent SAT-based checks of
+Section~\ref{sec:valid} and the stage-1 certificate of Section~\ref{sec:cert}. No independent human
+expert has reviewed the work. The human author has not read this manuscript or checked its arguments.
+The author takes responsibility for the accuracy of this disclosure.
+
+\raggedright
+\begin{thebibliography}{99}
+\bibitem{CaDiCaL} A.~Biere, T.~Faller, K.~Fazekas, M.~Fleury, N.~Froleyks, F.~Pollitt, \emph{CaDiCaL~2.0},
+in: Computer Aided Verification (CAV 2024), Lecture Notes in Comput.\ Sci., Springer, 2024, 133--152.
+\href{https://doi.org/10.1007/978-3-031-65627-9_7}{doi:10.1007/978-3-031-65627-9\_7}.
+\bibitem{Bird} W.~H.~Bird, \emph{Computational methods for domination problems}, PhD thesis, University of
+Victoria, 2017. \url{https://dspace.library.uvic.ca/handle/1828/8634}.
+\bibitem{Cockayne} E.~J.~Cockayne, \emph{Chessboard domination problems}, Discrete Math.\ \textbf{86}
+(1990), 13--20. \href{https://doi.org/10.1016/0012-365X(90)90344-H}{doi:10.1016/0012-365X(90)90344-H}.
+\bibitem{FW} D.~Finozhenok, W.~D.~Weakley, \emph{An improved lower bound for domination numbers of the
+queen's graph}, Australas.\ J.\ Combin.\ \textbf{37} (2007), 295--300.
+\bibitem{CubeConquer} M.~J.~H.~Heule, O.~Kullmann, S.~Wieringa, A.~Biere, \emph{Cube and conquer:
+guiding CDCL SAT solvers by lookaheads}, in: Hardware and Software: Verification and Testing (HVC 2011),
+Lecture Notes in Comput.\ Sci., Springer, 2012, 50--65.
+\href{https://doi.org/10.1007/978-3-642-34188-5_8}{doi:10.1007/978-3-642-34188-5\_8}.
+\bibitem{PySAT} A.~Ignatiev, A.~Morgado, J.~Marques-Silva, \emph{PySAT: a Python toolkit for prototyping
+with SAT oracles}, in: Theory and Applications of Satisfiability Testing (SAT 2018), Lecture Notes in
+Comput.\ Sci., Springer, 2018, 428--437.
+\href{https://doi.org/10.1007/978-3-319-94144-8_26}{doi:10.1007/978-3-319-94144-8\_26}.
+\bibitem{Kearse} M.~D.~Kearse, P.~B.~Gibbons, \emph{Computational methods and new results for chessboard
+problems}, Australas.\ J.\ Combin.\ \textbf{23} (2001), 253--284.
+\bibitem{LMR} A.~Langlois-R\'emillard, M.~M\"ussig, \'E.~Rold\'an, \emph{Complexity of chess domination
+problems}, Res.\ Math.\ Sci.\ \textbf{12} (2025), no.~1, paper no.~14.
+\href{https://doi.org/10.1007/s40687-024-00492-5}{doi:10.1007/s40687-024-00492-5}.
+\bibitem{OEIS} OEIS Foundation Inc., \emph{The On-Line Encyclopedia of Integer Sequences}, sequence
+A075458, with D.~Kamenetsky's file of best known placements for $n\le26$ (2019),
+\url{https://oeis.org/A075458}.
+\bibitem{OW} P.~R.~J.~\"Osterg\aa rd, W.~D.~Weakley, \emph{Values of domination numbers of the queen's graph},
+Electron.\ J.\ Combin.\ \textbf{8} (2001), \#R29.
+\href{https://doi.org/10.37236/1573}{doi:10.37236/1573}.
+\bibitem{RV} V.~Raghavan, S.~M.~Venkatesan, \emph{On bounds for a board covering problem}, Inform.\ Process.\
+Lett.\ \textbf{25} (1987), 281--284.
+\href{https://doi.org/10.1016/0020-0190(87)90201-8}{doi:10.1016/0020-0190(87)90201-8}.
+\bibitem{RB} T.~Rostami, C.~Bright, \emph{Queen domination by SAT solving}, preprint (2025),
+arXiv:2508.11945. \href{https://doi.org/10.48550/arXiv.2508.11945}{doi:10.48550/arXiv.2508.11945}.
+\bibitem{Sinz} C.~Sinz, \emph{Towards an optimal CNF encoding of Boolean cardinality constraints}, in:
+Principles and Practice of Constraint Programming (CP 2005), Lecture Notes in Comput.\ Sci., Springer, 2005, 827--831.
+\href{https://doi.org/10.1007/11564751_73}{doi:10.1007/11564751\_73}.
+\bibitem{Watkins} J.~J.~Watkins, \emph{Across the Board: The Mathematics of Chessboard Problems}, Princeton
+University Press, 2004. \href{https://doi.org/10.1515/9781400840922}{doi:10.1515/9781400840922}.
+\bibitem{Weakley2002} W.~D.~Weakley, \emph{A lower bound for domination numbers of the queen's graph},
+J.\ Combin.\ Math.\ Combin.\ Comput.\ \textbf{43} (2002), 231--254.
+\bibitem{Weakley2022} W.~D.~Weakley, \emph{Queen domination of even square boards}, Electron.\ J.\ Combin.\
+\textbf{29}(2) (2022), \#P2.50.
+\href{https://doi.org/10.37236/10617}{doi:10.37236/10617}.
+\bibitem{DRATtrim} N.~Wetzler, M.~J.~H.~Heule, W.~A.~Hunt~Jr., \emph{DRAT-trim: efficient checking and
+trimming using expressive clausal proofs}, in: Theory and Applications of Satisfiability Testing (SAT 2014),
+Lecture Notes in Comput.\ Sci., Springer, 2014, 422--429.
+\href{https://doi.org/10.1007/978-3-319-09284-3_31}{doi:10.1007/978-3-319-09284-3\_31}.
+\end{thebibliography}
+
+\end{document}

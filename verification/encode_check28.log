@@ -1,0 +1,4 @@
+$ python code/encode_check28.py data/n28/survivors.txt.xz data/q28_15.txt
+{"pairs": 118765, "pairs_satisfy_relaxation": 118765, "q28_15_satisfies_sat_place": true, "q28_15_empty_rows_cols": [13, 13]}
+
+[gate] ok   ran

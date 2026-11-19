@@ -1,0 +1,13 @@
+{
+ "mode": "sample",
+ "seed": 2028,
+ "stage1_parts": 20,
+ "stage1_parts_reproduced": 20,
+ "stage1_mismatch": [],
+ "sat_rerun": 40,
+ "sat_reproduced": 40,
+ "sat_expected": 40,
+ "cert_cubes_rerun": 16,
+ "cert_cubes_reproduced": 16,
+ "seconds": 66.6
+}

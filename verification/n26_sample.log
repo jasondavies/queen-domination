@@ -1,0 +1,6 @@
+$ python code/run_n26.py . 3 ./verification/n26_sample.json sample
+{"mode": "sample", "seed": 2026, "stage1_parts": 31, "stage1_parts_reproduced": 31, "stage1_mismatch": [], "sat_rerun": 40, "sat_reproduced": 40, "sat_expected": 40, "cert_cubes_rerun": 15, "cert_cubes_reproduced": 15, "seconds": 59.0}
+
+[gate] ok   31 stage-1 parts rerun, outputs identical (SHA-256)
+[gate] ok   SAT stage 2 rerun on a sample: same CNF hashes, UNSAT, VERIFIED
+[gate] ok   stage-1 certificate cubes rerun: same CNF hashes, UNSAT, VERIFIED
