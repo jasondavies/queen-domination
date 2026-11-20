@@ -22,7 +22,7 @@
 
 \title{The domination numbers of the $26\times26$ and $28\times28$ queen's graphs}
 \author{Jason Davies\thanks{\href{mailto:jason@jasondavies.com}{\nolinkurl{jason@jasondavies.com}}}}
-\date{November 20, 2026}
+\date{\clDate}
 
 \begin{document}
 
@@ -65,8 +65,8 @@ of~\cite{Weakley2022}. The general lower bound
 \]
 was proved independently by Spencer (see~\cite{Cockayne}) and by Raghavan and Venkatesan~\cite{RV}, and
 equality holds only for $n\in\{3,11\}$~\cite{Weakley2002,FW}. In particular $\gamma(Q_n)\ge n/2$ for even
-$n$. For every $n\le120$ the value is known to be $\lceil n/2\rceil$ or $\lceil n/2\rceil+1$
-\cite{OW,Weakley2022}. Exact values were known for $n\le 25$, for $n=27$, and for $n=29,30,31$
+$n$. For every $n\le120$ other than $3$ and $11$ the value is known to be $\lceil n/2\rceil$ or
+$\lceil n/2\rceil+1$ \cite{OW,Weakley2022}. Exact values were known for $n\le 25$, for $n=27$, and for $n=29,30,31$
 (Corollary~\ref{cor:oeis} below), as well as for some larger $n$. For $n\le25$ they come from constructions~\cite{OW,Kearse},
 from exhaustive searches by Kearse and Gibbons ($n\le19$)~\cite{Kearse} and by Bird ($n=20,22,24$, with a
 general-purpose dominating-set solver on 64 processors)~\cite{Bird}, and, for $n\le19$, from
@@ -79,11 +79,11 @@ $i(Q_{28})\in\{14,15\}$~\cite{OW}, Langlois-R\'emillard, M\"ussig and Rold\'an c
 and so $14\le\gamma(Q_{28})\le15$; once $n=26$ is settled, $n=28$ is the smallest open case.
 
 For even $n=2k$ the question whether $\gamma(Q_n)=k$ is a tight one. Weakley~\cite{Weakley2022} calls a
-dominating set \emph{monochromatic} if all its squares have the same colour. He shows that a
+dominating set \emph{monochromatic} if all its squares have the same colour. Weakley shows that a
 monochromatic $k$-set of $Q_{2k}$ forces $n\in\{4,12\}$ when $4\mid n$. When $n\equiv2\pmod 4$ it
-forces a Diophantine condition, which has no solution for $n=26$. He also shows that the colour classes
+forces a Diophantine condition, which has no solution for $n=26$. The same paper shows that the colour classes
 of a bichromatic $k$-set have nearly equal sizes (for $k=14$: sizes $\{7,7\}$, or $\{6,8\}$ under further
-conditions), and he conjectures that bichromatic $k$-sets do not exist for $n>4$. So the
+conditions), and conjectures that bichromatic $k$-sets do not exist for $n>4$. So the
 open questions were whether $Q_{26}$ has a bichromatic $13$-dominating set and whether $Q_{28}$, where
 monochromatic $14$-sets are excluded because $4\mid28$, has a bichromatic $14$-dominating set. Our
 computation does not use these results: it treats all colour splits alike.
@@ -264,8 +264,8 @@ Single-core CPU seconds on a shared machine.}\label{tab:26}
 for the $\clpartsXXVIII$ parts. Stage~1 leaves canonical feasible pairs only for the splits $(7,7)$
 ($\clpairsSevenXXVIII$ pairs) and $(6,8)$ ($\clpairsSixXXVIII$ pairs), and for $(0,14)$ and $(1,13)$. In the
 last two cases there is again exactly one pair, $A$ the odd rows and $B$ the even columns, whose grid
-$A\times B$ consists of squares of a single colour. This again agrees with Weakley's results: by his
-Theorem~17 and Proposition~11~\cite{Weakley2022} a $14$-dominating set of $Q_{28}$ would have colour
+$A\times B$ consists of squares of a single colour. This again agrees with Weakley's results: by
+Theorem~17 and Proposition~11 of~\cite{Weakley2022} a $14$-dominating set of $Q_{28}$ would have colour
 classes $\{7,7\}$ or $\{6,8\}$. Altogether there are $\clpairsTotalXXVIII$ pairs; the SHA-256 hash of the
 survivor list begins with \texttt{\clsurvShaXXVIII}. Stage~1 took $\clhStageOneXXVIII$ CPU hours. Of the
 parts, $\clcloudPartsXXVIII$ (all but $16$ of those with $z_0=7$, and $2673$ of those with $z_0=6$) were run on
@@ -409,6 +409,29 @@ enumerates all $g$-dominating sets directly, without the relaxation, in the case
 $n\le\clrefDirectMaxN$, again with the same counts. The referee also proposed the stage-1 certificate of
 Section~\ref{sec:cert}; the same certificate is produced in the verification run for $n=16$ and $n=18$.
 
+\paragraph{External review.} An external AI review (ChatGPT Pro) of the code, which also regenerated all
+$15$ base formulas of the stage-1 certificates and all $1\,528$ (for $n=26$) and $2\,600$ (for $n=28$) cube
+formulas from the committed survivor lists and found their SHA-256 hashes equal to the recorded ones,
+found three defects, now corrected, none of which affected the claimed values. When resumed, the
+certificate driver reused every cube already recorded in its output file without checking that the file
+was made for the same formula (the same $n$, $g$, $z_0$, $T$ and base formula) or that the recorded
+formula hash matched, so that a rerun on a different, satisfiable formula could be reported as
+certified. Every certificate reported here was computed with one survivor list and one set of
+arguments, and each record's formula hash is computed from the exact text given to the solver. For
+$n=28$, $z_0=7$ the run was stopped once, after $292$ of the $1\,072$ cubes, and resumed with the same
+arguments and the same, unchanged survivor list (only the number of parallel processes changed); the
+regenerated hashes show that every record belongs to the formula it is filed under. The driver now
+compares the header and a freshly rebuilt base formula before reusing anything, rebuilds the formula of
+every reused cube and compares its hash, requires exactly the expected set of cubes, and solves failed,
+interrupted or mismatched cubes again. A regression test, run by the verification script, includes the
+reviewer's example ($n=4$, $g=2$, $z_0=0$, $T=1$); the resume test of the cloud driver was tightened in the
+same way. The pinned \texttt{drat-trim} did not compile under GCC~14 (an implicit declaration of
+\texttt{getc\_unlocked}) and is now built with \texttt{-D\_DEFAULT\_SOURCE}. Finally, an earlier version of
+this paper stated $\gamma(Q_n)\in\{\lceil n/2\rceil,\lceil n/2\rceil+1\}$ for all $n\le120$, omitting the
+exceptions $n=3,11$. The review's main suggestion, a verification mode that rebuilds every certificate
+formula of both stages from the survivor lists alone, solves it and checks the proof without rerunning
+the searches, is implemented as \texttt{verify.py --certify-all}.
+
 \paragraph{Upper bounds.} The verification script checks that Kamenetsky's $14$-queen set and the
 independent $14$-queen set of \"Osterg\aa rd and Weakley dominate $Q_{26}$, and that their $14$-queen
 set of Corollary~\ref{cor:oeis} dominates $Q_{27}$. For $n=28$ we found a $15$-queen dominating set by
@@ -440,8 +463,11 @@ including the base formulas of both certificates, rebuilt from the survivor list
 bounds; and reruns seeded random samples of the two computations against the records ($\clsampleParts$
 and $\clsamplePartsXXVIII$ stage-1 parts, SAT instances and certificate cubes). Every number quoted in this
 paper is generated from a file of claims that the script compares with the computed values. With
-\texttt{--full} it reruns the whole $n=26$ computation, and with \texttt{--heavy28} a larger part of the
-$n=28$ computation (about six CPU hours).
+\texttt{--full} it reruns the whole $n=26$ computation, with \texttt{--heavy28} a larger part of the
+$n=28$ computation (about six CPU hours), and with \texttt{--certify-all} it rebuilds every certificate
+formula of both stages for both $n$ from the survivor lists, solves it and checks its proof (about
+$45$ CPU hours). The DRAT proofs themselves (about $25$ and $182$\,GB) are not published; they are
+regenerated by this mode.
 
 \section*{Declaration of AI-generated research and authorship}
 This manuscript is the product of an AI-driven research process. During a broader investigation of
@@ -449,13 +475,16 @@ open problems, initiated by the human author, an AI system identified this probl
 devised the method, wrote and ran the code for the computations, and wrote this manuscript. AI systems
 produced the results and their presentation, including the mathematical exposition, the computations
 and the organisation and writing of the text; the human author directed the AI systems but wrote no
-part of the manuscript. The system was Claude Opus~5.5 (Anthropic), used through Claude Code.
+part of the manuscript. The human author also launched the main cloud computation, using commands prepared
+by the AI system.
+The system was Claude Opus~5.5 (Anthropic), used through Claude Code.
 
 The computational claims are reproduced by \texttt{scripts/verify.py}. At the time of writing, the
 mathematics and the code have been checked only by AI systems and by computer verification. These
 checks include an adversarial review by an independent AI referee, who re-derived the proofs of
 Section~\ref{sec:relax}, read the search programs, wrote the independent SAT-based checks of
-Section~\ref{sec:valid} and the stage-1 certificate of Section~\ref{sec:cert}. No independent human
+Section~\ref{sec:valid} and the stage-1 certificate of Section~\ref{sec:cert}, and an external AI review of
+the code (ChatGPT Pro), whose findings are corrected (Section~\ref{sec:valid}). No independent human
 expert has reviewed the work. The human author has not read this manuscript or checked its arguments.
 The author takes responsibility for the accuracy of this disclosure.
 

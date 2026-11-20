@@ -1,5 +1,8 @@
 {
  "_comment": "Every number of the paper that a computation checks. scripts/verify.py compares the steps' JSON outputs (verification/) and the committed records (data/) with these values exactly, and scripts/make_claims_tex.py writes paper/claims.tex (LaTeX macros) from this file, so the paper and the checks share one source.",
+ "Date": "November 20, 2026",
+ "pdfEpoch": "1795132800",
+ "pages": "10",
  "cadicalVersion": "3.1.0",
  "pysatVersion": "1.9.dev24",
  "pairsTotal": "10888",

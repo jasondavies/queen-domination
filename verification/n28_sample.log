@@ -1,6 +1,0 @@
-$ python code/run_n28.py . 3 ./verification/n28_sample.json sample
-{"mode": "sample", "seed": 2028, "stage1_parts": 20, "stage1_parts_reproduced": 20, "stage1_mismatch": [], "sat_rerun": 40, "sat_reproduced": 40, "sat_expected": 40, "cert_cubes_rerun": 16, "cert_cubes_reproduced": 16, "seconds": 66.6}
-
-[gate] ok   20 n = 28 stage-1 parts rerun, outputs identical (SHA-256)
-[gate] ok   40 n = 28 SAT stage-2 instances rerun: same CNF hashes, UNSAT, VERIFIED
-[gate] ok   16 n = 28 certificate cubes (2 per z0) rerun: same CNF hashes, UNSAT, VERIFIED

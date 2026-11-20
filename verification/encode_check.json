@@ -1,8 +1,0 @@
-{
- "pairs": 10888,
- "pairs_satisfy_relaxation": 10888,
- "known_sets_satisfy_sat_place": {
-  "kamenetsky26": true,
-  "ow26": true
- }
-}

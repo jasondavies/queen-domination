@@ -1,6 +1,0 @@
-$ sh -c mkdir -p build && gcc -O2 -o build/stage1 code/stage1.c && gcc -O2 -o build/stage1_v code/stage1_v.c && gcc -O2 -o build/brute_ab code/brute_ab.c && gcc -O2 -o build/place code/place.c && sh scripts/get_tools.sh
-3.1.0
-drat-trim 2e3b2dc0ecf938addbd779d42877b6ed69d9a985
-
-[gate] ok   C programs compiled: stage1, stage1_v, brute_ab, place
-[gate] ok   CaDiCaL 3.1.0 and drat-trim built from SHA-256-checked tarballs

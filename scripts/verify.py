@@ -8,6 +8,14 @@
   .venv/bin/python scripts/verify.py --heavy28       # default steps + a larger n = 28 rerun (about 6 CPU hours):
                                                      # stage 1 for all parts with z0 <= 5, the whole stage-1
                                                      # certificate for z0 <= 6, 40 cubes for z0 = 7, 2000 SAT checks
+  .venv/bin/python scripts/verify.py --certify-all   # default steps + the complete certificate replay for n = 26
+                                                     # and n = 28 (about 45 CPU hours): every stage-1 cube and every
+                                                     # stage-2 formula rebuilt from the survivor lists, solved and
+                                                     # checked; resumable (build/certify, manifest-bound)
+  options: --jobs J (parallel processes, default 3); --write-pdf (copy the reproducible build to paper/)
+
+verification/ is not tracked: a run never modifies tracked files.  The paper is built in build/paper with
+SOURCE_DATE_EPOCH, so the build is byte-identical to the committed paper/queen-domination.pdf.
 
 Each step writes a machine-readable JSON file to verification/.  Each gate below parses that JSON and
 compares it EXACTLY with the paper's claims in claims.json (printed roundings must be correct roundings).
@@ -17,7 +25,7 @@ The exit status is nonzero if any gate fails, or if the LaTeX log has a warning 
 CaDiCaL rel-3.1.0 and drat-trim (commit 2e3b2dc) are not part of the repository: scripts/get_tools.sh
 downloads them, checks their SHA-256 and builds them in tools/ (git-ignored).
 """
-import argparse, hashlib, json, os, re, subprocess, sys, time
+import argparse, hashlib, json, os, re, shutil, subprocess, sys, time
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
@@ -262,6 +270,33 @@ def g_records28():
     return msgs
 
 
+def g_resume():
+    d = J('resume_test.json')
+    return [(d['all_ok'] and len(d) == 9, 'certificate driver resume: refuses a different formula or T (the reported repro), '
+             're-solves records with a wrong CNF hash, failed or truncated records, and does not certify a satisfiable formula')]
+
+
+def g_certify_all():
+    d = J('certify_all.json')
+    d = d if isinstance(d, list) else [d]
+    want = {26: (6 * 76 + I('cubesSix'), I('pairsTotal')), 28: (6 * 76 + 2 * I('cubesSix'), I('pairsTotalXXVIII'))}
+    msgs = []
+    for r in d:
+        c = r.get('compare', {})
+        msgs.append((r['certified'] and c.get('all_ok') and (c['cubes'], c['instances']) == want[r['n']],
+                     'n = %d: all %d stage-1 cubes and all %d stage-2 formulas rebuilt, UNSAT, VERIFIED, with the recorded CNF hashes'
+                     % (r['n'], want[r['n']][0], want[r['n']][1])))
+    msgs.append((sorted(r['n'] for r in d) == [26, 28], 'both n replayed'))
+    return msgs
+
+
+def g_tamper():
+    d = J('tamper.json')
+    return [(d['baseline_pass'], 'an unmodified copy of the tracked files passes'),
+            (all(c['failed'] for c in d['cases']) and len(d['cases']) == 10,
+             'each of %d altered copies fails: %s' % (len(d['cases']), ', '.join(c['name'] for c in d['cases'])))]
+
+
 def g_sample28():
     d = J('n28_sample.json')
     return [(d['stage1_parts'] == d['stage1_parts_reproduced'] == I('samplePartsXXVIII'), '%s n = 28 stage-1 parts rerun, outputs identical (SHA-256)' % C('samplePartsXXVIII')),
@@ -278,16 +313,22 @@ def g_heavy28():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--only', choices=['build', 'small', 'referee', 'records', 'sample', 'records28', 'sample28', 'upper', 'paper'])
+    ap.add_argument('--only', choices=['build', 'small', 'referee', 'records', 'sample', 'records28', 'sample28', 'upper', 'tamper', 'paper'])
     ap.add_argument('--full', action='store_true', help='also rerun the whole n = 26 computation (~15 CPU hours)')
     ap.add_argument('--heavy28', action='store_true', help='also rerun a larger part of the n = 28 computation (~6 CPU hours)')
+    ap.add_argument('--certify-all', action='store_true', help='also replay every certificate formula for n = 26, 28 (~45 CPU hours)')
+    ap.add_argument('--jobs', type=int, default=3)
+    ap.add_argument('--write-pdf', action='store_true', help='copy the reproducible paper build to paper/')
+    ap.add_argument('--no-tamper', action='store_true', help=argparse.SUPPRESS)
     a = ap.parse_args()
+    global JOBS
+    JOBS = a.jobs
     LOGS.mkdir(exist_ok=True)
     want = lambda s: a.only in (None, s)
     tmp = LOGS / 'tmp'
     tmp.mkdir(exist_ok=True)
     steps = []
-    if a.only in (None, 'build', 'small', 'referee', 'sample', 'sample28'):
+    if a.only in (None, 'build', 'small', 'referee', 'sample', 'sample28') or a.certify_all:
         cc = ' && '.join('gcc -O2 -o build/%s code/%s.c' % (p, p) for p in ('stage1', 'stage1_v', 'brute_ab', 'place'))
         steps.append(('build', ['sh', '-c', 'mkdir -p build && %s && sh scripts/get_tools.sh' % cc], ROOT, g_build, None))
     if want('small'):
@@ -308,6 +349,7 @@ def main():
             steps.append(('cert_small_%d' % n, ['sh', '-c', 'rm -f %s/cert_%d_*.jsonl; %s' % (tmp, n, cmd)], ROOT, lambda: [(True, 'ran')],
                           'cert_small_%d.json' % n))
         steps.append(('referee', [PY, 'code/refcheck.py', 'suite', 'build/stage1', C('refCompareMaxN')], ROOT, g_referee, 'referee.json'))
+        steps.append(('resume_test', [PY, 'code/test_resume.py', 'tools/cadical', 'tools/drat-trim'], ROOT, g_resume, 'resume_test.json'))
     if want('records'):
         steps.append(('records', [PY, 'code/check_records.py', 'data/n26'], ROOT, g_records, 'records.json'))
     if want('sample'):
@@ -328,26 +370,43 @@ def main():
         steps.append(('small_full', ['sh', '-c', ' ; '.join('%s code/pipeline.py build %s %s --xcheck' % (PY, r['n'], r['g']) for r in rows)],
                       ROOT, g_small('small_full', rows), 'small_full.json'))
         steps.append(('n26_full', [PY, 'code/run_n26.py', str(ROOT), str(JOBS), str(LOGS / 'n26_full.json'), 'full'], ROOT, g_full, None))
+    if a.certify_all:
+        steps.append(('certify_all', [PY, 'code/certify_all.py', str(ROOT), str(JOBS), str(BUILD / 'certify'), '26', '28'], ROOT,
+                      g_certify_all, 'certify_all.json'))
     if want('upper'):
         steps.append(('upper', [PY, 'code/check_upper.py', 'data/kamenetsky26.txt', 'data/q28_15.txt'], ROOT, g_upper, 'upper.json'))
+    if want('tamper') and not a.no_tamper:
+        steps.append(('tamper', [PY, 'scripts/tamper.py', str(ROOT)], ROOT, g_tamper, 'tamper.json'))
+    bp = BUILD / 'paper'
     if want('paper'):
+        cp = ' && '.join('cp paper/%s %s/' % (f, bp) for f in ('queen-domination.tex', 'claims.tex'))
         steps += [('claims_tex', [PY, 'scripts/make_claims_tex.py', '--check'], ROOT,
                    lambda: [(True, 'paper/claims.tex is in sync with claims.json')], None),
-                  ('paper', ['latexmk', '-pdf', '-interaction=nonstopmode', '-halt-on-error', '-gg', 'queen-domination.tex'],
-                   ROOT / 'paper', lambda: [(True, 'latexmk succeeded')], None)]
+                  ('paper', ['sh', '-c', 'rm -rf %s && mkdir -p %s && %s && cd %s && SOURCE_DATE_EPOCH=%s FORCE_SOURCE_DATE=1 '
+                             'latexmk -pdf -interaction=nonstopmode -halt-on-error queen-domination.tex' % (bp, bp, cp, bp, C('pdfEpoch'))],
+                   ROOT, lambda: [(True, 'latexmk succeeded in build/paper')], None)]
     results = [run(*s) for s in steps]
     if want('paper'):
-        log = ROOT / 'paper' / 'queen-domination.log'
+        log = bp / 'queen-domination.log'
         txt = log.read_text(errors='replace') if log.exists() else 'missing log: There were undefined'
         bad = re.findall(r'(LaTeX Warning|Package \w+ Warning|Overfull \\[hv]box|Underfull \\[hv]box|There were undefined)', txt)
-        results.append({'name': 'paper_log_clean', 'ok': not bad, 'issues': len(bad)})
-        print('%-22s %s' % ('paper_log_clean', 'PASS' if not bad else 'FAIL (%d issues)' % len(bad)))
+        m = re.search(r'Output written on queen-domination.pdf \((\d+) pages', txt)
+        results.append({'name': 'paper_log_clean', 'ok': not bad and bool(m) and m.group(1) == C('pages'), 'issues': len(bad),
+                        'pages': m.group(1) if m else None})
+        print('%-22s %s' % ('paper_log_clean', 'PASS' if results[-1]['ok'] else 'FAIL (%d issues, %s pages)' % (len(bad), m and m.group(1))))
+        built = bp / 'queen-domination.pdf'
+        if a.write_pdf and built.exists():
+            shutil.copy2(built, ROOT / 'paper' / 'queen-domination.pdf')
+        same = built.exists() and sha(built) == sha(ROOT / 'paper' / 'queen-domination.pdf')
+        results.append({'name': 'paper_reproducible', 'ok': same})
+        print('%-22s %s' % ('paper_reproducible', 'PASS' if same else 'FAIL (build differs from paper/queen-domination.pdf)'))
     inputs = sorted(p for p in ROOT.rglob('*') if p.is_file() and (p.suffix in {'.py', '.c', '.sh', '.tex', '.md', '.txt', '.cff', '.json', '.jsonl', '.xz', '.tsv'} or p.name == 'MANIFEST')
                     and not ({'.git', '.venv', 'verification', 'tools', 'build', '__pycache__'} & set(p.relative_to(ROOT).parts)))
     import pysat
     cad = subprocess.run([str(ROOT / 'tools' / 'cadical'), '--version'], capture_output=True, text=True).stdout.strip() \
         if (ROOT / 'tools' / 'cadical').exists() else None
     summary = {'time_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'only': a.only, 'full': a.full, 'heavy28': a.heavy28,
+               'certify_all': a.certify_all, 'jobs': JOBS,
                'python': sys.version.split()[0], 'python-sat': pysat.__version__, 'cadical': cad,
                'gcc': subprocess.run(['gcc', '--version'], capture_output=True, text=True).stdout.splitlines()[0],
                'results': results, 'inputs_sha256': {str(p.relative_to(ROOT)): sha(p) for p in inputs}}
@@ -356,7 +415,7 @@ def main():
         summary['pdf_sha256'] = sha(pdf)
     allok = all(r['ok'] for r in results)
     summary['overall'] = 'PASS' if allok else 'FAIL'
-    name = ('summary.json' if a.only is None and not a.full and not a.heavy28 else 'summary-full.json' if a.only is None else 'summary-partial.json')
+    name = ('summary.json' if a.only is None and not (a.full or a.heavy28 or a.certify_all) else 'summary-full.json' if a.only is None else 'summary-partial.json')
     (LOGS / name).write_text(json.dumps(summary, indent=1) + '\n')
     print('OVERALL', summary['overall'])
     return 0 if allok else 1

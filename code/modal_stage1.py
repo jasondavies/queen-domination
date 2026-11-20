@@ -7,7 +7,8 @@ usage string, and the ledger's program name "lines2" refers to code/stage1.c.
 
 usage:  modal run code/modal_stage1.py --jobs JOBFILE [--batch 8] [--conc 100] [--budget 7.0] [--procs 1]
 JOBFILE lines: "PROG Z MOD PART OUTDIR" (PROG in lines2, lines_v).  Results are written into OUTDIR as
-OUTDIR/z<Z>/part_<P>.{cand,s1log,done}; a part is skipped if its .done exists.  Every returned part is
+OUTDIR/z<Z>/part_<P>.{cand,s1log,done}; a part is skipped only if its .done record names exactly this job and
+matches its .cand file (valid_done); any other existing files for the part are overwritten.  Every returned part is
 verified locally (exit code, part/mod and colour split in the log, survivor count, SHA-256 of the candidate
 list computed remotely and locally), the C sources are hashed locally and in the container, and the
 container's binary SHA-256 is recorded.  Ledger: build/modal/modal_ledger.tsv (one line per part) and
@@ -79,7 +80,7 @@ def write_part(prog, z, mod, p, outdir, r):
         if len(f) != 4 or f[0] != "C" or int(f[3]) != z: return "bad cand line"
     d = os.path.join(outdir, "z%d" % z); os.makedirs(d, exist_ok=True)
     f = os.path.join(d, "part_%d" % p)
-    if os.path.exists(f + ".done"): return "already done locally (duplicate)"
+    if valid_done(prog, z, mod, p, outdir): return "already done locally (duplicate)"
     open(f + ".cand.tmp", "w").write(r["cand"])
     open(f + ".s1log", "w").write(log)
     if hashlib.sha256(r["cand"].encode()).hexdigest() != local_sha(f + ".cand.tmp"): return "sha mismatch"
@@ -87,6 +88,19 @@ def write_part(prog, z, mod, p, outdir, r):
     sh = local_sha(f + ".cand")[:16]
     open(f + ".done", "w").write("%s %d %d %d %d %d cand=%d %s %s\n" % (prog, N, G, z, mod, p, ncand, sh, log.strip()))
     return None
+
+
+def valid_done(prog, z, mod, p, out):
+    """a part counts as done only if its .done record names exactly this job (program, n, g, z0, mod,
+    part) and the SHA-256 prefix and survivor count it records match the .cand file on disk"""
+    f = os.path.join(out, "z%d" % z, "part_%d" % p)
+    if not (os.path.exists(f + ".done") and os.path.exists(f + ".cand")):
+        return False
+    d = open(f + ".done").read().split()
+    if d[:6] != [prog, str(N), str(G), str(z), str(mod), str(p)] or len(d) < 8:
+        return False
+    c = open(f + ".cand").read()
+    return d[6] == "cand=%d" % sum(1 for l in c.splitlines() if l.startswith("C ")) and d[7] == local_sha(f + ".cand")[:16]
 
 
 @app.local_entrypoint()
@@ -98,7 +112,7 @@ def main(jobs: str, batch: int = 8, conc: int = 100, budget: float = 7.0, procs:
         if not f: continue
         prog, z, mod, p, out = f[0], int(f[1]), int(f[2]), int(f[3]), f[4]
         if not os.path.isabs(out): out = os.path.join(ROOT, out)
-        if os.path.exists(os.path.join(out, "z%d" % z, "part_%d.done" % p)): continue
+        if valid_done(prog, z, mod, p, out): continue
         todo.append((prog, z, mod, p, out))
     # group into batches with the same (prog, z, mod, out)
     batches = []

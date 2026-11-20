@@ -5,7 +5,7 @@ This repository holds a paper and its verification material. The paper proves γ
 - thirteen queens cannot occupy or attack every square of a 26 × 26 board, and fourteen can;
 - fourteen queens cannot do so on a 28 × 28 board, and fifteen can.
 
-These were the two smallest open cases of the queen domination problem (OEIS A075458). Known results give
+These were the two smallest open cases of the queen domination problem (OEIS [A075458](https://oeis.org/A075458)). Known results give
 the other values up to n = 31: γ(Q₂₇) = 14 (Östergård and Weakley, Electron. J. Combin. 8 (2001) #R29),
 γ(Q₂₉) = γ(Q₃₀) = 15 and γ(Q₃₁) = 16. So γ(Q_n) is now known for all n ≤ 31 (Corollary 1.2). The
 smallest open case is now n = 32, where γ(Q₃₂) ∈ {16, 17}.
@@ -61,10 +61,19 @@ You need:
 ```sh
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python scripts/verify.py                   # default: about 20 minutes, at most 3 processes
-.venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|upper|paper
+.venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|upper|tamper|paper
 .venv/bin/python scripts/verify.py --full            # also reruns the whole n = 26 computation (~15 CPU hours)
 .venv/bin/python scripts/verify.py --heavy28         # also reruns a larger part of n = 28 (~6 CPU hours)
+.venv/bin/python scripts/verify.py --certify-all --jobs 10   # also replays every certificate formula (~45 CPU hours)
 ```
+
+`--certify-all` is the certificate-only full verification. For n = 26 and n = 28 it rebuilds every
+stage-1 cube formula and every stage-2 placement formula from the committed survivor lists, solves each
+with CaDiCaL, checks each DRAT proof with drat-trim and deletes it. It does not rerun the searches,
+which the certificates do not depend on. Its work directory `build/certify/` is bound to a manifest of
+n, g, the survivor-list hash, the solver, checker and encoder hashes and T. An interrupted run resumes,
+and a directory made for different inputs is refused. A completed replay writes compacted records to
+`data/replay/` and compares them with the original records.
 
 `scripts/verify.py` works as follows:
 - Each step writes a JSON file to `verification/`.
@@ -74,6 +83,9 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 - It writes logs to `verification/<step>.log` and a summary with input and PDF hashes to
   `verification/summary.json`.
 - It exits nonzero on any failed gate, LaTeX warning or bad box.
+- `verification/` is not tracked, and a run modifies no tracked file. The paper is built in
+  `build/paper` with `SOURCE_DATE_EPOCH` from `claims.json`, and the build must be byte-identical to the
+  committed `paper/queen-domination.pdf` (`--write-pdf` replaces it).
 
 The default run covers the following steps.
 - **build:** compiles the four C programs and fetches and builds CaDiCaL and drat-trim.
@@ -85,7 +97,9 @@ The default run covers the following steps.
   - an independent SAT pipeline for n ≤ 12;
   - direct SAT enumeration of dominating sets for n ≤ 10;
   - the stage-1 DRAT certificate for n = 16 and 18;
-  - sanity checks of the two encoders against known positives.
+  - sanity checks of the two encoders against known positives;
+  - `resume_test` (`code/test_resume.py`): the resume regression tests for the certificate driver,
+    including the external reviewer's example.
 - **records:** consistency of the committed n = 26 records in `data/n26/`:
   - per-part SHA-256 against `MANIFEST`;
   - every one of the 3360 stage-1 parts present;
@@ -108,7 +122,10 @@ The default run covers the following steps.
 - **upper:** Kamenetsky's 14-queen set and the independent 14-set of Östergård–Weakley dominate Q₂₆. Their
   14-set dominates Q₂₇. The 15-set in `data/q28_15.txt` dominates Q₂₈. Weakley's 15-set dominates Q₃₀,
   and the sets derived from it dominate Q₂₉ (15 queens) and Q₃₁ (16 queens).
-- **paper:** the claims macros and a clean LaTeX build.
+- **tamper:** `scripts/tamper.py` copies the tracked files, alters one record at a time (10 cases: survivors,
+  certificate cubes, SAT records, a claim, a part record, the 15-set, and n = 26 survivors and base hash),
+  and requires the corresponding step to fail. It also requires an unaltered copy to pass.
+- **paper:** the claims macros and a clean, reproducible LaTeX build.
 
 `--full` additionally reruns the following, comparing every output with the records:
 - n = 20 and 22, and (n, g) = (16, 9);
@@ -144,6 +161,20 @@ reduction to conditions (a) and (b) (Proposition 2.4), and the symmetry argument
 **From the literature:** the upper-bound constructions (except the 15-set for Q₂₈, found here), which
 are checked here, i(Q₂₈) = 15, and γ(Q_n) ≥ n/2, which is used only for Corollary 1.2.
 
+**External review.** An external AI review (ChatGPT Pro) of the code regenerated all 15 base formulas
+and all 4128 cube formulas of the stage-1 certificates (1528 for n = 26, 2600 for n = 28) from the
+survivor lists, and their hashes are equal to the recorded ones. It found three defects, now corrected,
+none of which affected the claimed values:
+- When resumed, `code/cert_stage1.py` reused recorded cubes without checking the header, the base
+  formula or each cube's formula hash. It now validates all three and re-solves failed, interrupted or
+  mismatched cubes. `code/test_resume.py` includes the reviewer's repro.
+- drat-trim did not compile under GCC 14. It now builds with `-D_DEFAULT_SOURCE`.
+- The paper omitted the exceptions n = 3, 11 when stating the range of γ(Q_n) for n ≤ 120.
+
+Every recorded cube's formula hash was computed from the exact CNF text given to the solver. The n = 28,
+z₀ = 7 certificate run was stopped once, after 292 of its 1072 cubes, and resumed with the same
+arguments and the same, unchanged survivor list; only the number of processes changed.
+
 **Main residual risks:**
 - errors in the short encoders. They are cross-checked by agreement with two independent search programs
   for n ≤ 18 and by known positives at n = 26 and 28;
@@ -168,8 +199,10 @@ No independent human review has been recorded.
   - `check_records.py`, `check_records28.py`: record checks;
   - `encode_check28.py`: n = 28 known positives for the encoders;
   - `check_upper.py`: the upper-bound sets;
+  - `certify_all.py`: the certificate-only full replay (`verify.py --certify-all`);
+  - `test_resume.py`: resume regression tests for `cert_stage1.py`;
   - `modal_stage1.py`: the cloud driver used for part of the n = 28 stage 1.
-- `scripts/`: `verify.py`, `make_claims_tex.py`, `get_tools.sh`.
+- `scripts/`: `verify.py`, `tamper.py`, `make_claims_tex.py`, `get_tools.sh`.
 - `data/n26/`: the n = 26 records:
   - `survivors.txt`: the 10 888 pairs;
   - `MANIFEST`: per-part SHA-256 of the stage-1 and stage-2 outputs;
@@ -193,7 +226,7 @@ No independent human review has been recorded.
 - `data/validation/`: part logs of the n = 20, 22, 24 runs.
 - `data/kamenetsky26.txt`: Kamenetsky's 14-queen set.
 - `data/q28_15.txt`: a 15-queen dominating set of Q₂₈.
-- `verification/`: outputs of the last verification run.
+- `verification/` (not tracked): outputs of verification runs.
 
 ## Authorship and AI disclosure
 

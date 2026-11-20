@@ -30,7 +30,7 @@ if [ ! -x "$T/drat-trim" ]; then
   fetch "$DT_URL" "$DT_SHA" "$T/drat-trim-$DT_COMMIT.tar.gz" "${DRATTRIM_TARBALL:-}"
   rm -rf "$T/drat-trim-src" && mkdir "$T/drat-trim-src"
   tar -xzf "$T/drat-trim-$DT_COMMIT.tar.gz" -C "$T/drat-trim-src" --strip-components=1
-  (cd "$T/drat-trim-src" && gcc drat-trim.c -std=c99 -O2 -o drat-trim)
+  (cd "$T/drat-trim-src" && gcc drat-trim.c -std=c99 -D_DEFAULT_SOURCE -O2 -Werror=implicit-function-declaration -o drat-trim)
   cp "$T/drat-trim-src/drat-trim" "$T/drat-trim"
 fi
 "$T/cadical" --version

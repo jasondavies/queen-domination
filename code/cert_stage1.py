@@ -17,7 +17,16 @@ orbits of the solved cubes are all 16^T cubes.  Proofs are deleted after checkin
 regenerated deterministically: same CNF, same solver version, same options).
 
 usage: cert_stage1.py N G z0 SURVIVORS CADICAL DRATTRIM WORKDIR T JOBS OUT.jsonl
-       (resumable: cubes already recorded in OUT.jsonl are skipped)
+
+Resuming.  OUT.jsonl starts with a header (n, g, z0, T, number of pairs, number of cubes and orbit
+representatives, SHA-256 of the base CNF).  If OUT.jsonl exists, the header is compared with the one
+rebuilt from the arguments and the survivor file; on any difference the program refuses to run (exit 2).
+A recorded cube is reused only if it is an orbit representative, its latest record is UNSAT + VERIFIED,
+and the SHA-256 of its CNF, rebuilt now, equals the recorded one; otherwise (failed, interrupted,
+mismatched) it is solved again and the new record supersedes the old.  The final verdict
+(all_unsat_verified) requires exactly the expected set of cubes, each with a reused-and-revalidated or a
+freshly produced UNSAT + VERIFIED record; the exit status is 0 only in that case.  The CNF hash of a
+record is always computed from the exact text written to the file given to the solver.
 """
 import hashlib, json, os, subprocess, sys, time
 from multiprocessing import Pool
@@ -77,8 +86,9 @@ def build_base(n, g, z0, surv):
     return cls, a, b, len(pairs)
 
 
-def solve_cube(cube):
-    n, cls, a, b, T, cad, drat, wd = (_CTX[k] for k in ('n', 'cls', 'a', 'b', 'T', 'cad', 'drat', 'wd'))
+def cube_cnf(cube):
+    """the exact CNF text given to the solver for this cube, and its SHA-256"""
+    n, cls, a, b, T = (_CTX[k] for k in ('n', 'cls', 'a', 'b', 'T'))
     lits = []
     for (kind, i), v in zip(cube_vars(n, T), cube):
         var = a[i] if kind == 'a' else b[i]
@@ -86,7 +96,16 @@ def solve_cube(cube):
     allc = cls + [[l] for l in lits]
     nv = max(abs(l) for c in allc for l in c)
     cnf = 'p cnf %d %d\n' % (nv, len(allc)) + ''.join(' '.join(map(str, c)) + ' 0\n' for c in allc)
-    h = hashlib.sha256(cnf.encode()).hexdigest()
+    return cnf, hashlib.sha256(cnf.encode()).hexdigest()
+
+
+def cube_hash(cube):
+    return ''.join(map(str, cube)), cube_cnf(cube)[1]
+
+
+def solve_cube(cube):
+    cad, drat, wd = (_CTX[k] for k in ('cad', 'drat', 'wd'))
+    cnf, h = cube_cnf(cube)
     tag = ''.join(map(str, cube))
     fc, fp = os.path.join(wd, tag + '.cnf'), os.path.join(wd, tag + '.drat')
     with open(fc, 'w') as f:
@@ -108,6 +127,26 @@ def solve_cube(cube):
             't_solve': round(t1 - t0, 2), 't_check': round(t2 - t1, 2)}
 
 
+def read_records(out):
+    """parse OUT.jsonl; returns (header or None, list of cube records); unparsable lines are ignored
+    (an interrupted write), so the cubes concerned are solved again"""
+    hdr, recs = None, []
+    for i, l in enumerate(open(out)):
+        if not l.strip():
+            continue
+        try:
+            r = json.loads(l)
+        except ValueError:
+            continue
+        if i == 0 and r.get('header') is True:
+            hdr = r
+        elif 'cube' in r:
+            recs.append(r)
+        else:
+            raise SystemExit('unexpected record in %s: %r' % (out, l[:80]))
+    return hdr, recs
+
+
 def main():
     n, g, z0 = map(int, sys.argv[1:4])
     surv, cad, drat, wd = sys.argv[4:8]
@@ -117,25 +156,52 @@ def main():
     _CTX.update(n=n, cls=cls, a=a, b=b, T=T, cad=os.path.abspath(cad), drat=os.path.abspath(drat), wd=wd)
     reps = rep_cubes(T)
     assert check_cover(reps, T)
-    done = set()
-    if os.path.exists(out):
-        done = set(json.loads(l)['cube'] for l in open(out) if l.strip() and 'cube' in json.loads(l))
-    todo = [c for c in reps if ''.join(map(str, c)) not in done]
+    tags = {''.join(map(str, c)): c for c in reps}
     base_sha = hashlib.sha256(repr(cls).encode()).hexdigest()
+    header = {'header': True, 'n': n, 'g': g, 'z0': z0, 'T': T, 'pairs': npairs,
+              'cubes_total': 16 ** T, 'cube_reps': len(reps), 'base_sha256': base_sha}
+    good = {}          # tag -> record, validated (reused) or produced in this run
+    reused = superseded = 0
+    if os.path.exists(out) and os.path.getsize(out) > 0:
+        hdr, recs = read_records(out)
+        if hdr != header:
+            print(json.dumps({'error': 'header of %s does not match this run; refusing to reuse it' % out,
+                              'found': hdr, 'expected': header}))
+            sys.exit(2)
+        unknown = sorted(set(r['cube'] for r in recs) - set(tags))
+        if unknown:
+            print(json.dumps({'error': 'records for cubes that are not orbit representatives', 'cubes': unknown[:5]}))
+            sys.exit(2)
+        latest = {}
+        for r in recs:
+            superseded += r['cube'] in latest
+            latest[r['cube']] = r
+        cand = [t for t, r in latest.items() if r.get('result') == 'UNSAT' and r.get('drat') == 'VERIFIED']
+        with Pool(jobs) as P:
+            for t, h in P.imap_unordered(cube_hash, [tags[t] for t in cand]):
+                if h == latest[t]['cnf_sha256']:
+                    good[t] = latest[t]; reused += 1
+        if not open(out).read().endswith('\n'):
+            open(out, 'a').write('\n')
+    else:
+        with open(out, 'w') as f:
+            f.write(json.dumps(header) + '\n')
+    todo = [c for t, c in tags.items() if t not in good]
     with open(out, 'a') as f:
-        if not done:
-            f.write(json.dumps({'header': True, 'n': n, 'g': g, 'z0': z0, 'T': T, 'pairs': npairs,
-                                'cubes_total': 16 ** T, 'cube_reps': len(reps), 'base_sha256': base_sha}) + '\n')
         with Pool(jobs) as P:
             for rec in P.imap_unordered(solve_cube, todo):
                 f.write(json.dumps(rec) + '\n')
                 f.flush()
-    recs = [json.loads(l) for l in open(out) if l.strip()]
-    cubes = [r for r in recs if 'cube' in r]
-    ok = (len(set(r['cube'] for r in cubes)) == len(reps) and all(r['result'] == 'UNSAT' and r['drat'] == 'VERIFIED' for r in cubes))
+                if rec['result'] == 'UNSAT' and rec['drat'] == 'VERIFIED':
+                    good[rec['cube']] = rec
+    hdr, recs = read_records(out)
+    ok = hdr == header and set(good) == set(tags) and all(r['result'] == 'UNSAT' and r['drat'] == 'VERIFIED' for r in good.values())
+    cubes = list(good.values())
     print(json.dumps({'n': n, 'g': g, 'z0': z0, 'T': T, 'cube_reps': len(reps), 'pairs': npairs, 'all_unsat_verified': ok,
+                      'reused': reused, 'solved': len(todo), 'superseded_records': superseded,
                       't_solve': round(sum(r['t_solve'] for r in cubes), 1), 't_check': round(sum(r['t_check'] for r in cubes), 1),
                       'max_proof_bytes': max((r['proof_bytes'] for r in cubes), default=0)}))
+    sys.exit(0 if ok else 1)
 
 
 if __name__ == '__main__':

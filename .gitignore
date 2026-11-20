@@ -4,8 +4,7 @@ venv/
 .venv/
 /build/
 /tools/
-/verification/tmp/
-/verification/cert_wd_*/
+/verification/
 paper/*.aux
 paper/*.log
 paper/*.out
@@ -14,4 +13,3 @@ paper/*.fdb_latexmk
 paper/*.synctex.gz
 paper/*.bbl
 paper/*.blg
-/verification/summary-partial.json
