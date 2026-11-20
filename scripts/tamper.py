@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Tamper test: altered copies of the tracked files must fail verification.
 
-For each case, the tracked files (git ls-files) are copied to a temporary directory, one record is
-altered, and `scripts/verify.py --only STEP` is run on the copy; the case passes if that run FAILS.  An
-unaltered copy must pass the same steps.  usage: tamper.py ROOT   -- prints JSON."""
-import json, lzma, re, shutil, subprocess, sys, tempfile
+For each case, the committed tree (git archive HEAD, so uncommitted edits never change what is tested)
+is extracted to a temporary directory, one record is altered, and `scripts/verify.py --only STEP` is run
+on the copy; the case passes if that run FAILS.  An unaltered copy must pass the same steps.
+usage: tamper.py ROOT   -- prints JSON (including the commit tested and whether the working tree is dirty)."""
+import json, lzma, re, subprocess, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(sys.argv[1]).resolve()
-FILES = subprocess.run(['git', 'ls-files'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+HEAD = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+DIRTY = bool(subprocess.run(['git', 'status', '--porcelain'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip())
 
 
 def xz_edit(p, fn):
@@ -56,9 +58,9 @@ CASES = [
 
 def copy(td):
     d = Path(td) / 'r'
-    for f in FILES:
-        (d / f).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / f, d / f)
+    d.mkdir()
+    arc = subprocess.run(['git', 'archive', '--format=tar', HEAD], cwd=ROOT, capture_output=True, check=True).stdout
+    subprocess.run(['tar', '-x', '-C', str(d)], input=arc, check=True)
     return d
 
 
@@ -68,7 +70,7 @@ def verify(d, step):
 
 
 def main():
-    out = {'cases': []}
+    out = {'commit': HEAD, 'working_tree_dirty': DIRTY, 'cases': []}
     with tempfile.TemporaryDirectory() as td:
         d = copy(td)
         out['baseline_pass'] = all(verify(d, s) for s in ('records', 'records28', 'upper'))

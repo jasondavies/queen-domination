@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "Please cite the accompanying paper when using this work, and identify the commit used for computational results."
 type: software
-title: "The domination numbers of the 26x26 and 28x28 queen's graphs"
+title: "An independent verification of the queen domination numbers gamma(Q26) = 14 and gamma(Q28) = 15"
 authors:
   - family-names: "Davies"
     given-names: "Jason"
@@ -9,7 +9,7 @@ license: Apache-2.0
 repository-code: "https://github.com/jasondavies/queen-domination"
 preferred-citation:
   type: unpublished
-  title: "The domination numbers of the 26x26 and 28x28 queen's graphs"
+  title: "An independent verification of the queen domination numbers gamma(Q26) = 14 and gamma(Q28) = 15"
   authors:
     - family-names: "Davies"
       given-names: "Jason"

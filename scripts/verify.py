@@ -323,6 +323,13 @@ def main():
     a = ap.parse_args()
     global JOBS
     JOBS = a.jobs
+    dirty = None
+    if (ROOT / '.git').exists():
+        st = subprocess.run(['git', 'status', '--porcelain'], cwd=ROOT, capture_output=True, text=True)
+        dirty = bool(st.stdout.strip()) if st.returncode == 0 else None
+        if dirty:
+            print('WARNING: the working tree has uncommitted changes; this run checks the working tree, while the '
+                  'tamper step checks the committed tree (git archive HEAD)', flush=True)
     LOGS.mkdir(exist_ok=True)
     want = lambda s: a.only in (None, s)
     tmp = LOGS / 'tmp'
@@ -406,7 +413,7 @@ def main():
     cad = subprocess.run([str(ROOT / 'tools' / 'cadical'), '--version'], capture_output=True, text=True).stdout.strip() \
         if (ROOT / 'tools' / 'cadical').exists() else None
     summary = {'time_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'only': a.only, 'full': a.full, 'heavy28': a.heavy28,
-               'certify_all': a.certify_all, 'jobs': JOBS,
+               'certify_all': a.certify_all, 'jobs': JOBS, 'working_tree_dirty': dirty,
                'python': sys.version.split()[0], 'python-sat': pysat.__version__, 'cadical': cad,
                'gcc': subprocess.run(['gcc', '--version'], capture_output=True, text=True).stdout.splitlines()[0],
                'results': results, 'inputs_sha256': {str(p.relative_to(ROOT)): sha(p) for p in inputs}}

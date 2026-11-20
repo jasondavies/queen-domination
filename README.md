@@ -1,19 +1,35 @@
-# The domination numbers of the 26 × 26 and 28 × 28 queen's graphs
+# An independent verification of the queen domination numbers γ(Q₂₆) = 14 and γ(Q₂₈) = 15
 
-This repository holds a paper and its verification material. The paper proves γ(Q₂₆) = 14 and
-γ(Q₂₈) = 15:
+This repository holds a paper and its verification material. The paper gives an **independent
+verification** of γ(Q₂₆) = 14 and γ(Q₂₈) = 15 (OEIS [A075458](https://oeis.org/A075458)):
 - thirteen queens cannot occupy or attack every square of a 26 × 26 board, and fourteen can;
 - fourteen queens cannot do so on a 28 × 28 board, and fifteen can.
 
-These were the two smallest open cases of the queen domination problem (OEIS [A075458](https://oeis.org/A075458)). Known results give
-the other values up to n = 31: γ(Q₂₇) = 14 (Östergård and Weakley, Electron. J. Combin. 8 (2001) #R29),
-γ(Q₂₉) = γ(Q₃₀) = 15 and γ(Q₃₁) = 16. So γ(Q_n) is now known for all n ≤ 31 (Corollary 1.2). The
-smallest open case is now n = 32, where γ(Q₃₂) ∈ {16, 17}.
+**These values are not new.**
+- They were first established, with DRAT-checked SAT proofs, in the preprint *Hint and Conquer: New
+  Queen Domination Numbers by SAT Solving* (October 2026; `doc.pdf` on branch `hint-and-conquer` of
+  [github.com/TahaRostami/Gamma](https://github.com/TahaRostami/Gamma)). That preprint also gives
+  γ(Q₃₂) = 17, γ(Q₃₄) = 18, γ(Q₃₆) = 19 and γ(Q₃₈) = 20.
+- They had been claimed earlier, by an integer-programming computation without certificates, in
+  S. Neuhaus's dissertation (Universität zu Köln, 2009, [kups.ub.uni-koeln.de/2916](https://kups.ub.uni-koeln.de/2916/)).
+- An earlier version of this repository presented them as new; that was wrong and has been corrected.
+
+What this repository contributes is a completely independent method. It uses a relaxation of the
+empty-row/empty-column grid to diagonal covers plus SAT, and shares neither the reduction nor any code
+with those works. Both stages have full DRAT certification, and there is a certificate-only replay of
+every certificate formula. The neighbouring known values are γ(Q₂₇) = 14, γ(Q₂₉) = γ(Q₃₀) = 15 and
+γ(Q₃₁) = 16 (Östergård and Weakley, Electron. J. Combin. 8 (2001) #R29), and γ(Q₃₃) = 17 (also there).
+With the values above, γ(Q_n) is known for all n ≤ 34.
 
 ## Results
 
-- **Theorem 1.1.** γ(Q₂₆) = 14 and γ(Q₂₈) = 15. The upper bounds come from explicit 14- and 15-queen
-  sets. The lower bounds are computer-assisted.
+- **Theorem 1.1** (Hint and Conquer; claimed by Neuhaus). γ(Q₂₆) = 14 and γ(Q₂₈) = 15. The paper gives an
+  independent proof. The upper bounds come from explicit 14- and 15-queen sets, and the lower bounds are
+  computer-assisted.
+- **Relation to the box method** (paper, Section 6). Hint and Conquer splits the search by the box of
+  the outermost empty rows and columns, with counting hints. A separate reimplementation of that box
+  method, with an explicit deficit split and DRAT checks, also confirms n = 26, 28, 32, 34, 36. It will
+  be released separately.
 - **Method.** Take a dominating set D of 13 queens, with z_q queens of colour q. Choose 13 empty rows A
   and 13 empty columns B. Every colour-q square of A × B is attacked diagonally, so these squares are
   covered by at most z_q difference diagonals and at most z_q sum diagonals of colour q (Lemma 2.2).
@@ -159,7 +175,7 @@ reduction to conditions (a) and (b) (Proposition 2.4), and the symmetry argument
 - drat-trim.
 
 **From the literature:** the upper-bound constructions (except the 15-set for Q₂₈, found here), which
-are checked here, i(Q₂₈) = 15, and γ(Q_n) ≥ n/2, which is used only for Corollary 1.2.
+are checked here, i(Q₂₈) = 15, and γ(Q_n) ≥ n/2, which is used only for Proposition 1.2 (known values).
 
 **External review.** An external AI review (ChatGPT Pro) of the code regenerated all 15 base formulas
 and all 4128 cube formulas of the stage-1 certificates (1528 for n = 26, 2600 for n = 28) from the
@@ -232,8 +248,11 @@ No independent human review has been recorded.
 
 Author: Jason Davies. AI systems produced the mathematics, the code and the manuscript: Claude Opus 5.5
 (Anthropic), via Claude Code, under the author's direction. An independent AI referee reviewed the work
-and wrote the SAT-based checks and the stage-1 certificate. The author has not read the manuscript or
-checked the arguments; see the declaration in the paper.
+and wrote the SAT-based checks and the stage-1 certificate. An external AI review (ChatGPT Pro) of the code
+found the defects listed above. The AI system's literature search missed the prior work of Hint and
+Conquer and of Neuhaus, so the first published version of this repository and of the OEIS entry
+presented the values as new; this was corrected. The author has not read the manuscript or checked the
+arguments; see the declaration in the paper.
 
 ## License
 

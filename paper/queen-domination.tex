@@ -20,7 +20,7 @@
 \emergencystretch=3em
 \newcommand{\repo}{\url{https://github.com/jasondavies/queen-domination}}
 
-\title{The domination numbers of the $26\times26$ and $28\times28$ queen's graphs}
+\title{An independent verification of the queen domination numbers $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$}
 \author{Jason Davies\thanks{\href{mailto:jason@jasondavies.com}{\nolinkurl{jason@jasondavies.com}}}}
 \date{\clDate}
 
@@ -28,13 +28,13 @@
 
 \maketitle
 \begin{abstract}
-We show that $14$ queens are needed to occupy or attack every square of a $26\times26$ chessboard and
-$15$ queens for a $28\times28$ board, so $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$. These were the two
-smallest open cases of the queen domination problem (OEIS A075458); the previous bounds were
-$13\le\gamma(Q_{26})\le14$ and $14\le\gamma(Q_{28})\le15$. Together with known results for $n=27$ and
-$n=29,30,31$, the values of $\gamma(Q_n)$ are now known for all $n\le 31$. The proofs are
-computer-assisted. If $n/2$ queens dominate the $n\times n$ board, $z_q$ of them on squares of colour
-$q$, choose $n/2$ empty rows and $n/2$ empty columns. Every square of colour $q$ in both chosen sets is
+The domination numbers $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$ of the $26\times26$ and $28\times28$
+queen's graphs (OEIS A075458) were established in the 2026 preprint \emph{Hint and Conquer}, by SAT
+solving with DRAT proofs over a split of the search space by the box of the outermost empty rows and
+columns, and they had been claimed earlier, by integer programming without certificates, in Neuhaus's
+2009 dissertation. We give a completely independent verification, by a different reduction and with
+no common code. If $n/2$ queens dominate the $n\times n$ board, $z_q$ of them on squares of colour $q$,
+choose $n/2$ empty rows and $n/2$ empty columns. Every square of colour $q$ in both chosen sets is
 attacked along a diagonal, so these squares are covered by at most $z_q$ difference diagonals and at
 most $z_q$ sum diagonals of colour $q$. This is a constrained vertex cover problem in a small bipartite
 graph, and a matching bound prunes it well enough that the possible pairs (empty rows, empty columns)
@@ -43,17 +43,19 @@ for $n=28$. A second search shows that no $n/2$ queens avoiding the chosen rows 
 board, for any of these pairs. Both steps are certified by DRAT proofs checked with \texttt{drat-trim}:
 the enumeration through a cube-and-conquer refutation of the relaxation with every listed pair
 excluded, the second step by one refutation per pair. The lower bounds therefore depend on two short CNF
-encoders and the proof checker, and not on the search programs. The same pipeline reproduces all known
-values and isomorphism-class counts of minimum dominating sets of $Q_n$ for even $n\le 18$, and the
-known values for $n=20,22,24$.
+encoders and the proof checker, and not on the search programs, and a certificate-only replay mode
+rebuilds and re-checks every certificate formula from the survivor lists alone. The same pipeline
+reproduces all known values and isomorphism-class counts of minimum dominating sets of $Q_n$ for even
+$n\le 18$, and the known values for $n=20,22,24$.
 \end{abstract}
 
-\noindent\textbf{AI transparency statement.} The result, the computer-assisted proof, the code and
-this manuscript were produced by artificial intelligence. The human author initiated the broader
+\noindent\textbf{AI transparency statement.} The computer-assisted verification, the code and this
+manuscript were produced by artificial intelligence. The values verified here were established earlier
+by others (Section~\ref{sec:intro}). The human author initiated the broader
 research and directed the AI systems, but did not write the text and has not checked the arguments.
 Details are given at the end of the paper.
 
-\section{Introduction}
+\section{Introduction}\label{sec:intro}
 
 The queen's graph $Q_n$ has the $n^2$ squares of the $n\times n$ board as vertices, two squares being
 adjacent when they share a row, a column or a diagonal. Its domination number $\gamma(Q_n)$ is the least
@@ -66,63 +68,80 @@ of~\cite{Weakley2022}. The general lower bound
 was proved independently by Spencer (see~\cite{Cockayne}) and by Raghavan and Venkatesan~\cite{RV}, and
 equality holds only for $n\in\{3,11\}$~\cite{Weakley2002,FW}. In particular $\gamma(Q_n)\ge n/2$ for even
 $n$. For every $n\le120$ other than $3$ and $11$ the value is known to be $\lceil n/2\rceil$ or
-$\lceil n/2\rceil+1$ \cite{OW,Weakley2022}. Exact values were known for $n\le 25$, for $n=27$, and for $n=29,30,31$
-(Corollary~\ref{cor:oeis} below), as well as for some larger $n$. For $n\le25$ they come from constructions~\cite{OW,Kearse},
+$\lceil n/2\rceil+1$ \cite{OW,Weakley2022}. For $n\le25$ the exact values come from constructions~\cite{OW,Kearse},
 from exhaustive searches by Kearse and Gibbons ($n\le19$)~\cite{Kearse} and by Bird ($n=20,22,24$, with a
 general-purpose dominating-set solver on 64 processors)~\cite{Bird}, and, for $n\le19$, from
-proof-producing SAT solving~\cite{RB}. Bird identified $n=26$ as the smallest open case. A $14$-queen
-dominating set of $Q_{26}$ was given by \"Osterg\aa rd and Weakley~\cite{OW}, who in fact found an
-independent one, and another appears in Kamenetsky's list of best known placements attached to OEIS
-A075458~\cite{OEIS}. So $13\le\gamma(Q_{26})\le 14$. The independent domination number of $Q_{26}$ is
-already known to be $14$~\cite{LMR}. For $n=28$, \"Osterg\aa rd and Weakley showed
-$i(Q_{28})\in\{14,15\}$~\cite{OW}, Langlois-R\'emillard, M\"ussig and Rold\'an computed $i(Q_{28})=15$~\cite{LMR},
-and so $14\le\gamma(Q_{28})\le15$; once $n=26$ is settled, $n=28$ is the smallest open case.
+proof-producing SAT solving~\cite{RB}. A $14$-queen dominating set of $Q_{26}$ was given by
+\"Osterg\aa rd and Weakley~\cite{OW}, who in fact found an independent one, and another appears in
+Kamenetsky's list of best known placements attached to OEIS A075458~\cite{OEIS}; the independent
+domination numbers $i(Q_{26})=14$ and $i(Q_{28})=15$ were computed by Langlois-R\'emillard, M\"ussig and
+Rold\'an~\cite{LMR}. So $13\le\gamma(Q_{26})\le14$ and $14\le\gamma(Q_{28})\le15$.
 
 For even $n=2k$ the question whether $\gamma(Q_n)=k$ is a tight one. Weakley~\cite{Weakley2022} calls a
 dominating set \emph{monochromatic} if all its squares have the same colour. Weakley shows that a
 monochromatic $k$-set of $Q_{2k}$ forces $n\in\{4,12\}$ when $4\mid n$. When $n\equiv2\pmod 4$ it
 forces a Diophantine condition, which has no solution for $n=26$. The same paper shows that the colour classes
 of a bichromatic $k$-set have nearly equal sizes (for $k=14$: sizes $\{7,7\}$, or $\{6,8\}$ under further
-conditions), and conjectures that bichromatic $k$-sets do not exist for $n>4$. So the
-open questions were whether $Q_{26}$ has a bichromatic $13$-dominating set and whether $Q_{28}$, where
-monochromatic $14$-sets are excluded because $4\mid28$, has a bichromatic $14$-dominating set. Our
-computation does not use these results: it treats all colour splits alike.
+conditions), and conjectures that bichromatic $k$-sets do not exist for $n>4$. So the question is
+whether $Q_{26}$ has a bichromatic $13$-dominating set and whether $Q_{28}$, where monochromatic
+$14$-sets are excluded because $4\mid28$, has a bichromatic $14$-dominating set. Our computation does not
+use these results: it treats all colour splits alike.
 
-\begin{theorem}\label{thm:main}
+\paragraph{Prior determinations.} The lower bounds $\gamma(Q_{26})>13$ and $\gamma(Q_{28})>14$, and
+hence $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$, were established in the preprint \emph{Hint and
+Conquer}~\cite{HC} (October 2026), together with $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$,
+$\gamma(Q_{36})=19$ and $\gamma(Q_{38})=20$. It splits the search space by the box spanned by the outermost
+empty rows and columns of a dominating set, adds counting constraints derived from the classical
+lower-bound argument, solves one SAT formula per box with the line-variable encoding of Rostami and
+Bright~\cite{RB}, and checks a DRAT proof for every formula (Section~\ref{sec:box}). Earlier, Neuhaus's
+dissertation~\cite{Neuhaus} had claimed $\gamma(Q_n)=n/2+1$ for $n=20,22,\dots,28$ and $n=32,\dots,46$,
+by an integer-programming computation (CPLEX) for which no run times, logs or certificates are given
+for $n\ge20$. An earlier version of the present paper overlooked both works.
+
+\paragraph{This paper.} We verify $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$ independently. Our
+reduction is different: it relaxes the problem to covers of the grid of empty rows and empty columns by
+diagonals of each colour, enumerates the feasible grids up to symmetry with a search program, and
+refutes the placement of queens for each of them. It shares no code with~\cite{HC,RB,Neuhaus}. Both
+steps carry DRAT certificates checked with \texttt{drat-trim}, and a certificate-only verification mode
+rebuilds every certificate formula from the committed survivor lists, solves it and checks the proof.
+
+\begin{theorem}[\cite{HC}; claimed in~\cite{Neuhaus}]\label{thm:main}
 $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$. Equivalently, no $13$ queens dominate the $26\times26$
 board, and no $14$ queens dominate the $28\times28$ board.
 \end{theorem}
 
-\begin{corollary}\label{cor:oeis}
-The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 are known for all $n\le31$:
+We give an independent proof of Theorem~\ref{thm:main} in Sections~\ref{sec:relax}--\ref{sec:cert}.
+For reference we collect the neighbouring known values.
+
+\begin{proposition}[known values]\label{cor:oeis}
+The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 for $26\le n\le31$ are
 \[
   a(26)=a(27)=14,\qquad a(28)=a(29)=a(30)=15,\qquad a(31)=16 .
 \]
-The smallest open case is now $n=32$, where $\gamma(Q_{32})\in\{16,17\}$.
-\end{corollary}
+Here $a(26)$ and $a(28)$ are due to~\cite{HC} (Theorem~\ref{thm:main}), and $a(27)$, $a(29)$, $a(30)$
+and $a(31)$ to \"Osterg\aa rd and Weakley~\cite{OW}. With $\gamma(Q_{33})=17$~\cite{OW} and
+$\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$~\cite{HC}, the values are known for all $n\le34$.
+\end{proposition}
 
-\begin{proof}
+\begin{proof}[Checks]
 By Corollary~2 of \"Osterg\aa rd and Weakley~\cite{OW}, $\gamma(Q_n)\ge n/2$ for $n<143$,
-$n\ne3,11$; this gives the lower bounds $14$, $15$, $15$, $16$ for $n=27,29,30,31$. The upper bounds come
-from explicit sets, whose domination our verification script checks directly.
+$n\ne3,11$; this gives the lower bounds $14$, $15$, $15$, $16$ for $n=27,29,30,31$. For the upper bounds
+we check explicit sets directly in our verification script.
 For $n=27$ we use the $14$-set of \"Osterg\aa rd and Weakley \cite[\S5]{OW}: in centred coordinates
 $-13,\dots,13$ it consists of the $13$ squares $(x,y)$ with $x=-12,-10,\dots,12$ and
 $y=6,-12,-6,8,0,-8,10,-2,4,12,-10,-4,2$ respectively, together with $(-9,-9)$.
-For $n=30$ we use Weakley's monochromatic $15$-set \cite[proof of Proposition~21]{Weakley2022}: in
+For $n=30$ we use the monochromatic $15$-set given by Weakley \cite[proof of Proposition~21]{Weakley2022}: in
 coordinates $-14,\dots,15$, the squares $(x,y)$ with $x=-13,-11,\dots,15$ and
 $y=1,-9,9,15,-11,-5,3,-3,13,11,7,-13,-7,-1,5$ respectively. None of its squares lies in the row or the
 column with coordinate $-14$; deleting them leaves a $29\times29$ board on which the same $15$ squares
-still dominate, so $\gamma(Q_{29})\le15$ (this value is also among those of~\cite{OW}). Adding a
-$31$st row and column and a queen at their intersection gives a $16$-set dominating $Q_{31}$.
-Finally $\gamma(Q_{32})\ge16$ and $\gamma(Q_{32})\le17$~\cite{Weakley2022}.
+still dominate, so $\gamma(Q_{29})\le15$. Adding a $31$st row and column and a queen at their
+intersection gives a $16$-set dominating $Q_{31}$.
 \end{proof}
-
-Theorem~\ref{thm:main} also settles Weakley's Conjecture~4~\cite{Weakley2022} for $n=26$ and $n=28$,
-vacuously.
 
 Section~\ref{sec:relax} reduces the problem to a finite search, with complete proofs.
 Section~\ref{sec:comp} describes the search and the two computations, and Section~\ref{sec:cert} the
-DRAT certificates and what the proofs rest on. Section~\ref{sec:valid} reports the validation runs and the independent checks. The
+DRAT certificates and what the proofs rest on. Section~\ref{sec:valid} reports the validation runs and
+the independent checks, and Section~\ref{sec:box} compares the method with the box method of~\cite{HC}. The
 code, the records of the computation and a verification script are available online.\footnote{\repo}
 
 \section{A line relaxation}\label{sec:relax}
@@ -345,7 +364,7 @@ formulas deterministically, their SHA-256 hashes are recorded in the repository,
 script regenerates and checks a random sample of the proofs. For every $z_0\ge3$ and both $n$ the
 certificate took less CPU time than the stage-1 search itself (Tables~\ref{tab:26} and~\ref{tab:28}).
 
-\paragraph{What the proof rests on.} Theorem~\ref{thm:main} follows from Proposition~\ref{prop:complete},
+\paragraph{What the proof rests on.} Our proof of Theorem~\ref{thm:main} follows from Proposition~\ref{prop:complete},
 applied for $n=26$ and for $n=28$ with $\mathcal L$ the respective survivor list, and from the upper bounds
 of~\cite{OW,OEIS} for $n=26$ and of~\cite{LMR} and Section~\ref{sec:valid} for $n=28$. Its correctness depends on
 Lemmas~\ref{lem:relax} and~\ref{lem:sym} and Proposition~\ref{prop:complete}, which are proved above;
@@ -439,6 +458,34 @@ simulated annealing; it is in the repository, and the script checks it. (The val
 of~\cite{LMR} already gives $\gamma(Q_{28})\le15$.) The script also checks the sets used for $n=29,30,31$
 in the proof of Corollary~\ref{cor:oeis}.
 
+\section{Relation to the box method}\label{sec:box}
+
+\emph{Hint and Conquer}~\cite{HC} uses a different decomposition. For a dominating set $D$ of $\gamma$
+queens, let $a,b$ be the leftmost and rightmost empty columns and $c,d$ the lowest and highest empty
+rows. The rectangle they span is the \emph{box} of $D$: its four sides are empty lines, and every row and
+column outside it carries a queen. Counting the active lines through the squares of the two vertical
+sides, and separately of the two horizontal sides, gives two exact identities (\cite[Lemma~1]{HC})
+that bound how much of the coverage of the sides can be wasted, by lines missing the sides or meeting
+a square more than once, in terms of the slack $2(2\gamma-n)$ and the number of lines meeting a side
+twice. These identities are refinements of the border count behind the bound
+$\gamma(Q_n)\ge(n-1)/2$~\cite{RV,Cockayne}; an exact border identity also appears in the proof of
+Theorem~1 of~\cite{Weakley2022}, and Neuhaus~\cite[Ch.~4]{Neuhaus} analysed boxes and loss squares for
+dominating sets of size $n/2$ by hand. \cite{HC} enumerates the boxes up to symmetry ($1\,596$ for
+$n=26$, $2\,080$ for $n=28$), encodes each with the line variables of~\cite{RB} plus the two identities as
+cardinality constraints (the ``counting hints''), and proves every formula unsatisfiable with CaDiCaL
+and \texttt{drat-trim}, in minutes for $n=26,28$ and in about one hour of solving for $n=38$.
+
+Our method relaxes differently. It keeps all $s$ chosen empty rows and columns rather than only the
+outermost ones, forgets where the queens are, and records only which diagonals of each colour must be
+occupied to cover the grid $A\times B$ (Lemma~\ref{lem:relax}); the enumeration of the feasible grids is
+a combinatorial search, certified afterwards by a cube-and-conquer refutation, and the queens are
+placed only in the second stage. It is much slower than the box method (Tables~\ref{tab:26}
+and~\ref{tab:28}), but it shares neither the reduction nor any code with~\cite{HC}, and so gives an
+independent check of its results for $n=26$ and $n=28$. A separate reimplementation of the box method,
+written for this project, which splits each box explicitly by the possible deficits of the four line
+types and checks every formula with \texttt{drat-trim}, also confirms $\gamma(Q_n)=n/2+1$ for
+$n=26,28,32,34,36$; it will be released separately.
+
 \section{Remarks}
 
 The relaxation of Lemma~\ref{lem:relax} keeps only the line structure of the squares that must be
@@ -446,11 +493,8 @@ covered diagonally, yet it is strong enough that stage~1 leaves only $\clpairsTo
 $n=26$ and $\clpairsTotalXXVIII$ for $n=28$. The cost grows quickly: from $n=26$ to $n=28$ the stage-1
 search grew from $\clhStageOne$ to $\clhStageOneXXVIII$ CPU hours (part of the latter on slower cores), the
 number of pairs by a factor of about $11$, and the stage-1 certificate from $\clhCert$ to $\clhCertXXVIII$ CPU
-hours. The smallest open case is now $n=32$. There $4\mid n$, so again only bichromatic $16$-sets are
-possible~\cite{Weakley2022}. Extrapolating the growth from $n=26$ to $n=28$ over two more steps suggests
-some $10^3$ to $10^4$ CPU hours for the present method, so deciding $\gamma(Q_{32})\in\{16,17\}$ probably
-calls for a stronger relaxation, or for using structural results such as Proposition~11
-of~\cite{Weakley2022} as proved lemmas.
+hours. The box method of~\cite{HC} is far more efficient for this task, and it has been carried to
+$n=38$. The value of the present method lies in its independence.
 
 \section*{Reproducibility}
 The repository\footnote{\repo} contains the C sources of both stages and of the second stage-1 program,
@@ -472,7 +516,10 @@ regenerated by this mode.
 \section*{Declaration of AI-generated research and authorship}
 This manuscript is the product of an AI-driven research process. During a broader investigation of
 open problems, initiated by the human author, an AI system identified this problem as a candidate,
-devised the method, wrote and ran the code for the computations, and wrote this manuscript. AI systems
+devised the method, wrote and ran the code for the computations, and wrote this manuscript. The AI
+system believed the two values to be open; its literature search missed~\cite{HC} and~\cite{Neuhaus},
+and an earlier version of this paper and of the OEIS entry presented them as new. This was corrected
+when the prior work was pointed out, and the paper is now presented as an independent verification. AI systems
 produced the results and their presentation, including the mathematical exposition, the computations
 and the organisation and writing of the text; the human author directed the AI systems but wrote no
 part of the manuscript. The human author also launched the main cloud computation, using commands prepared
@@ -507,11 +554,16 @@ Lecture Notes in Comput.\ Sci., Springer, 2012, 50--65.
 with SAT oracles}, in: Theory and Applications of Satisfiability Testing (SAT 2018), Lecture Notes in
 Comput.\ Sci., Springer, 2018, 428--437.
 \href{https://doi.org/10.1007/978-3-319-94144-8_26}{doi:10.1007/978-3-319-94144-8\_26}.
+\bibitem{HC} Anonymous, \emph{Hint and Conquer: new queen domination numbers by SAT solving}, preprint,
+October 2026, file \texttt{doc.pdf} on branch \texttt{hint-and-conquer} of the repository
+\url{https://github.com/TahaRostami/Gamma}.
 \bibitem{Kearse} M.~D.~Kearse, P.~B.~Gibbons, \emph{Computational methods and new results for chessboard
 problems}, Australas.\ J.\ Combin.\ \textbf{23} (2001), 253--284.
 \bibitem{LMR} A.~Langlois-R\'emillard, M.~M\"ussig, \'E.~Rold\'an, \emph{Complexity of chess domination
 problems}, Res.\ Math.\ Sci.\ \textbf{12} (2025), no.~1, paper no.~14.
 \href{https://doi.org/10.1007/s40687-024-00492-5}{doi:10.1007/s40687-024-00492-5}.
+\bibitem{Neuhaus} S.~Neuhaus, \emph{Eigenschaften kleinster dominierender Mengen und Dominanzzahlen von
+Damengraphen}, Dissertation, Universit\"at zu K\"oln, 2009. \url{https://kups.ub.uni-koeln.de/2916/}.
 \bibitem{OEIS} OEIS Foundation Inc., \emph{The On-Line Encyclopedia of Integer Sequences}, sequence
 A075458, with D.~Kamenetsky's file of best known placements for $n\le26$ (2019),
 \url{https://oeis.org/A075458}.
@@ -521,8 +573,9 @@ Electron.\ J.\ Combin.\ \textbf{8} (2001), \#R29.
 \bibitem{RV} V.~Raghavan, S.~M.~Venkatesan, \emph{On bounds for a board covering problem}, Inform.\ Process.\
 Lett.\ \textbf{25} (1987), 281--284.
 \href{https://doi.org/10.1016/0020-0190(87)90201-8}{doi:10.1016/0020-0190(87)90201-8}.
-\bibitem{RB} T.~Rostami, C.~Bright, \emph{Queen domination by SAT solving}, preprint (2025),
-arXiv:2508.11945. \href{https://doi.org/10.48550/arXiv.2508.11945}{doi:10.48550/arXiv.2508.11945}.
+\bibitem{RB} T.~Rostami, C.~Bright, \emph{Queen domination by SAT solving}, Art Discrete Appl.\ Math.\
+(2026). \href{https://doi.org/10.26493/2590-9770.2033.c47}{doi:10.26493/2590-9770.2033.c47};
+arXiv:2508.11945.
 \bibitem{Sinz} C.~Sinz, \emph{Towards an optimal CNF encoding of Boolean cardinality constraints}, in:
 Principles and Practice of Constraint Programming (CP 2005), Lecture Notes in Comput.\ Sci., Springer, 2005, 827--831.
 \href{https://doi.org/10.1007/11564751_73}{doi:10.1007/11564751\_73}.
