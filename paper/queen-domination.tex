@@ -24,7 +24,7 @@
 \newcommand{\dT}{d_T}
 \newcommand{\dS}{d_S}
 
-\title{The queen domination number $\gamma(Q_{35})=19$}
+\title{$\gamma(Q_{35})=19$ and certified queen domination numbers up to $n=46$}
 \author{Jason Davies\thanks{\href{mailto:jason@jasondavies.com}{\nolinkurl{jason@jasondavies.com}}}}
 \date{\clDate}
 
@@ -43,18 +43,21 @@ identities for the border and for the sides of the box make each of the resultin
 small SAT problem. Every case was refuted by CaDiCaL with a DRAT proof checked by \texttt{drat-trim}, in
 about $81$ CPU hours. The reduction to the cases, the completeness of the case list and the upper bound
 are formalised in Lean~4 with Mathlib, modulo the CNF encoding and the SAT certificates. A second,
-separately written encoding solved with Kissat cross-checks the hardest cases (this run was still in
-progress at the time of writing). The same method, with
-DRAT proofs, confirms $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$ and $\gamma(Q_{36})=19$, and
-$\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$, which were first established in \emph{Hint and Conquer}
-(2026). For $n=26$ and $n=28$ we also give a second, completely independent proof, by a relaxation of
+separately written encoding, solved with Kissat and without any symmetry breaking, independently refutes
+the $\clxHardCases$ hardest cases and a sample of $\clxSampleCases$ others. The same method, with DRAT
+proofs, gives $\gamma(Q_{40})=21$, $\gamma(Q_{42})=22$, $\gamma(Q_{44})=23$ and $\gamma(Q_{46})=24$, the
+first certified values for these boards; they confirm claims made in 2009 on the basis of an uncertified
+integer-programming computation. With them, $\gamma(Q_n)$ is known for every $n\le46$. The method also
+confirms $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$ and $\gamma(Q_{36})=19$, and $\gamma(Q_{26})=14$ and
+$\gamma(Q_{28})=15$, which were first established in \emph{Hint and Conquer} (2026). For $n=26$ and $n=28$ we also give a second, completely independent proof, by a relaxation of
 the grid of empty rows and columns to covers by diagonals, with DRAT certificates for both of its stages
 and a complete replay of every certificate formula.
 \end{abstract}
 
 \noindent\textbf{AI transparency statement.} The computer-assisted proofs, the code, the Lean
-formalisation and this manuscript were produced by artificial intelligence. The even values verified here
-were established earlier by others (Section~\ref{sec:intro}). The human author initiated the broader
+formalisation and this manuscript were produced by artificial intelligence. The values for $n\le36$ other
+than $n=35$ were established earlier by others, and those for $n=40,\dots,46$ were claimed earlier without
+certificates (Section~\ref{sec:intro}). The human author initiated the broader
 research and directed the AI systems, but did not write the text and has not checked the arguments.
 Details are given at the end of the paper.
 
@@ -118,7 +121,18 @@ at-most-one constraints, the whole-border identity, a residual symmetry reductio
 cases, and its application to an odd board, where the identities have more slack
 (Section~\ref{sec:frame}). \cite{HC}~treats even $n$ only.
 
-\paragraph{Even boards.} With the same method and DRAT proofs we also confirm the even values.
+\paragraph{Even boards.} With the same method and DRAT proofs we determine four further even values
+(Section~\ref{sec:even}).
+
+\begin{theorem}[claimed in~\cite{Neuhaus}]\label{thm:new}
+$\gamma(Q_{40})=21$, $\gamma(Q_{42})=22$, $\gamma(Q_{44})=23$ and $\gamma(Q_{46})=24$.
+\end{theorem}
+
+Before this work, the refereed literature gave only $\gamma(Q_n)\in\{n/2,n/2+1\}$ for these
+$n$~\cite{OW,Weakley2022}, and \emph{Hint and Conquer}~\cite{HC} covers even $n\le38$. Neuhaus's 2009
+dissertation~\cite{Neuhaus} claims $\gamma(Q_n)=n/2+1$ for $n=40,42,44,46$ on the basis of an
+integer-programming computation (CPLEX) without certificates. Theorem~\ref{thm:new} confirms these
+claims; as far as we know, it gives the first certified values. We also confirm the known even values.
 
 \begin{theorem}[\cite{HC}; claimed in~\cite{Neuhaus}]\label{thm:even}
 $\gamma(Q_{26})=14$, $\gamma(Q_{28})=15$, $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$ and $\gamma(Q_{36})=19$.
@@ -144,14 +158,18 @@ solved and checked again.
 For reference we collect the neighbouring known values.
 
 \begin{proposition}[known values]\label{cor:oeis}
-The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 for $26\le n\le38$ are
+The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 for $26\le n\le46$ are
 \begin{gather*}
   a(26)=a(27)=14,\quad a(28)=a(29)=a(30)=15,\quad a(31)=16,\quad a(32)=a(33)=17,\\
-  a(34)=18,\quad a(35)=a(36)=a(37)=19,\quad a(38)=20 .
+  a(34)=18,\quad a(35)=a(36)=a(37)=19,\quad a(38)=a(39)=20,\quad a(40)=a(41)=21,\\
+  a(42)=a(43)=22,\quad a(44)=a(45)=23,\quad a(46)=24 .
 \end{gather*}
 Here $a(26)$, $a(28)$, $a(32)$, $a(34)$, $a(36)$ and $a(38)$ are due to~\cite{HC} (Theorem~\ref{thm:even}),
-$a(35)$ is Theorem~\ref{thm:main}, and $a(27)$, $a(29)$, $a(30)$, $a(31)$, $a(33)$ and $a(37)$ are listed
-by \"Osterg\aa rd and Weakley~\cite{OW}. So $\gamma(Q_n)$ is known for every $n\le38$.
+$a(35)$ is Theorem~\ref{thm:main} and $a(40)$, $a(42)$, $a(44)$, $a(46)$ are Theorem~\ref{thm:new}.
+The values $a(27)$, $a(29)$, $a(30)$, $a(31)$, $a(33)$, $a(37)$, $a(39)$, $a(41)$ and $a(45)$ equal
+$\lceil n/2\rceil$ and are listed by \"Osterg\aa rd and Weakley~\cite{OW}. For $n=43$, \cite{OW} gives
+$\{22,23\}$; the $22$-queen dominating set of $Q_{43}$ in~\cite{Neuhaus} and the lower bound
+$\lceil n/2\rceil$~\cite{OW,FW} give $a(43)=22$. So $\gamma(Q_n)$ is known for every $n\le46$.
 \end{proposition}
 
 \begin{proof}[Checks]
@@ -167,7 +185,8 @@ $y=1,-9,9,15,-11,-5,3,-3,13,11,7,-13,-7,-1,5$ respectively. None of its squares 
 column with coordinate $-14$; deleting them leaves a $29\times29$ board on which the same $15$ squares
 still dominate, so $\gamma(Q_{29})\le15$. Adding a $31$st row and column and a queen at their
 intersection gives a $16$-set dominating $Q_{31}$. The sets for $n=32,\dots,36$ are given in
-Sections~\ref{sec:n35} and~\ref{sec:even}. We did not check the values for $n=33,37,38$.
+Sections~\ref{sec:n35} and~\ref{sec:even}, and the verification script also checks the $22$-set of $Q_{43}$
+of~\cite{Neuhaus}. We did not check the values for $n=33,37,38,39,41,45$.
 \end{proof}
 
 Section~\ref{sec:frame} sets up the frame method with complete proofs, and Section~\ref{sec:n35}
@@ -444,11 +463,17 @@ formalised in Lean (Section~\ref{sec:lean}); the encoder and the SAT certificate
 
 \section{Even boards}\label{sec:even}
 
-We ran the same code, with DRAT proofs, for $k=n/2$ and $n=26,28,32,34,36$, and for $(n,k)=(35,17)$
-(Table~\ref{tab:even}). Every case is unsatisfiable and every proof was verified; no case needed symmetry
-breaking or cubes. Together with explicit sets of $n/2+1$ queens this proves Theorem~\ref{thm:even}. The
-case $(35,17)$ reproduces the known bound $\gamma(Q_{35})\ge18$. The numbers of canonical frames for
-$n=26,28,32,34,36$ equal the numbers of boxes reported in~\cite[Table~1]{HC}.
+We ran the same code, with DRAT proofs, for $k=n/2$ and $n=26,28,32,34,36,40,42,44,46$, and for
+$(n,k)=(35,17)$ (Table~\ref{tab:even}). Every case is unsatisfiable and every proof was verified; no case
+timed out at the limit of $1800$\,s, so no case needed symmetry breaking or cubes, and the result for these
+boards rests only on Proposition~\ref{prop:cover} and Lemma~\ref{lem:sound}. The encoder and the
+enumeration are the files of the $n=35$ run, unchanged. Together with explicit sets of $n/2+1$ queens this
+proves Theorems~\ref{thm:even} and~\ref{thm:new}. The case $(35,17)$ reproduces the known bound
+$\gamma(Q_{35})\ge18$. The numbers of canonical frames for $n=26,28,32,34,36$ equal the numbers of boxes
+reported in~\cite[Table~1]{HC}. For $n=40,\dots,46$ the case list was also rebuilt by a separate
+enumeration that maps boxes geometrically and checks the number of frames by Burnside's lemma; the lists
+agree. As for $n=35$, the verification script rebuilds each list, checks that every case has exactly one
+refuting record, rebuilds the formulas of a sample of records and compares their hashes.
 
 \begin{table}[ht]\centering\small
 \begin{tabular}{rrrrrrrr}\toprule
@@ -458,10 +483,15 @@ $n$ & $k$ & frames & cases & CaDiCaL (s) & \texttt{drat-trim} (s) & proofs (GB) 
 \clrowFc
 \clrowFd
 \clrowFe
+\clrowFg
+\clrowFh
+\clrowFi
+\clrowFj
 \clrowFf
 \bottomrule\end{tabular}
 \caption{The frame method on further boards: every case UNSAT with a verified DRAT proof. Single-core
-CPU seconds; five or six processes.}\label{tab:even}
+CPU seconds on a shared machine, four to six processes; the times depend on the load (the run for $n=46$
+had the machine almost to itself).}\label{tab:even}
 \end{table}
 
 The upper bounds come from sets found by a SAT search for a permutation-like placement on the odd lines
@@ -472,10 +502,22 @@ $(17,21)$, $(19,25)$, $(21,9)$, $(23,3)$, $(25,19)$, $(27,5)$, $(29,13)$, $(30,3
 \item $Q_{34}$, $18$ queens: $(1,19)$, $(3,7)$, $(5,27)$, $(7,9)$, $(9,17)$, $(11,1)$, $(13,23)$, $(15,15)$,
 $(17,31)$, $(19,5)$, $(21,13)$, $(23,21)$, $(25,3)$, $(27,33)$, $(29,11)$, $(31,25)$, $(32,32)$, $(33,29)$;
 \item $Q_{36}$, $19$ queens: $(1,27)$, $(3,13)$, $(5,9)$, $(7,25)$, $(9,3)$, $(11,19)$, $(13,35)$, $(15,5)$,
-$(17,31)$, $(19,15)$, $(21,23)$, $(23,1)$, $(25,11)$, $(27,33)$, $(29,21)$, $(31,29)$, $(33,7)$, $(34,34)$, $(35,17)$.
+$(17,31)$, $(19,15)$, $(21,23)$, $(23,1)$, $(25,11)$, $(27,33)$, $(29,21)$, $(31,29)$, $(33,7)$, $(34,34)$, $(35,17)$;
+\item $Q_{40}$, $21$ queens: $(1,17)$, $(3,27)$, $(5,33)$, $(7,9)$, $(9,5)$, $(11,23)$, $(13,19)$, $(15,25)$,
+$(17,37)$, $(19,3)$, $(21,15)$, $(23,11)$, $(25,1)$, $(27,31)$, $(29,21)$, $(31,39)$, $(33,13)$, $(35,7)$, $(37,35)$,
+$(38,38)$, $(39,29)$;
+\item $Q_{42}$, $22$ queens: $(1,23)$, $(3,29)$, $(5,11)$, $(7,21)$, $(9,39)$, $(11,1)$, $(13,7)$, $(15,19)$,
+$(17,25)$, $(19,37)$, $(21,17)$, $(23,5)$, $(25,35)$, $(27,13)$, $(29,27)$, $(31,33)$, $(33,3)$, $(35,9)$, $(37,15)$,
+$(39,31)$, $(40,40)$, $(41,41)$;
+\item $Q_{46}$, $24$ queens: $(0,0)$, $(1,11)$, $(3,25)$, $(5,19)$, $(7,35)$, $(9,39)$, $(11,9)$, $(13,31)$,
+$(15,1)$, $(17,43)$, $(19,21)$, $(21,17)$, $(23,41)$, $(25,29)$, $(27,5)$, $(29,23)$, $(31,37)$, $(33,3)$, $(35,45)$,
+$(37,13)$, $(39,7)$, $(41,15)$, $(43,33)$, $(45,27)$.
 \end{itemize}
-For $n=26,28$ the sets of Section~\ref{sec:relax} are used. Upper bounds $\gamma(Q_n)\le n/2+1$ for these
-$n$ are also in~\cite{OW,Weakley2022}.
+For $Q_{44}$ we take Neuhaus's $22$-queen dominating set of $Q_{43}$ (a ``0-1-cover'', \cite[App.~B]{Neuhaus};
+a file of Neuhaus's solutions repository~\cite{NeuhausSol}, licensed CC~BY~4.0 and included unchanged
+in our repository) and add the corner $(43,43)$, which covers the new row and column; the
+script checks both sets directly. For $n=26,28$ the sets of Section~\ref{sec:relax} are used. Upper
+bounds $\gamma(Q_n)\le n/2+1$ for these $n$ are also in~\cite{OW,Weakley2022}.
 
 \section{Validation of the frame method}\label{sec:fvalid}
 
@@ -546,9 +588,14 @@ encoder with CaDiCaL~1.9.5 and encoding X with Kissat give the same verdict on e
 \paragraph{The hard cases and a sample.} The cross-check was run on all $\clxHardCases$ cases of phase~3,
 which the main computation refuted only with symmetry breaking or cubes, and on a stratified sample of
 $\clxSampleCases$ of the other cases ($2000$ uniformly random and the $200$ slowest in the main run).
-\textbf{At the time of writing this run was still in progress}: all cases it had finished were
-unsatisfiable, with no satisfiable formula and no disagreement. The verification script checks its
-records; its gates for the hard cases and the sample fail until the run is complete.
+Every one of the $\clxHardCases$ hard cases is unsatisfiable under encoding X: $\clxHardSplit$ of them
+needed cube splitting, and their trees have $\clxHardLeaves$ unsatisfiable leaves in all; the formulas took
+$\clxHardCpuH$ CPU hours. All $\clxSampleCases$ sampled cases are unsatisfiable without splitting
+($\clxSampleCpu$ CPU seconds). There is no satisfiable formula and no disagreement with the main
+computation. The verification script checks from the records that every tree is complete, and rebuilds
+all $\clxHardRehash$ formulas of the hard trees and all $\clxSampleCases$ of the sample and compares their
+hashes. Kissat produced no proofs here: the cross-check is independent evidence for the encoding and the
+case list, while the certificates of Section~\ref{sec:n35} remain the proof.
 
 \section{Formalisation in Lean}\label{sec:lean}
 
@@ -579,7 +626,10 @@ where \texttt{cases35} is the list of the run and \texttt{SymBreak} the lex-lead
 analogous theorem for $n=32$ has the hypothesis without \texttt{SymBreak}. All $\clleanTheorems$ theorems
 of the axiom report, and all kernel computations, depend only on \texttt{propext},
 \texttt{Classical.choice} and \texttt{Quot.sound}; there is no \texttt{sorry} and no
-\texttt{native\_decide}.
+\texttt{native\_decide}. The general theorems (\texttt{main\_even}, \texttt{lt\_gamma\_of\_cases\_unsat})
+apply to every even $n$, but the explicit case lists of $n=26,28,34,36,40,\dots,46$ are not in Lean; for
+those boards the identification of the run with $\mathcal L(n,k)$ rests on the Python enumeration, checked
+for $n=40,\dots,46$ by the separate enumeration of Section~\ref{sec:even}.
 
 \paragraph{What is not formalised.} The hypothesis \texttt{H} is what the computation establishes, by
 steps outside Lean: (i) that a set $D$ with \texttt{CaseSat n k c D} yields a model of the CNF written by
@@ -932,7 +982,10 @@ with~\cite{HC}. For $n=26$ and $n=28$ the two methods agree.
 \section{Remarks}
 
 For even $n$ and $k=n/2$ the identities leave no slack when the box is not square, and the frame method
-is fast: under two CPU hours for $n=36$ including proof checking. For odd $n$ and $k=(n+1)/2$ there are two
+is fast: under two CPU hours for $n=36$ and about six for $n=44$, including proof checking, with the
+square boxes of deficit vector $0$ taking most of the time. The cost grows by a factor of roughly $1.5$
+per step of $2$ in $n$, so somewhat larger even boards appear to be within reach of the same code; the even
+values from $n=48$ on remain open in the certified literature. For odd $n$ and $k=(n+1)/2$ there are two
 units of slack in each side identity and up to four in the border identity; the cases with deficit vector
 $0$ and an almost square box, where the $18$ queens would be pairwise non-attacking, account for about
 $40\%$ of the time for $n=35$, and the hardest single case took about an hour. Two further sound
@@ -950,14 +1003,14 @@ $\clhCertXXVIII$ CPU hours.
 
 \section*{Reproducibility}
 The repository\footnote{\repo} contains, for the frame method, the case enumeration, the encoder, the
-drivers and checkers, the records of every case for $n=26,28,32,34,35,36$ (one JSON line per case or
+drivers and checkers, the records of every case for $n=26,28,32,34,35,36,40,42,44,46$ (one JSON line per case or
 cube with the SHA-256 of the formula, the verdict, the checker's status and the CPU times), the records
 of the validation runs, the code and records of the cross-check, and the Lean sources; and, for the
 relaxation, the C sources of both stages and of the second stage-1 program, the CNF encoders, the
 referee's checks, the driver used for the cloud runs, and for $n=26$ and $n=28$ the survivor lists,
 per-part SHA-256 manifests, the logs of the searches, the per-pair SAT records, the per-cube records of
 the stage-1 certificates and the records of the complete replay. The script \texttt{scripts/verify.py}
-rebuilds the programs and, in under an hour on three cores, reruns the validation of the relaxation for
+rebuilds the programs and, in about an hour on three cores, reruns the validation of the relaxation for
 small $n$, the referee's checks and the stage-1 certificate for $n=16,18$, the tests of the frame
 method, and seeded random samples of the computations; it checks every record set against its manifest or
 against the case list rebuilt from first principles, rebuilds the formulas of a sample of records and
@@ -975,15 +1028,15 @@ $n=28$) are not published; they are regenerated by solving the recorded formulas
 This manuscript is the product of an AI-driven research process. During a broader investigation of
 open problems, initiated by the human author, AI systems identified the problems, devised the methods,
 wrote and ran the code for the computations, wrote the Lean formalisation, and wrote this manuscript. The
-frame/deficit case split was first tried in an earlier, uncertified AI attempt within the same project;
-the version reported here was re-derived, with proofs, and reimplemented from a description of that
-attempt's identities, and was compared with its logs only afterwards (the case lists for $n=28,30,32$
-agree). The line relaxation of Section~\ref{sec:relax} was devised first, when the AI system believed
+frame/deficit case split was first proposed in an earlier, uncertified attempt by Claude Fable~5.2
+(Claude for web), run by the author; it was re-derived, proved and reimplemented here, and compared with
+the logs of that attempt only afterwards (the case lists for $n=28,30,32$ agree). The line relaxation of Section~\ref{sec:relax} was devised first, when the AI system believed
 $\gamma(Q_{26})$ and $\gamma(Q_{28})$ to be open: its literature search missed~\cite{HC}
 and~\cite{Neuhaus}, and an earlier version of this paper and of the OEIS entry presented those values as
-new. This was corrected when the prior work was pointed out. For $n=35$ the AI system then searched the
-literature, preprint servers, code repositories and the OEIS history and found no statement of the value;
-such a search cannot be exhaustive. AI systems produced the results and their presentation, including
+new. This was corrected when the prior work was pointed out. For $n=35$ and $n=40,\dots,46$ the AI system then
+searched the literature, preprint servers, code repositories and the OEIS history; it found no statement
+of $\gamma(Q_{35})$, and for $n=40,\dots,46$ only the uncertified claims of~\cite{Neuhaus}. Such a search
+cannot be exhaustive. AI systems produced the results and their presentation, including
 the mathematical exposition, the computations and the organisation and writing of the text; the human
 author directed the AI systems but wrote no part of the manuscript. The human author also launched the
 main cloud computation for $n=28$, using commands prepared by the AI system. The system was Claude
@@ -1047,6 +1100,8 @@ ACM SIGPLAN International Conference on Certified Programs and Proofs (CPP 2020)
 \href{https://doi.org/10.1145/3372885.3373824}{doi:10.1145/3372885.3373824}.
 \bibitem{Neuhaus} S.~Neuhaus, \emph{Eigenschaften kleinster dominierender Mengen und Dominanzzahlen von
 Damengraphen}, Dissertation, Universit\"at zu K\"oln, 2009. \url{https://kups.ub.uni-koeln.de/2916/}.
+\bibitem{NeuhausSol} S.~Neuhaus, \emph{Solutions for queen's domination} (repository), 2017,
+\url{https://github.com/stefanneuhaus/queens-domination-solutions}.
 \bibitem{OEIS} OEIS Foundation Inc., \emph{The On-Line Encyclopedia of Integer Sequences}, sequence
 A075458, with D.~Kamenetsky's file of best known placements for $n\le26$ (2019),
 \url{https://oeis.org/A075458}.

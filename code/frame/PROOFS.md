@@ -1,8 +1,9 @@
 # Frame method: definitions, identities, proofs
 
 (Working notes behind Section 2 of the paper, in the numbering used by the map in lean/README.md.  The
-identities were re-derived here from a description of an earlier, uncertified implementation; see the
-paper's declaration.  Brute-force tests: code/frame/verify_identities.py.)
+identities were re-derived here from a description of an earlier, uncertified attempt by Claude Fable 5.2
+(Claude for web), run by the author; see the paper's declaration.  Brute-force tests:
+code/frame/verify_identities.py.)
 
 ## F.0 Setting and definitions
 

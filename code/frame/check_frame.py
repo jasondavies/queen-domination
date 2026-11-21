@@ -18,7 +18,9 @@ coverage: the case list L(N, K) is rebuilt from first principles (geom.cases_by_
 resolve: a seeded sample of M cases whose recorded solve time is at most T seconds is solved again exactly
   as run_cases.py --mode drat does (CaDiCaL writes a DRAT proof, drat-trim -w checks it); the CNF hash, the
   verdict and the checker status must equal the record.
-upper: the explicit dominating sets of DATA/plus1_{32,34,36}.json and DATA/q35_19.json are checked directly.
+upper: the explicit dominating sets of DATA/plus1_{32,34,36}.json, DATA/q35_19.json and DATA/q{40_21,42_22,44_23,46_24}.json
+  are checked directly; the 22-set of Q_43 in DATA/neuhaus/ (Neuhaus 2009) is checked to dominate Q_43, and the
+  Q_44 set to be that set plus the corner (43, 43).
 validation: summarises the recorded validation runs (run_cases.py --mode pysat; QD_ENC=b for vb_*): per (n, k)
   the number of cases run, satisfiable and unsatisfiable cases, whether every case of L(n, k) was run, and a
   direct check of every recorded model (k squares, dominating, and of the case it was found for).
@@ -191,12 +193,18 @@ def upper(data):
         return sum(1 for x in range(n) for y in range(n)
                    if not any(x == a or y == b or y - x == b - a or x + y == a + b for a, b in Q))
     out = {}
-    for name in ('plus1_32.json', 'plus1_34.json', 'plus1_36.json', 'q35_19.json'):
+    for name in ('plus1_32.json', 'plus1_34.json', 'plus1_36.json', 'q35_19.json', 'q40_21.json', 'q42_22.json', 'q44_23.json', 'q46_24.json'):
         d = json.load(open(os.path.join(data, name)))
         Q = [tuple(p) for p in d['set_col_row']]
         n = d['n']
         out['q%d' % n] = {'n': n, 'queens': len(set(Q)), 'on_board': all(0 <= a < n and 0 <= b < n for a, b in Q),
                           'undominated': undominated(n, Q)}
+    import re
+    txt = open(os.path.join(data, 'neuhaus', 'appendix_01_q43_01cover.txt')).read()
+    P = [tuple(map(int, m)) for m in re.findall(r'^\((\d+),\s*(\d+)\)\s*$', txt, re.M)]
+    q44 = {tuple(p) for p in json.load(open(os.path.join(data, 'q44_23.json')))['set_col_row']}
+    out['neuhaus43'] = {'n': 43, 'queens': len(set(P)), 'on_board': all(0 <= a < 43 and 0 <= b < 43 for a, b in P),
+                        'undominated': undominated(43, P), 'q44_is_it_plus_corner': q44 == set(P) | {(43, 43)}}
     return out
 
 

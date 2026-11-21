@@ -1,0 +1,3 @@
+{"case_list_check": {"frames_independent": 7381, "burnside_orbits": 7381, "cases_independent": 24871, "cases_geom": 24871, "no_duplicates": true, "equal_as_sets": true, "ok": true}}
+{"n": 40, "k": 20, "frames": 7381, "cases": 24871, "refuted_unsplit_plain": 24871, "refuted_by_run_hard_unsplit": 0, "refuted_by_run_hard_cubes": 0, "NOT_REFUTED": 0, "sat_records": 0, "verified_cube_records_used": 0, "cnf_hashes_rebuilt": 24871, "hash_mismatches": 0, "t_solve_cpu_h": 2.2, "t_check_cpu_h": 1.5, "not_refuted_examples": [], "ALL_CASES_UNSAT_WITH_VERIFIED_PROOFS": true}
+{"FINAL": "PASS"}

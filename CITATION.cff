@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "Please cite the accompanying paper when using this work, and identify the commit used for computational results."
 type: software
-title: "The queen domination number gamma(Q35) = 19"
+title: "gamma(Q35) = 19 and certified queen domination numbers up to n = 46"
 authors:
   - family-names: "Davies"
     given-names: "Jason"
@@ -9,7 +9,7 @@ license: Apache-2.0
 repository-code: "https://github.com/jasondavies/queen-domination"
 preferred-citation:
   type: unpublished
-  title: "The queen domination number gamma(Q35) = 19"
+  title: "gamma(Q35) = 19 and certified queen domination numbers up to n = 46"
   authors:
     - family-names: "Davies"
       given-names: "Jason"

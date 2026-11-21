@@ -1,0 +1,17 @@
+2026-11-21T15:57:05Z start n=46 k=23, 4 processes
+frame/geom.py: OK
+frame/enc.py: OK
+frame/run_cases.py: OK
+frame/run_hard.py: OK
+frame/hard_test.py: OK
+frame/plan35.py: OK
+frame/final_check35.py: OK
+frame/n35_master.sh: OK
+tools/cadical: OK
+tools/drat-trim: OK
+{"n": 46, "k": 23, "mode": "drat", "frames": 12246, "cases": 40728, "reused": 0, "run": 40728, "SAT": 0, "UNSAT": 40728, "verified": 40728, "other": 0, "t_solve": 10008.5, "t_check": 7724.3, "proof_bytes": 18546647432, "max_t_solve": 135.307, "constraints": {"use_F": true, "use_V": true, "use_H": true}, "wall": 4516.4, "complete": true, "verdict": "UNSAT", "all_proofs_verified": true}
+2026-11-21T17:13:40Z run_cases exit 0
+{"case_list_check": {"frames_independent": 12246, "burnside_orbits": 12246, "cases_independent": 40728, "cases_geom": 40728, "no_duplicates": true, "equal_as_sets": true, "ok": true}}
+{"n": 46, "k": 23, "frames": 12246, "cases": 40728, "refuted_unsplit_plain": 40728, "refuted_by_run_hard_unsplit": 0, "refuted_by_run_hard_cubes": 0, "NOT_REFUTED": 0, "sat_records": 0, "verified_cube_records_used": 0, "cnf_hashes_rebuilt": 40728, "hash_mismatches": 0, "t_solve_cpu_h": 2.8, "t_check_cpu_h": 2.1, "not_refuted_examples": [], "ALL_CASES_UNSAT_WITH_VERIFIED_PROOFS": true}
+{"FINAL": "PASS"}
+2026-11-21T17:18:49Z final check exit 0

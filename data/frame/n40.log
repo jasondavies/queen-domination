@@ -1,0 +1,5 @@
+2026-11-21T11:16:09Z phase 1 start, 4 processes
+2026-11-21T11:22:12Z restarted (workers had been at nice 19 through a double nice)
+2026-11-21T11:22:12Z phase 1 start, 4 processes
+{"n": 40, "k": 20, "mode": "drat", "frames": 7381, "cases": 24871, "reused": 859, "run": 24012, "SAT": 0, "UNSAT": 24871, "verified": 24871, "other": 0, "t_solve": 7703.4, "t_check": 5224.0, "proof_bytes": 7814618559, "max_t_solve": 84.841, "constraints": {"use_F": true, "use_V": true, "use_H": true}, "wall": 3938.2, "complete": true, "verdict": "UNSAT", "all_proofs_verified": true}
+2026-11-21T12:28:22Z phase 1 exit 0

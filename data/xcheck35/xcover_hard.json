@@ -1,0 +1,15 @@
+{
+ "n": 35,
+ "k": 18,
+ "cases": 585,
+ "cases_not_in_independent_list": 0,
+ "refuted": 585,
+ "not_refuted": 0,
+ "split_cases": 14,
+ "unsat_leaves": 795,
+ "SAT_records": 0,
+ "cpu_s_in_trees": 275260.3,
+ "rehashed": 809,
+ "hash_mismatches": 0,
+ "not_refuted_list": []
+}

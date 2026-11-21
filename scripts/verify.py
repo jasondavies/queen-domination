@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reproduce every computation and every number in the paper.
 
-  .venv/bin/python scripts/verify.py                 # default: about 20 minutes, at most 3 processes
+  .venv/bin/python scripts/verify.py                 # default: about an hour, at most 3 processes
   .venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|replay|frame|framesample|
                                             frametests|leandata|xcheck|upper|tamper|paper
   .venv/bin/python scripts/verify.py --full          # default steps + the whole n = 26 computation again
@@ -14,7 +14,7 @@
                                                      # stage-2 formula rebuilt from the survivor lists, solved and
                                                      # checked; resumable (build/certify, manifest-bound)
   .venv/bin/python scripts/verify.py --frame-rehash-all  # the frame step rebuilds all 130,111 CNF hashes of n = 35 and all
-                                                     # those of n = 26, 28, 32, 34, 36 (about 1 CPU hour) instead of a sample
+                                                     # those of n = 26, ..., 46 (about 2 CPU hours) instead of a sample
   .venv/bin/python scripts/verify.py --lean          # also builds the Lean formalisation in lean/ (lake exe cache get, lake
                                                      # build: about 10 minutes and 8 GB of disk) and checks #print axioms
   options: --jobs J (parallel processes, default 3); --write-pdf (copy the reproducible build to paper/)
@@ -393,7 +393,11 @@ def g_leandata():
 def g_upper_frame():
     d = J('upper_frame.json')
     return [(all(d[q]['on_board'] and d[q]['undominated'] == 0 for q in d) and [d[q]['queens'] for q in ('q32', 'q34', 'q35', 'q36')] == [17, 18, 19, 19],
-             'a 17-set dominates Q_32, an 18-set Q_34, a 19-set Q_35 and a 19-set Q_36 (data/frame)')]
+             'a 17-set dominates Q_32, an 18-set Q_34, a 19-set Q_35 and a 19-set Q_36 (data/frame)'),
+            ([d[q]['queens'] for q in ('q40', 'q42', 'q44', 'q46')] == [21, 22, 23, 24] and all(d[q]['undominated'] == 0 for q in ('q40', 'q42', 'q44', 'q46')),
+             'a 21-set dominates Q_40, a 22-set Q_42, a 23-set Q_44 and a 24-set Q_46 (data/frame)'),
+            (d['neuhaus43']['queens'] == 22 and d['neuhaus43']['undominated'] == 0 and d['neuhaus43']['q44_is_it_plus_corner'],
+             "Neuhaus's 22-set dominates Q_43, and the Q_44 set is that set plus the corner (43, 43)")]
 
 
 def g_xcheck():
@@ -410,12 +414,18 @@ def g_xcheck():
             (a15['cases'] == a15['refuted'] == I('xAllFifteen') and a15['sat_cases'] == 0, '(15, 8), complete: all %s cases refuted' % C('xAllFifteen')),
             (all(v['cases'] == v['records'] == v['agree'] and v['same_cases'] and v['models_ok'] for v in d['diff_z0'].values()) and len(d['diff_z0']) == 4,
              'zero-deficit cases of (13, 7), (15, 8), (17, 9), (19, 10): enc.py + CaDiCaL 1.9.5 and encoding X + kissat agree on every case')]
-    for name, key in (('hard', 'xHardCases'), ('sample', 'xSampleCases')):
-        h = d[name]
-        msgs.append((h.get('cases') == h.get('refuted') == I(key) and h.get('SAT_records') == 0 and h.get('cases_not_in_independent_list') == 0,
-                     'n = 35, %s cases: all %s refuted by encoding X + kissat (complete cube trees), no SAT record%s'
-                     % (name, C(key), '' if h.get('cases') == h.get('refuted') == I(key) else
-                        ' -- NOT YET: %s' % ('records absent (run in progress)' if not h.get('present', True) else '%s of %s refuted' % (h.get('refuted'), h.get('cases'))))))
+    h = d['hard']
+    msgs.append((h.get('cases') == h.get('refuted') == I('xHardCases') and h.get('SAT_records') == 0 and h.get('cases_not_in_independent_list') == 0
+                 and (h.get('split_cases'), h.get('unsat_leaves'), h.get('rehashed'), h.get('hash_mismatches')) == (I('xHardSplit'), I('xHardLeaves'), I('xHardRehash'), 0)
+                 and rnd(h['cpu_s_in_trees'] / 3600, 1) == C('xHardCpuH'),
+                 'n = 35, the %s hard cases: all refuted by encoding X + kissat (%s split, %s UNSAT leaves, complete trees), no SAT record; '
+                 'all %s CNFs rebuilt with the recorded hashes; %s CPU hours' % (C('xHardCases'), C('xHardSplit'), C('xHardLeaves'), C('xHardRehash'), C('xHardCpuH'))))
+    h = d['sample']
+    msgs.append((h.get('cases') == h.get('refuted') == h.get('unsat_leaves') == h.get('rehashed') == I('xSampleCases') and h.get('SAT_records') == 0
+                 and h.get('split_cases') == 0 and h.get('hash_mismatches') == 0 and h.get('cases_not_in_independent_list') == 0
+                 and rnd(h['cpu_s_in_trees']) == C('xSampleCpu'),
+                 'n = 35, sample of %s other cases: all UNSAT with encoding X + kissat, none split, no SAT record; all CNFs rebuilt; %s CPU seconds'
+                 % (C('xSampleCases'), C('xSampleCpu'))))
     return msgs
 
 

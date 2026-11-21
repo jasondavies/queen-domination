@@ -2,7 +2,7 @@
  "_comment": "Every number of the paper that a computation checks. scripts/verify.py compares the steps' JSON outputs (verification/) and the committed records (data/) with these values exactly, and scripts/make_claims_tex.py writes paper/claims.tex (LaTeX macros) from this file, so the paper and the checks share one source.",
  "Date": "November 21, 2026",
  "pdfEpoch": "1795219200",
- "pages": "21",
+ "pages": "22",
  "cadicalVersion": "3.1.0",
  "pysatVersion": "1.9.dev24",
  "pairsTotal": "10888",
@@ -135,12 +135,21 @@
  "xAllFifteen": "7916",
  "xHardCases": "585",
  "xSampleCases": "2200",
+ "xHardSplit": "14",
+ "xHardLeaves": "795",
+ "xHardRehash": "809",
+ "xHardCpuH": "76.5",
+ "xSampleCpu": "50142",
  "frame": [
   {"key": "a", "n": "26", "k": "13", "frames": "1596", "cases": "5663", "solve": "413", "check": "549", "proofGB": "0.59", "maxSolve": "17.8"},
   {"key": "b", "n": "28", "k": "14", "frames": "2080", "cases": "7300", "solve": "652", "check": "787", "proofGB": "0.93", "maxSolve": "17.8"},
   {"key": "c", "n": "32", "k": "16", "frames": "3321", "cases": "11466", "solve": "1597", "check": "1559", "proofGB": "2.12", "maxSolve": "29.6"},
   {"key": "d", "n": "34", "k": "17", "frames": "4095", "cases": "14049", "solve": "2548", "check": "2193", "proofGB": "3.06", "maxSolve": "81.1"},
   {"key": "e", "n": "36", "k": "18", "frames": "5050", "cases": "17205", "solve": "3604", "check": "2927", "proofGB": "4.32", "maxSolve": "57.5"},
+  {"key": "g", "n": "40", "k": "20", "frames": "7381", "cases": "24871", "solve": "7892", "check": "5395", "proofGB": "8.15", "maxSolve": "84.8"},
+  {"key": "h", "n": "42", "k": "21", "frames": "8778", "cases": "29447", "solve": "11299", "check": "7154", "proofGB": "10.85", "maxSolve": "132.7"},
+  {"key": "i", "n": "44", "k": "22", "frames": "10440", "cases": "34854", "solve": "13243", "check": "8772", "proofGB": "14.46", "maxSolve": "119.1"},
+  {"key": "j", "n": "46", "k": "23", "frames": "12246", "cases": "40728", "solve": "10009", "check": "7724", "proofGB": "18.55", "maxSolve": "135.3"},
   {"key": "f", "n": "35", "k": "17", "frames": "330", "cases": "330", "solve": "13", "check": "36", "proofGB": "0.01", "maxSolve": "0.1"}
  ]
 }

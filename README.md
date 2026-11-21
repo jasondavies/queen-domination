@@ -1,4 +1,4 @@
-# The queen domination number γ(Q₃₅) = 19
+# γ(Q₃₅) = 19 and certified queen domination numbers up to n = 46
 
 This repository holds a paper and its verification material. The main result is **γ(Q₃₅) = 19** (OEIS
 [A075458](https://oeis.org/A075458)): eighteen queens cannot occupy or attack every square of a 35 × 35
@@ -14,8 +14,13 @@ The lower bound is computer-assisted:
 - Every case is refuted by CaDiCaL with a DRAT proof checked by drat-trim.
 
 The reduction and the completeness of the case list are formalised in Lean 4 (`lean/`), modulo the CNF
-encoding and the SAT certificates. A separately written second encoding, solved with Kissat, cross-checks
-the hardest cases.
+encoding and the SAT certificates. A separately written second encoding, solved with Kissat and without
+symmetry breaking, independently refutes the 585 hardest cases and a sample of 2200 others.
+
+The same method, with DRAT proofs, gives **γ(Q₄₀) = 21, γ(Q₄₂) = 22, γ(Q₄₄) = 23 and γ(Q₄₆) = 24**. These are
+the first certified values for these boards. They confirm the claims in S. Neuhaus's 2009 dissertation
+(below), which rest on an uncertified integer-programming computation. Hint and Conquer covers even
+n ≤ 38 only.
 
 The repository also contains **independent confirmations of known even values**:
 - The same frame method gives DRAT-checked proofs of γ(Q₃₂) = 17, γ(Q₃₄) = 18 and γ(Q₃₆) = 19, and of
@@ -36,7 +41,9 @@ The repository also contains **independent confirmations of known even values**:
 - An earlier version of this repository presented γ(Q₂₆) and γ(Q₂₈) as new; that was wrong and has been
   corrected.
 
-With these values, γ(Q_n) is known for all n ≤ 38.
+With these values, γ(Q_n) is known for all n ≤ 46. The odd values 37, 39, 41 and 45 are ⌈n/2⌉ by
+Östergård–Weakley. For 43, Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give
+γ(Q₄₃) = 22.
 
 ## Results
 
@@ -51,7 +58,18 @@ With these values, γ(Q_n) is known for all n ≤ 38.
     - Every proof was checked by drat-trim, and there is no satisfiable case.
     - The run took 53.1 + 27.6 CPU hours (solve + check), and the proofs came to about 232 GB.
     - All 130 111 formulas were rebuilt and their SHA-256 hashes compared with the records.
-- **Theorem 1.3** (Hint and Conquer; claimed by Neuhaus). γ(Q₂₆) = 14, γ(Q₂₈) = 15, γ(Q₃₂) = 17,
+- **Theorem 1.3** (claimed by Neuhaus). γ(Q₄₀) = 21, γ(Q₄₂) = 22, γ(Q₄₄) = 23, γ(Q₄₆) = 24.
+  - The frame method gives 24 871, 29 447, 34 854 and 40 728 cases, all UNSAT with drat-trim-verified
+    proofs.
+  - No case timed out at 1800 s, so neither symmetry breaking nor cubes were used.
+  - The case lists were also rebuilt by a separate enumeration with a Burnside check of the frame counts
+    (`code/frame/final_check40.py`).
+  - Upper-bound sets:
+    - for Q₄₀, Q₄₂ and Q₄₆, found by SAT search and checked;
+    - for Q₄₄, Neuhaus's 22-set of Q₄₃ plus a corner (file from
+      [github.com/stefanneuhaus/queens-domination-solutions](https://github.com/stefanneuhaus/queens-domination-solutions),
+      CC BY 4.0, included unchanged in `data/frame/neuhaus/`).
+- **Theorem 1.4** (Hint and Conquer; claimed by Neuhaus). γ(Q₂₆) = 14, γ(Q₂₈) = 15, γ(Q₃₂) = 17,
   γ(Q₃₄) = 18, γ(Q₃₆) = 19.
   - The frame method has records for all five, every case UNSAT and DRAT-verified, plus the explicit
     upper-bound sets.
@@ -79,8 +97,11 @@ With these values, γ(Q_n) is known for all n ≤ 38.
     - k = (n−1)/2 for every odd n ≤ 35;
     - complete runs of (13, 7) and (15, 8);
     - zero-deficit differential tests against the main encoder.
-  - **The run on the 585 hard cases and a 2200-case sample is still in progress.** Its gates in
-    `verify.py` (`xcheck`) fail until it is complete.
+  - **The 585 hard cases:** all refuted. 14 needed cube splitting, giving 795 UNSAT leaves; the run took
+    76.5 CPU hours.
+  - **A sample of 2200 other cases** (2000 random and the 200 slowest in the main run): all UNSAT.
+  - There is no SAT formula and no disagreement with the main computation.
+  - The script rebuilds all 809 + 2200 formulas and compares their hashes.
 - **Line relaxation for n = 26, 28 (paper, Section 8).** Take a dominating set D of n/2 queens, with z_q
   queens of colour q. Choose n/2 empty rows A and n/2 empty columns B.
   - Every colour-q square of A × B is attacked diagonally, so these squares are covered by at most z_q
@@ -116,7 +137,7 @@ You need:
 
 ```sh
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python scripts/verify.py                   # default: under an hour, at most 3 processes
+.venv/bin/python scripts/verify.py                   # default: about an hour, at most 3 processes
 .venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|replay|frame|framesample|frametests|leandata|xcheck|upper|tamper|paper
 .venv/bin/python scripts/verify.py --frame-rehash-all  # the frame step rebuilds every formula hash (~1 CPU hour)
 .venv/bin/python scripts/verify.py --lean            # also builds lean/ and checks its axioms (~11 minutes)
@@ -189,7 +210,8 @@ The default run covers the following steps.
   - the counts, CPU hours and proof sizes match the claims;
   - the CNFs of a seeded sample of 2000 plain and 200 cube records are rebuilt by `enc.py` (and
     `run_hard.build`) and their hashes compared (all 130 111 with `--frame-rehash-all`);
-  - the same checks for (32, 16), (34, 17), (36, 18), (26, 13), (28, 14) and (35, 17).
+  - the same checks (300 sampled formulas each) for (32, 16), (34, 17), (36, 18), (40, 20), (42, 21),
+    (44, 22), (46, 23), (26, 13), (28, 14) and (35, 17).
 - **framesample:** re-solves 8 cases for n = 35 and 3 each for n = 32, 34, 36 with CaDiCaL + drat-trim:
   same CNF hash, UNSAT, VERIFIED.
 - **frametests:**
@@ -210,8 +232,8 @@ The default run covers the following steps.
   - the negative controls k = (n−1)/2 for n = 5..35;
   - the complete runs (13, 7) and (15, 8);
   - the zero-deficit differential tests;
-  - the 585 hard cases and the 2200-case sample: all refuted by complete cube trees. **These two gates
-    fail until the run is finished.**
+  - the 585 hard cases and the 2200-case sample: all refuted by complete cube trees, with no SAT record;
+  - every CNF of the trees (809 + 2200) rebuilt by `encx.py` and compared by hash.
 - **upper:**
   - Kamenetsky's 14-queen set and the independent 14-set of Östergård–Weakley dominate Q₂₆. Their 14-set
     dominates Q₂₇.
@@ -219,7 +241,11 @@ The default run covers the following steps.
   - Weakley's 15-set dominates Q₃₀, and the sets derived from it dominate Q₂₉ (15 queens) and Q₃₁
     (16 queens).
   - The independent 19-set of Östergård–Weakley dominates Q₃₅.
-  - **upper_frame:** the 17-, 18-, 19- and 19-sets of Q₃₂, Q₃₄, Q₃₅ and Q₃₆ in `data/frame/` dominate.
+  - **upper_frame:** these sets in `data/frame/` dominate:
+    - the 17-, 18-, 19- and 19-sets of Q₃₂, Q₃₄, Q₃₅ and Q₃₆;
+    - the 21-, 22-, 23- and 24-sets of Q₄₀, Q₄₂, Q₄₄ and Q₄₆.
+
+    Neuhaus's 22-set dominates Q₄₃, and the Q₄₄ set is that set plus the corner.
 - **tamper:** `scripts/tamper.py` copies the tracked files and alters one record at a time, then requires
   the corresponding step to fail. It also requires an unaltered copy to pass. There are 15 cases:
   - n = 28: survivors, certificate cubes, SAT records, a claim, a part record, the 15-set;
@@ -267,8 +293,11 @@ breaking (Lemma 2.5) and the cube cover. `code/frame/PROOFS.md` has the same pro
 - that the case lists of the n = 32 and n = 35 runs are exactly L(n, k);
 - the upper-bound sets for n = 32 and n = 35.
 
-**Certified by DRAT proofs checked with drat-trim:** every case formula for n = 26, 28, 32, 34, 35, 36 (and
-(35, 17)).
+The explicit case lists for the other n are not in Lean. They rest on `geom.py`; for n = 40–46 they are
+also checked against a separate enumeration.
+
+**Certified by DRAT proofs checked with drat-trim:** every case formula for n = 26, 28, 32, 34, 35, 36, 40,
+42, 44, 46 (and (35, 17)).
 
 **Trusted, small and auditable code (not formalised):**
 - `code/frame/enc.py`, the formula Φ(case) with its own sequential counter;
@@ -278,8 +307,8 @@ breaking (Lemma 2.5) and the cube cover. `code/frame/PROOFS.md` has the same pro
 - drat-trim.
 
 **Cross-checked:**
-- by a separately written enumeration and encoding with Kissat (`code/xcheck35/`; hard cases and sample
-  still running);
+- by a separately written enumeration and encoding with Kissat (`code/xcheck35/`): the 585 hard cases and
+  a 2200-case sample;
 - for n = 32, by `enc_b.py` with Glucose 4.
 
 ### Line relaxation (n = 26, 28)
@@ -298,10 +327,13 @@ reduction to conditions (a) and (b) (Proposition 8.4), and the symmetry argument
 ### Literature
 
 **From the literature:**
-- the upper-bound constructions (except the 15-set for Q₂₈ and the sets for Q₃₂, Q₃₄, Q₃₅, Q₃₆ found
-  here), which are checked here;
+- the upper-bound constructions, which are checked here; the 15-set for Q₂₈ and the sets for Q₃₂, Q₃₄,
+  Q₃₅, Q₃₆, Q₄₀, Q₄₂, Q₄₆ were found here;
+- the Q₄₃ set of Neuhaus used for Q₄₄;
+- the odd values of Proposition 1.5 for n = 33, 37, 39, 41, 45 (Östergård–Weakley) and the upper bound for
+  n = 43 (Neuhaus);
 - i(Q₂₈) = 15;
-- γ(Q_n) ≥ n/2, which is used only for Proposition 1.4 (known values).
+- γ(Q_n) ≥ ⌈n/2⌉, which is used only for Proposition 1.5 (known values).
 
 **External review.** An external AI review (ChatGPT Pro) of the code regenerated all 15 base formulas
 and all 4128 cube formulas of the stage-1 certificates (1528 for n = 26, 2600 for n = 28) from the
@@ -362,6 +394,10 @@ No independent human review has been recorded.
     - `check_frame.py`: the checks run by `verify.py`;
     - `verify_identities.py`, `test_enc.py`, `test_waste.py`, `test_sbp.py`: tests;
     - `find_plus1.py`: the SAT search for the upper-bound sets;
+    - `final_check40.py`: the final check used for n = 40–46. It rebuilds the case list independently with a
+      Burnside count, then calls `final_check35.py`;
+    - `q44_from_q43.py`: the Q₄₄ set from Neuhaus's Q₄₃ set;
+    - `find_odd_perm.py`: an unsuccessful search variant, kept for the record;
     - `PROOFS.md`: the proofs.
   - `xcheck35/`: the independent cross-check:
     - `cases.py`: the separate case list;
@@ -399,7 +435,9 @@ No independent human review has been recorded.
 - `data/frame/`: frame-method records (`.jsonl.xz`: one JSON line per case or cube, with case, cube,
   `cnf_sha256`, result, drat status, CPU times, proof size):
   - `d_35_18.jsonl.xz`, `d_35_18_sq.jsonl.xz`, `h_35_18.jsonl.xz`: n = 35 phases 1, 2, 3;
-  - `d_{26_13,28_14,32_16,34_17,36_18,35_17}.jsonl.xz`: the other runs;
+  - `d_{26_13,28_14,32_16,34_17,36_18,40_20,42_21,44_22,46_23,35_17}.jsonl.xz`: the other runs;
+  - `final_check_{40_20,42_21,44_22,46_23}.json`, `n40.log` to `n46.log`, `even42_46.log`: the final checks
+    (independent case list, coverage, full CNF rehash) and the run logs for n = 40–46;
   - `hard35_cases.jsonl`: the 585 phase-3 cases;
   - `final_check_35_18.json`, `check_hard_35_18.json`: the checks at the end of the run, all CNF hashes
     rebuilt;
@@ -407,18 +445,21 @@ No independent human review has been recorded.
   - `SHA256SUMS_*.txt`: hashes of code and uncompressed records at run time;
   - `enc_as_of_n32_run.py`: the encoder version of the n = 32 run. Its default output is byte-identical,
     see `d_32_16.check*.json`;
-  - `plus1_{32,34,36}.json`, `q35_19.json`: the upper-bound sets;
+  - `plus1_{32,34,36}.json`, `q35_19.json`, `q{40_21,42_22,44_23,46_24}.json`: the upper-bound sets;
+  - `neuhaus/appendix_01_q43_01cover.txt`: Neuhaus's 22-set of Q₄₃. It is from
+    github.com/stefanneuhaus/queens-domination-solutions, CC BY 4.0, unchanged;
   - `validation/`: records of the validation runs (`v_*` even, `om_*` and `o_*` odd, `vb_*` second
-    encoding) and `planted.log`.
+    encoding), `planted.log` and `planted{40,42,44,46}.log`.
 - `data/xcheck35/`: cross-check records:
   - `hard_cases_35_18.jsonl.xz`, `sample_cases_35_18.jsonl.xz`: inputs;
-  - `x_hard_35_18.jsonl.xz`, `x_sample_35_18.jsonl.xz`: results, added when the run is complete;
+  - `x_hard_35_18.jsonl.xz`, `x_sample_35_18.jsonl.xz`: results;
+  - `xcover_hard.json`, `xcover_sample.json`: the tree checks with full rehash at the end of the run;
   - `ctl/`: controls;
   - `logs/`: test logs.
 - `data/validation/`: part logs of the n = 20, 22, 24 runs.
 - `data/kamenetsky26.txt`: Kamenetsky's 14-queen set.
 - `data/q28_15.txt`: a 15-queen dominating set of Q₂₈.
-- Upper-bound sets for Q₃₂ to Q₃₆ are in `data/frame/`. The Östergård–Weakley sets are in
+- Upper-bound sets for Q₃₂ to Q₄₆ are in `data/frame/`. The Östergård–Weakley sets are in
   `code/check_upper.py`.
 - `verification/` (not tracked): outputs of verification runs.
 
@@ -427,9 +468,9 @@ No independent human review has been recorded.
 Author: Jason Davies.
 - AI systems produced the mathematics, the code, the Lean formalisation and the manuscript: Claude Opus 5.5
   (Anthropic), via Claude Code, under the author's direction.
-- The frame/deficit split was first tried in an earlier, uncertified AI attempt within the same project.
-  It was re-derived with proofs and reimplemented here, and compared with that attempt's logs only
-  afterwards.
+- The frame/deficit case split was first proposed in an earlier, uncertified attempt by Claude Fable 5.2
+  (Claude for web), run by the author. It was re-derived, proved and reimplemented here, and compared
+  with that attempt's logs only afterwards.
 - An independent AI referee reviewed the work and wrote the SAT-based checks and the stage-1
   certificate. An external AI review (ChatGPT Pro) of the code
 found the defects listed above. The AI system's literature search missed the prior work of Hint and
@@ -439,6 +480,7 @@ arguments; see the declaration in the paper.
 
 ## License
 
-Apache License 2.0; see [LICENSE](LICENSE). CaDiCaL (MIT) and drat-trim (MIT), which are downloaded
+Apache License 2.0; see [LICENSE](LICENSE), except `data/frame/neuhaus/appendix_01_q43_01cover.txt`, which is
+S. Neuhaus's file under CC BY 4.0 (its header gives the licence). CaDiCaL (MIT) and drat-trim (MIT), which are downloaded
 separately, have their own licences; Kissat (MIT) is not included. The Lean sources use Mathlib
 (Apache 2.0), which `lake` downloads.

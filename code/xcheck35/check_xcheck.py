@@ -11,8 +11,8 @@
 * differential tests on the zero-deficit cases (ctl/diff_z0_*): verdicts of enc.py + CaDiCaL 1.9.5 and of
   encoding X + kissat agree on every case;
 * the 585 hard cases (x_hard_35_18.jsonl.xz) and the stratified sample (x_sample_35_18.jsonl.xz): number of
-  cases refuted by complete cube trees (xcover.py), SAT records.  While the run is in progress these files are
-  absent or partial.
+  cases refuted by complete cube trees (xcover.py), SAT records, and every CNF of the trees rebuilt by encx.py with
+  the recorded SHA-256 (xcover.py --rehash; the two run in parallel, a few minutes).
 Prints JSON."""
 import json, lzma, os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,14 +62,18 @@ def main():
                                   'sat_cases': sum(r['A'] == 'SAT' for r in R),
                                   'models_ok': all(r.get('A_ok', True) and r.get('X_ok', True) for r in R)}
     out['diff_z0'] = diff
+    procs = {}
     for name in ('hard', 'sample'):
         cf, rf = os.path.join(data, '%s_cases_35_18.jsonl.xz' % name), os.path.join(data, 'x_%s_35_18.jsonl.xz' % name)
         if os.path.exists(cf) and os.path.exists(rf):
-            c = xcover(35, 18, cf, rf)
-            out[name] = {k: c[k] for k in ('cases', 'refuted', 'not_refuted', 'split_cases', 'unsat_leaves', 'SAT_records', 'cpu_s_in_trees',
-                                           'cases_not_in_independent_list')}
+            procs[name] = subprocess.Popen([sys.executable, os.path.join(HERE, 'xcover.py'), '35', '18', cf, rf, '--rehash'],
+                                           stdout=subprocess.PIPE, text=True)
         else:
             out[name] = {'present': False}
+    for name, pr in procs.items():
+        c = json.loads(pr.communicate()[0].splitlines()[0])
+        out[name] = {k: c[k] for k in ('cases', 'refuted', 'not_refuted', 'split_cases', 'unsat_leaves', 'SAT_records', 'cpu_s_in_trees',
+                                       'cases_not_in_independent_list', 'rehashed', 'hash_mismatches')}
     print(json.dumps(out))
 
 
