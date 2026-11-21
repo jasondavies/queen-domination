@@ -1,0 +1,33 @@
+kamenetsky a(4)        n= 4 k= 2  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(5)        n= 5 k= 3  accepted in 1 canonical orientation(s); moved-queen control rejected
+kamenetsky a(6)        n= 6 k= 3  accepted in 1 canonical orientation(s); moved-queen control rejected
+kamenetsky a(7)        n= 7 k= 4  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(8)        n= 8 k= 5  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(9)        n= 9 k= 5  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(10)       n=10 k= 5  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(11)       n=11 k= 5  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(12)       n=12 k= 6  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(13)       n=13 k= 7  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(14)       n=14 k= 8  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(15)       n=15 k= 9  accepted in 1 canonical orientation(s); moved-queen control rejected
+kamenetsky a(16)       n=16 k= 9  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(17)       n=17 k= 9  accepted in 8 canonical orientation(s); moved-queen control rejected
+kamenetsky a(18)       n=18 k= 9  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(19)       n=19 k=10  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(20)       n=20 k=11  accepted in 8 canonical orientation(s); moved-queen control rejected
+kamenetsky a(20) #2    n=20 k=11  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(21)       n=21 k=11  accepted in 8 canonical orientation(s); moved-queen control rejected
+kamenetsky a(22)       n=22 k=12  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(23)       n=23 k=12  accepted in 4 canonical orientation(s); moved-queen control rejected
+kamenetsky a(24)       n=24 k=13  accepted in 2 canonical orientation(s); moved-queen control rejected
+kamenetsky a(25)       n=25 k=13  accepted in 8 canonical orientation(s); moved-queen control rejected
+kamenetsky a(26)       n=26 k=14  accepted in 2 canonical orientation(s); moved-queen control rejected
+weakley30              n=30 k=15  accepted in 2 canonical orientation(s); moved-queen control rejected
+ow27+corner            n=27 k=14  accepted in 8 canonical orientation(s); moved-queen control rejected
+q29 from w30           n=29 k=15  accepted in 8 canonical orientation(s); moved-queen control rejected
+q31 = w30+corner       n=31 k=16  accepted in 2 canonical orientation(s); moved-queen control rejected
+q31 even lines         n=31 k=16  accepted in 4 canonical orientation(s); moved-queen control rejected
+q32_17 from w30        n=32 k=17  accepted in 2 canonical orientation(s); moved-queen control rejected
+q34_18                 n=34 k=18  accepted in 2 canonical orientation(s); moved-queen control rejected
+q35_19 (k=19)          n=35 k=19  accepted in 2 canonical orientation(s); moved-queen control rejected
+planted_x: 32 sets OK

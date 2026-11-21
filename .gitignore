@@ -13,3 +13,5 @@ paper/*.fdb_latexmk
 paper/*.synctex.gz
 paper/*.bbl
 paper/*.blg
+/code/frame/out/
+/lean/.lake/

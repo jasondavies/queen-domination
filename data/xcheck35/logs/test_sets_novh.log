@@ -1,0 +1,11 @@
+(n,k)=(4,2) cases 36: reference 12 sets (0.0s), frame/X 12 sets from 4 satisfiable cases (0.0s): EQUAL
+(n,k)=(5,3) cases 397: reference 186 sets (0.0s), frame/X 186 sets from 37 satisfiable cases (0.6s): EQUAL
+(n,k)=(6,3) cases 98: reference 4 sets (0.0s), frame/X 4 sets from 1 satisfiable cases (0.2s): EQUAL
+(n,k)=(6,4) cases 2289: reference 2744 sets (0.5s), frame/X 2744 sets from 302 satisfiable cases (5.2s): EQUAL
+(n,k)=(7,4) cases 966: reference 86 sets (0.6s), frame/X 86 sets from 17 satisfiable cases (3.1s): EQUAL
+(n,k)=(8,4) cases 195: reference 0 sets (0.6s), frame/X 0 sets from 0 satisfiable cases (0.8s): EQUAL
+(n,k)=(8,5) cases 5130: reference 4860 sets (8.0s), frame/X 4860 sets from 386 satisfiable cases (21.4s): EQUAL
+(n,k)=(9,5) cases 1832: reference 114 sets (13.9s), frame/X 114 sets from 16 satisfiable cases (11.3s): EQUAL
+(n,k)=(10,5) cases 327: reference 8 sets (30.2s), frame/X 8 sets from 1 satisfiable cases (2.2s): EQUAL
+(n,k)=(11,5) cases 20: reference 2 sets (55.7s), frame/X 2 sets from 1 satisfiable cases (0.1s): EQUAL
+ALL EQUAL

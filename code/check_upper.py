@@ -18,6 +18,10 @@
 * Q_31: the Q_30 set plus a queen on the new corner square (30, 30).
 Together with gamma(Q_n) >= n/2 for n < 143, n != 3, 11 (Ostergard-Weakley, Corollary 2) the last three
 give gamma(Q_29) = gamma(Q_30) = 15 and gamma(Q_31) = 16.
+* Q_35: the independent 19-queen set of Ostergard and Weakley (Section 5, entry "i(Q35), gamma(Q35), i(Q36),
+  gamma(Q36) in {18,19}"): in centred coordinates -17..17, the squares (x, y) for odd x = -17, -15, ..., 17 with
+  y = 3, -17, -9, 13, 7, -11, 1, 9, -7, 11, -13, -5, 15, -15, -1, 5, 17, -3, plus (2, 2).  With gamma(Q_35) >= 19
+  it gives i(Q_35) = 19.
 usage: check_upper.py KAMENETSKY26 Q28_15
 Prints JSON."""
 import json, sys
@@ -49,6 +53,11 @@ def weakley30():
     return [(x + 14, y + 14) for x, y in zip(xs, ys)]               # board [-14, 15]^2 -> [0, 30)^2
 
 
+def ow35():
+    ys = [3, -17, -9, 13, 7, -11, 1, 9, -7, 11, -13, -5, 15, -15, -1, 5, 17, -3]
+    return [(x + 17, y + 17) for x, y in list(zip(range(-17, 18, 2), ys)) + [(2, 2)]]   # [-17, 17]^2 -> [0, 35)^2
+
+
 def board(path, n):
     rows = [l.rstrip('\n') for l in open(path) if l.strip()]
     assert len(rows) == n and all(len(r) == n for r in rows)
@@ -72,10 +81,14 @@ def main():
         out[key] = {'n': n, 'queens': len(set(Q)), 'on_board': all(0 <= r < n and 0 <= c < n for r, c in Q),
                     'undominated': len(undominated(n, Q))}
     out['weakley30']['monochromatic'] = len(set((r + c) % 2 for r, c in w30)) == 1
+    o35 = ow35()
+    out['ow35'] = {'n': 35, 'queens': len(set(o35)), 'on_board': all(0 <= r < 35 and 0 <= c < 35 for r, c in o35),
+                   'undominated': len(undominated(35, o35)), 'independent': independent(o35)}
     out['ok'] = (out['kamenetsky26'] == {'queens': 14, 'undominated': 0} and out['ow27'] == {'queens': 14, 'undominated': 0}
                  and out['ow26'] == {'queens': 14, 'undominated': 0, 'independent': True}
                  and all(out[k]['on_board'] and out[k]['undominated'] == 0 for k in ('q28', 'q29', 'weakley30', 'q31'))
-                 and (out['q28']['queens'], out['q29']['queens'], out['weakley30']['queens'], out['q31']['queens']) == (15, 15, 15, 16))
+                 and (out['q28']['queens'], out['q29']['queens'], out['weakley30']['queens'], out['q31']['queens']) == (15, 15, 15, 16)
+                 and out['ow35'] == {'n': 35, 'queens': 19, 'on_board': True, 'undominated': 0, 'independent': True})
     print(json.dumps(out))
 
 

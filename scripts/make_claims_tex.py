@@ -35,6 +35,9 @@ def render():
         lines.append(r'\newcommand{\clpairs%s%s}{%s}' % ('gp' if 'g' in r else 'rec', ['', '', '', '', '', '', '', '', 'Eight', '', '', '', '', '', 'Fourteen', '', 'Sixteen', '', '', '', 'Twenty', '', 'TwentyTwo', '', 'TwentyFour'][int(r['n'])], group(r['pairs'], '{,}')))
     for r in c['gplus']:
         lines.append(r'\newcommand{\clgp%s}{%s}' % (['', '', '', '', '', '', '', '', 'Eight', '', '', '', '', '', 'Fourteen', '', 'Sixteen'][int(r['n'])], group(r['classes'], '{,}')))
+    for r in c['frame']:
+        cells = [r['n'], r['k']] + [group(r[k], r'\,') for k in ('frames', 'cases', 'solve', 'check', 'proofGB', 'maxSolve')]
+        lines.append(r'\newcommand{\clrowF%s}{%s\\}' % (r['key'], ' & '.join(cells)))
     return '\n'.join(lines) + '\n'
 
 

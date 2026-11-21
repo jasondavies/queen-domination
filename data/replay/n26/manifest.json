@@ -1,0 +1,22 @@
+{
+ "n": 26,
+ "g": 13,
+ "survivors_sha256": "58068a1dd390e3508da25b1e3f37ffea6fff545cab546de8f1edc8dbdf8dde22",
+ "cadical_sha256": "d5bd1ba36091716fefebea77db9c43a6f3d6ce402f202b2291bafe44d62a65fa",
+ "drat_trim_sha256": "890a7f1d66f482265518096a433a07cc949fdfba3595602755a018ca20ce2fdc",
+ "sources_sha256": {
+  "cert_stage1.py": "dc7c6bf9fabcf346901e9ede349ecdbcad58b5a68e34ad11321fa729ce747f32",
+  "refcheck.py": "107745534b8d85146f4eeb0ba15b77273aa08ca0959781c669d39ccd3b29eedc",
+  "sat_place.py": "2f62a5fd5baa9a0cc10a2c54ef1a68a94337400eb98bce3095b765cdb6dfaf91"
+ },
+ "T": {
+  "0": 2,
+  "1": 2,
+  "2": 2,
+  "3": 2,
+  "4": 2,
+  "5": 2,
+  "6": 3
+ },
+ "chunk": 100
+}

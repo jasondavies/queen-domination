@@ -1,0 +1,1 @@
+{"n": 35, "k": 18, "select": "square0", "cases": 585, "covered_by_verified_unsat_cubes": 585, "not_covered": 0, "verified_cubes": 1755, "sat_records": 0, "rehash_mismatch": 0, "uncovered_examples": []}

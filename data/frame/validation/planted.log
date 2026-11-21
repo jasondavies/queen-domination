@@ -1,0 +1,36 @@
+kamenetsky a(4)        n=4 k=2  dominating  case=(0, 0, 1, 1, 0, 1, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(5)        n=5 k=3  dominating  case=(0, 0, 1, 2, 0, 2, 0, 0)  orientations with canonical frame: 1  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(6)        n=6 k=3  dominating  case=(0, 1, 0, 1, 0, 0, 0, 1)  orientations with canonical frame: 1  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(7)        n=7 k=4  dominating  case=(0, 1, 0, 1, 0, 1, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(8)        n=8 k=5  dominating  case=(1, 2, 1, 2, 0, 0, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(9)        n=9 k=5  dominating  case=(1, 2, 1, 2, 0, 0, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(10)       n=10 k=5  dominating  case=(0, 1, 0, 1, 0, 0, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(11)       n=11 k=5  dominating  case=(0, 0, 0, 0, 0, 0, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(12)       n=12 k=6  dominating  case=(0, 1, 0, 1, 0, 0, 1, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(13)       n=13 k=7  dominating  case=(0, 1, 0, 1, 0, 0, 0, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(14)       n=14 k=8  dominating  case=(1, 2, 1, 2, 0, 0, 1, 2)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(15)       n=15 k=9  dominating  case=(0, 1, 1, 2, 0, 2, 0, 1)  orientations with canonical frame: 1  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(16)       n=16 k=9  dominating  case=(0, 1, 0, 1, 1, 1, 0, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(17)       n=17 k=9  dominating  case=(0, 0, 0, 0, 0, 0, 1, 0)  orientations with canonical frame: 8  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(18)       n=18 k=9  dominating  case=(0, 1, 0, 1, 0, 0, 0, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(19)       n=19 k=10  dominating  case=(0, 2, 1, 1, 0, 0, 1, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(20)       n=20 k=11  dominating  case=(0, 0, 0, 0, 2, 2, 0, 0)  orientations with canonical frame: 8  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(20) #2    n=20 k=11  dominating  case=(1, 2, 1, 2, 0, 0, 1, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(21)       n=21 k=11  dominating  case=(0, 0, 0, 0, 1, 1, 0, 1)  orientations with canonical frame: 8  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(22)       n=22 k=12  dominating  case=(0, 1, 0, 1, 0, 0, 2, 2)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(23)       n=23 k=12  dominating  case=(1, 1, 1, 1, 0, 0, 1, 1)  orientations with canonical frame: 4  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(24)       n=24 k=13  dominating  case=(0, 1, 0, 1, 1, 1, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(25)       n=25 k=13  dominating  case=(0, 0, 0, 0, 0, 0, 2, 0)  orientations with canonical frame: 8  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+kamenetsky a(26)       n=26 k=14  dominating  case=(0, 1, 0, 1, 1, 1, 1, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q28_15 (repo)          n=28 k=15  dominating  case=(0, 1, 0, 1, 1, 1, 0, 2)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+mcrae18 (k=n/2)        n=18 k=9  dominating  case=(0, 1, 0, 1, 0, 0, 0, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+weakley30 (k=n/2)      n=30 k=15  dominating  case=(0, 1, 0, 1, 0, 0, 0, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q32_17 from weakley30  n=32 k=17  dominating  case=(0, 3, 0, 3, 0, 0, 2, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q32_17 external        n=32 k=17  dominating  case=(0, 3, 0, 3, 0, 0, 0, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+ow27 (k=(n+1)/2)       n=27 k=14  dominating  case=(0, 0, 0, 0, 0, 0, 1, 0)  orientations with canonical frame: 8  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q29 from weakley30     n=29 k=15  dominating  case=(1, 1, 1, 1, 0, 0, 0, 1)  orientations with canonical frame: 8  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q31 = weakley30+corner n=31 k=16  dominating  case=(0, 2, 0, 2, 0, 0, 1, 1)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q31 even-lines (found) n=31 k=16  dominating  case=(1, 1, 1, 1, 0, 0, 1, 1)  orientations with canonical frame: 4  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q34_18 (found)         n=34 k=18  dominating  case=(0, 3, 0, 3, 0, 0, 1, 0)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+q36_19 (found)         n=36 k=19  dominating  case=(0, 3, 0, 3, 0, 0, 0, 2)  orientations with canonical frame: 2  in case list: True  accepted: True  control (non-dominating variant) accepted: False
+ALL OK

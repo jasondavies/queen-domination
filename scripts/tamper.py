@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tamper test: altered copies of the tracked files must fail verification.
 
-For each case, the committed tree (git archive HEAD, so uncommitted edits never change what is tested)
+For each case (15 in all), the committed tree (git archive HEAD, so uncommitted edits never change what is tested)
 is extracted to a temporary directory, one record is altered, and `scripts/verify.py --only STEP` is run
 on the copy; the case passes if that run FAILS.  An unaltered copy must pass the same steps.
 usage: tamper.py ROOT   -- prints JSON (including the commit tested and whether the working tree is dirty)."""
@@ -33,6 +33,23 @@ def alter_base(L):
     return L
 
 
+def first_unsat_to_sat(L):
+    i = next(k for k, x in enumerate(L) if '"result": "UNSAT"' in x)
+    L[i] = L[i].replace('"result": "UNSAT"', '"result": "SAT"')
+    return L
+
+
+def drop_split_cube(L):
+    i = next(k for k, x in enumerate(L) if re.search(r'"cube": "[01]{4}"', x) and '"result": "UNSAT"' in x)
+    return L[:i] + L[i + 1:]
+
+
+def json_drop_queen(L):
+    d = json.loads(''.join(L))
+    d['set_col_row'] = d['set_col_row'][1:]
+    return [json.dumps(d)]
+
+
 def drop_queen(L):
     i = next(k for k, x in enumerate(L) if 'Q' in x)
     L[i] = L[i].replace('Q', '.', 1)
@@ -53,6 +70,12 @@ CASES = [
     ('Q28 15-set with a queen removed', 'upper', lambda d: txt_edit(d / 'data/q28_15.txt', drop_queen)),
     ('n26 survivor altered', 'records', lambda d: txt_edit(d / 'data/n26/survivors.txt', lambda L: L[:5] + [L[5].replace(' 6\n', ' 5\n')] + L[6:])),
     ('n26 certificate base hash altered', 'records', lambda d: txt_edit(d / 'data/n26/cert_stage1_z6.jsonl', alter_base)),
+    ('n35 frame record marked SAT', 'frame', lambda d: xz_edit(d / 'data/frame/d_35_18.jsonl.xz', first_unsat_to_sat)),
+    ('n35 cube of a split case dropped', 'frame', lambda d: xz_edit(d / 'data/frame/h_35_18.jsonl.xz', drop_split_cube)),
+    ('n32 frame record dropped', 'frame', lambda d: xz_edit(d / 'data/frame/d_32_16.jsonl.xz', lambda L: L[:100] + L[101:])),
+    ('Q35 19-set with a queen removed', 'upper', lambda d: txt_edit(d / 'data/frame/q35_19.json', json_drop_queen)),
+    ('n28 replay cube marked SAT', 'replay', lambda d: txt_edit(d / 'data/replay/n28/cert_stage1_z7.jsonl',
+                                                              lambda L: L[:3] + [L[3].replace('"UNSAT"', '"SAT"')] + L[4:])),
 ]
 
 
@@ -73,7 +96,7 @@ def main():
     out = {'commit': HEAD, 'working_tree_dirty': DIRTY, 'cases': []}
     with tempfile.TemporaryDirectory() as td:
         d = copy(td)
-        out['baseline_pass'] = all(verify(d, s) for s in ('records', 'records28', 'upper'))
+        out['baseline_pass'] = all(verify(d, s) for s in ('records', 'records28', 'upper', 'frame', 'replay'))
     for name, step, fn in CASES:
         with tempfile.TemporaryDirectory() as td:
             d = copy(td)

@@ -19,8 +19,12 @@
 
 \emergencystretch=3em
 \newcommand{\repo}{\url{https://github.com/jasondavies/queen-domination}}
+\newcommand{\dR}{d_R}
+\newcommand{\dC}{d_C}
+\newcommand{\dT}{d_T}
+\newcommand{\dS}{d_S}
 
-\title{An independent verification of the queen domination numbers $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$}
+\title{The queen domination number $\gamma(Q_{35})=19$}
 \author{Jason Davies\thanks{\href{mailto:jason@jasondavies.com}{\nolinkurl{jason@jasondavies.com}}}}
 \date{\clDate}
 
@@ -28,30 +32,29 @@
 
 \maketitle
 \begin{abstract}
-The domination numbers $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$ of the $26\times26$ and $28\times28$
-queen's graphs (OEIS A075458) were established in the 2026 preprint \emph{Hint and Conquer}, by SAT
-solving with DRAT proofs over a split of the search space by the box of the outermost empty rows and
-columns, and they had been claimed earlier, by integer programming without certificates, in Neuhaus's
-2009 dissertation. We give a completely independent verification, by a different reduction and with
-no common code. If $n/2$ queens dominate the $n\times n$ board, $z_q$ of them on squares of colour $q$,
-choose $n/2$ empty rows and $n/2$ empty columns. Every square of colour $q$ in both chosen sets is
-attacked along a diagonal, so these squares are covered by at most $z_q$ difference diagonals and at
-most $z_q$ sum diagonals of colour $q$. This is a constrained vertex cover problem in a small bipartite
-graph, and a matching bound prunes it well enough that the possible pairs (empty rows, empty columns)
-can be enumerated: up to symmetry there are $\clpairsTotal$ of them for $n=26$ and $\clpairsTotalXXVIII$
-for $n=28$. A second search shows that no $n/2$ queens avoiding the chosen rows and columns dominate the
-board, for any of these pairs. Both steps are certified by DRAT proofs checked with \texttt{drat-trim}:
-the enumeration through a cube-and-conquer refutation of the relaxation with every listed pair
-excluded, the second step by one refutation per pair. The lower bounds therefore depend on two short CNF
-encoders and the proof checker, and not on the search programs, and a certificate-only replay mode
-rebuilds and re-checks every certificate formula from the survivor lists alone. The same pipeline
-reproduces all known values and isomorphism-class counts of minimum dominating sets of $Q_n$ for even
-$n\le 18$, and the known values for $n=20,22,24$.
+We show that no $18$ queens dominate the $35\times35$ board, so that the domination number of the queen's
+graph $Q_{35}$ is $\gamma(Q_{35})=19$ (OEIS A075458); since 2001 it had been known only that
+$\gamma(Q_{35})\in\{18,19\}$. An independent dominating set of $19$ queens found by \"Osterg\aa rd and
+Weakley then gives $i(Q_{35})=19$, and $35$ is the smallest odd $n>15$ with
+$\gamma(Q_n)=\lceil n/2\rceil+1$. The proof is computer-assisted. It splits a hypothetical dominating set
+by the box spanned by its outermost empty rows and columns, as in the \emph{Hint and Conquer} method
+for even boards, and further by the deficits of occupied lines of the four kinds. Exact counting
+identities for the border and for the sides of the box make each of the resulting $\clcasesXXXV$ cases a
+small SAT problem. Every case was refuted by CaDiCaL with a DRAT proof checked by \texttt{drat-trim}, in
+about $81$ CPU hours. The reduction to the cases, the completeness of the case list and the upper bound
+are formalised in Lean~4 with Mathlib, modulo the CNF encoding and the SAT certificates. A second,
+separately written encoding solved with Kissat cross-checks the hardest cases (this run was still in
+progress at the time of writing). The same method, with
+DRAT proofs, confirms $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$ and $\gamma(Q_{36})=19$, and
+$\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$, which were first established in \emph{Hint and Conquer}
+(2026). For $n=26$ and $n=28$ we also give a second, completely independent proof, by a relaxation of
+the grid of empty rows and columns to covers by diagonals, with DRAT certificates for both of its stages
+and a complete replay of every certificate formula.
 \end{abstract}
 
-\noindent\textbf{AI transparency statement.} The computer-assisted verification, the code and this
-manuscript were produced by artificial intelligence. The values verified here were established earlier
-by others (Section~\ref{sec:intro}). The human author initiated the broader
+\noindent\textbf{AI transparency statement.} The computer-assisted proofs, the code, the Lean
+formalisation and this manuscript were produced by artificial intelligence. The even values verified here
+were established earlier by others (Section~\ref{sec:intro}). The human author initiated the broader
 research and directed the AI systems, but did not write the text and has not checked the arguments.
 Details are given at the end of the paper.
 
@@ -59,68 +62,96 @@ Details are given at the end of the paper.
 
 The queen's graph $Q_n$ has the $n^2$ squares of the $n\times n$ board as vertices, two squares being
 adjacent when they share a row, a column or a diagonal. Its domination number $\gamma(Q_n)$ is the least
-number of queens that occupy or attack every square. The problem goes back to de~Jaenisch (1862) and
-is Problem~C18 in Guy's collection; see the surveys \cite{Cockayne,Watkins} and the introduction
+number of queens that occupy or attack every square, and its independent domination number $i(Q_n)$ the
+least number of pairwise non-attacking queens that do so. The problem goes back to de~Jaenisch (1862)
+and is Problem~C18 in Guy's collection; see the surveys \cite{Cockayne,Watkins} and the introduction
 of~\cite{Weakley2022}. The general lower bound
 \[
   \gamma(Q_n)\ \ge\ \tfrac{n-1}{2}
 \]
 was proved independently by Spencer (see~\cite{Cockayne}) and by Raghavan and Venkatesan~\cite{RV}, and
-equality holds only for $n\in\{3,11\}$~\cite{Weakley2002,FW}. In particular $\gamma(Q_n)\ge n/2$ for even
-$n$. For every $n\le120$ other than $3$ and $11$ the value is known to be $\lceil n/2\rceil$ or
+equality holds only for $n\in\{3,11\}$~\cite{Weakley2002,FW}. So $\gamma(Q_n)\ge\lceil n/2\rceil$ for all
+other $n$. For every $n\le120$ other than $3$ and $11$ the value is known to be $\lceil n/2\rceil$ or
 $\lceil n/2\rceil+1$ \cite{OW,Weakley2022}. For $n\le25$ the exact values come from constructions~\cite{OW,Kearse},
 from exhaustive searches by Kearse and Gibbons ($n\le19$)~\cite{Kearse} and by Bird ($n=20,22,24$, with a
 general-purpose dominating-set solver on 64 processors)~\cite{Bird}, and, for $n\le19$, from
-proof-producing SAT solving~\cite{RB}. A $14$-queen dominating set of $Q_{26}$ was given by
-\"Osterg\aa rd and Weakley~\cite{OW}, who in fact found an independent one, and another appears in
-Kamenetsky's list of best known placements attached to OEIS A075458~\cite{OEIS}; the independent
-domination numbers $i(Q_{26})=14$ and $i(Q_{28})=15$ were computed by Langlois-R\'emillard, M\"ussig and
-Rold\'an~\cite{LMR}. So $13\le\gamma(Q_{26})\le14$ and $14\le\gamma(Q_{28})\le15$.
+proof-producing SAT solving~\cite{RB}.
 
-For even $n=2k$ the question whether $\gamma(Q_n)=k$ is a tight one. Weakley~\cite{Weakley2022} calls a
-dominating set \emph{monochromatic} if all its squares have the same colour. Weakley shows that a
-monochromatic $k$-set of $Q_{2k}$ forces $n\in\{4,12\}$ when $4\mid n$. When $n\equiv2\pmod 4$ it
-forces a Diophantine condition, which has no solution for $n=26$. The same paper shows that the colour classes
-of a bichromatic $k$-set have nearly equal sizes (for $k=14$: sizes $\{7,7\}$, or $\{6,8\}$ under further
-conditions), and conjectures that bichromatic $k$-sets do not exist for $n>4$. So the question is
-whether $Q_{26}$ has a bichromatic $13$-dominating set and whether $Q_{28}$, where monochromatic
-$14$-sets are excluded because $4\mid28$, has a bichromatic $14$-dominating set. Our computation does not
-use these results: it treats all colour splits alike.
+For odd $n$, \"Osterg\aa rd and Weakley~\cite{OW} list the values $\gamma(Q_n)=\lceil n/2\rceil$ for many
+$n$, among them every $n\equiv1\pmod4$ up to $129$ and all odd $n$ with $17\le n\le33$, and they leave
+$n=35$ open: ``$i(Q_{35}),\gamma(Q_{35}),i(Q_{36}),\gamma(Q_{36})\in\{18,19\}$''. Their $19$-queen set
+for $Q_{35}$ is independent. The only odd $n$ for which $\gamma(Q_n)=\lceil n/2\rceil+1$ was known is
+$n=15$, where $\gamma(Q_{15})=9$~\cite{Kearse}. We settle $n=35$.
 
-\paragraph{Prior determinations.} The lower bounds $\gamma(Q_{26})>13$ and $\gamma(Q_{28})>14$, and
-hence $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$, were established in the preprint \emph{Hint and
-Conquer}~\cite{HC} (October 2026), together with $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$,
-$\gamma(Q_{36})=19$ and $\gamma(Q_{38})=20$. It splits the search space by the box spanned by the outermost
-empty rows and columns of a dominating set, adds counting constraints derived from the classical
-lower-bound argument, solves one SAT formula per box with the line-variable encoding of Rostami and
-Bright~\cite{RB}, and checks a DRAT proof for every formula (Section~\ref{sec:box}). Earlier, Neuhaus's
-dissertation~\cite{Neuhaus} had claimed $\gamma(Q_n)=n/2+1$ for $n=20,22,\dots,28$ and $n=32,\dots,46$,
-by an integer-programming computation (CPLEX) for which no run times, logs or certificates are given
-for $n\ge20$. An earlier version of the present paper overlooked both works.
-
-\paragraph{This paper.} We verify $\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$ independently. Our
-reduction is different: it relaxes the problem to covers of the grid of empty rows and empty columns by
-diagonals of each colour, enumerates the feasible grids up to symmetry with a search program, and
-refutes the placement of queens for each of them. It shares no code with~\cite{HC,RB,Neuhaus}. Both
-steps carry DRAT certificates checked with \texttt{drat-trim}, and a certificate-only verification mode
-rebuilds every certificate formula from the committed survivor lists, solves it and checks the proof.
-
-\begin{theorem}[\cite{HC}; claimed in~\cite{Neuhaus}]\label{thm:main}
-$\gamma(Q_{26})=14$ and $\gamma(Q_{28})=15$. Equivalently, no $13$ queens dominate the $26\times26$
-board, and no $14$ queens dominate the $28\times28$ board.
+\begin{theorem}\label{thm:main}
+No $18$ queens dominate the $35\times35$ board. Hence $\gamma(Q_{35})=i(Q_{35})=19$.
 \end{theorem}
 
-We give an independent proof of Theorem~\ref{thm:main} in Sections~\ref{sec:relax}--\ref{sec:cert}.
+\begin{corollary}\label{cor:odd}
+$n=35$ is the smallest odd $n>15$ with $\gamma(Q_n)=\lceil n/2\rceil+1$.
+\end{corollary}
+\begin{proof}
+For odd $n$ with $17\le n\le33$ the value $\gamma(Q_n)=\lceil n/2\rceil$ is in the list of~\cite{OW}.
+\end{proof}
+
+The upper bounds are explicit sets, the independent one from~\cite{OW}. The lower bound is
+computer-assisted (Sections~\ref{sec:frame}--\ref{sec:n35}): we prove that a dominating set of $18$
+queens would satisfy the constraints of one of $\clcasesXXXV$ explicit cases, and refute every case by
+SAT solving with a DRAT proof checked by \texttt{drat-trim}~\cite{DRATtrim}. The reduction is
+formalised in Lean~4 (Section~\ref{sec:lean}), and a second, separately written encoding solved with a
+different SAT solver cross-checks the cases that are hardest for the first one (Section~\ref{sec:xcheck}).
+
+\paragraph{The frame method and prior work.} Our reduction splits the search space by the \emph{box}
+spanned by the outermost empty rows and columns of a dominating set, and by the \emph{deficits}, the
+numbers of queens in excess of the occupied lines of each of the four kinds. The border of the box and
+its sides obey exact counting identities, which make the case formulas small and strong. The box split,
+with the two side identities as ``counting hints'', is the method of the preprint \emph{Hint and
+Conquer}~\cite{HC} (October 2026), which used it to establish $\gamma(Q_n)=n/2+1$ for $n=26,28,32,34,36,38$.
+Exact border identities of this kind go back to the counting argument behind the bound
+$\gamma(Q_n)\ge(n-1)/2$~\cite{RV,Cockayne}: Weakley~\cite[proof of Theorem~1]{Weakley2022} states an
+exact border identity for the box (the box and the border inequality appear in the work of Boz\'oki,
+G\'al, Marosi and Weakley~\cite{BGMW}), Neuhaus~\cite[Ch.~4]{Neuhaus} analysed boxes, their sides and
+``loss squares'' of dominating sets of size $n/2$ by hand, and Karandikar and Dutta~\cite{KD} used counts
+on the sides of the box, with a split into square and non-square boxes, for odd boards. What we add to
+the method of~\cite{HC} is an explicit split by the deficit vector with exact cardinalities and
+at-most-one constraints, the whole-border identity, a residual symmetry reduction for the hardest
+cases, and its application to an odd board, where the identities have more slack
+(Section~\ref{sec:frame}). \cite{HC}~treats even $n$ only.
+
+\paragraph{Even boards.} With the same method and DRAT proofs we also confirm the even values.
+
+\begin{theorem}[\cite{HC}; claimed in~\cite{Neuhaus}]\label{thm:even}
+$\gamma(Q_{26})=14$, $\gamma(Q_{28})=15$, $\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$ and $\gamma(Q_{36})=19$.
+\end{theorem}
+
+These values were first established in \emph{Hint and Conquer}~\cite{HC}, together with
+$\gamma(Q_{38})=20$, by SAT solving with DRAT proofs. They had been claimed earlier in Neuhaus's 2009
+dissertation~\cite{Neuhaus}, which states $\gamma(Q_n)=i(Q_n)=n/2+1$ for $n=20,22,\dots,28$ and
+$n=32,\dots,46$ on the basis of an integer-programming computation (CPLEX) for which no run times, logs
+or certificates are given for $n\ge20$. For $n=26$, the repository \texttt{jkolantree/BSC} on
+GitHub~\cite{BSC} contains a Lean~4 development whose final theorem states $\gamma(Q_{26})=14$; its
+proof, committed in August 2026, uses parity ``shadows'' of a $13$-queen set, polynomial (Nullstellensatz
+and moment) identities and a case analysis of monochromatic sets, and the repository reports an external
+re-check of the Lean statements by a second kernel. We have not built or checked it. An earlier version of
+the present paper overlooked~\cite{HC} and~\cite{Neuhaus}.
+
+For $n=26$ and $n=28$ we give, in addition, a second proof that is independent of the box method in
+reduction and in code (Section~\ref{sec:relax}). It relaxes the grid of empty rows and empty columns to
+covers by diagonals of each colour, enumerates the feasible grids, and then places the queens; both
+stages carry DRAT certificates, and every certificate formula has been rebuilt from the survivor lists,
+solved and checked again.
+
 For reference we collect the neighbouring known values.
 
 \begin{proposition}[known values]\label{cor:oeis}
-The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 for $26\le n\le31$ are
-\[
-  a(26)=a(27)=14,\qquad a(28)=a(29)=a(30)=15,\qquad a(31)=16 .
-\]
-Here $a(26)$ and $a(28)$ are due to~\cite{HC} (Theorem~\ref{thm:main}), and $a(27)$, $a(29)$, $a(30)$
-and $a(31)$ to \"Osterg\aa rd and Weakley~\cite{OW}. With $\gamma(Q_{33})=17$~\cite{OW} and
-$\gamma(Q_{32})=17$, $\gamma(Q_{34})=18$~\cite{HC}, the values are known for all $n\le34$.
+The terms $a(n)=\gamma(Q_n)$ of OEIS A075458 for $26\le n\le38$ are
+\begin{gather*}
+  a(26)=a(27)=14,\quad a(28)=a(29)=a(30)=15,\quad a(31)=16,\quad a(32)=a(33)=17,\\
+  a(34)=18,\quad a(35)=a(36)=a(37)=19,\quad a(38)=20 .
+\end{gather*}
+Here $a(26)$, $a(28)$, $a(32)$, $a(34)$, $a(36)$ and $a(38)$ are due to~\cite{HC} (Theorem~\ref{thm:even}),
+$a(35)$ is Theorem~\ref{thm:main}, and $a(27)$, $a(29)$, $a(30)$, $a(31)$, $a(33)$ and $a(37)$ are listed
+by \"Osterg\aa rd and Weakley~\cite{OW}. So $\gamma(Q_n)$ is known for every $n\le38$.
 \end{proposition}
 
 \begin{proof}[Checks]
@@ -135,16 +166,440 @@ coordinates $-14,\dots,15$, the squares $(x,y)$ with $x=-13,-11,\dots,15$ and
 $y=1,-9,9,15,-11,-5,3,-3,13,11,7,-13,-7,-1,5$ respectively. None of its squares lies in the row or the
 column with coordinate $-14$; deleting them leaves a $29\times29$ board on which the same $15$ squares
 still dominate, so $\gamma(Q_{29})\le15$. Adding a $31$st row and column and a queen at their
-intersection gives a $16$-set dominating $Q_{31}$.
+intersection gives a $16$-set dominating $Q_{31}$. The sets for $n=32,\dots,36$ are given in
+Sections~\ref{sec:n35} and~\ref{sec:even}. We did not check the values for $n=33,37,38$.
 \end{proof}
 
-Section~\ref{sec:relax} reduces the problem to a finite search, with complete proofs.
-Section~\ref{sec:comp} describes the search and the two computations, and Section~\ref{sec:cert} the
-DRAT certificates and what the proofs rest on. Section~\ref{sec:valid} reports the validation runs and
-the independent checks, and Section~\ref{sec:box} compares the method with the box method of~\cite{HC}. The
-code, the records of the computation and a verification script are available online.\footnote{\repo}
+Section~\ref{sec:frame} sets up the frame method with complete proofs, and Section~\ref{sec:n35}
+reports the computation for $n=35$. Section~\ref{sec:even} gives the even boards,
+Section~\ref{sec:fvalid} the validation of the method, Section~\ref{sec:xcheck} the cross-check for
+$n=35$ and Section~\ref{sec:lean} the Lean formalisation. Section~\ref{sec:relax} is the second proof
+for $n=26,28$. The code, the records of all computations, the Lean sources and a verification script are
+available online.\footnote{\repo}
 
-\section{A line relaxation}\label{sec:relax}
+\section{The frame method}\label{sec:frame}
+
+\subsection{Boxes, needy squares and deficits}
+
+In this part of the paper a square is a pair $(x,y)$ with $0\le x,y<n$, where $x$ is the column and $y$
+the row. The \emph{difference diagonal} of $(x,y)$ is $t=y-x$ and its \emph{sum diagonal} is $s=x+y$; a
+\emph{line} is a row, a column or a diagonal of either kind. Let $D$ be a set of exactly $k$ squares
+(queens), and let $R$, $C$, $T$, $S$ be the sets of rows, columns, difference diagonals and sum diagonals
+that contain a queen. The \emph{deficits}
+\[
+  \dR=k-|R|,\qquad \dC=k-|C|,\qquad \dT=k-|T|,\qquad \dS=k-|S|
+\]
+are non-negative; for instance $\dT=0$ means that no two queens share a difference diagonal. A row or
+column is \emph{empty} if it contains no queen, and a square is \emph{needy} if its row and its column are
+both empty. A needy square is not in $D$ and is not attacked along its row or column, so:
+
+\begin{enumerate}
+\item[(N)] if $D$ dominates the board, every needy square lies on an occupied diagonal.
+\end{enumerate}
+
+Assume that at least two rows and two columns are empty; this holds if $k\le n-2$. Let $a<b$ be the
+least and the greatest empty column and $c<d$ the least and the greatest empty row, and put $w=b-a\ge1$,
+$h=d-c\ge1$. The \emph{box} is $[a,b]\times[c,d]$. Its \emph{border} is the set of its squares with
+$x\in\{a,b\}$ or $y\in\{c,d\}$, each counted once; the \emph{vertical sides} are the $2(h+1)$ border
+squares with $x\in\{a,b\}$, and the \emph{horizontal sides} the $2(w+1)$ border squares with
+$y\in\{c,d\}$, so the four corners belong to both. The \emph{frame} of $D$ is the quadruple of margins
+$(m_l,m_r,m_b,m_t)=(a,\,n-1-b,\,c,\,n-1-d)$.
+
+\begin{lemma}\label{lem:facts}
+Let $D$ be as above.
+\begin{enumerate}
+\item[(E1)] Every empty column lies in $[a,b]$ and every empty row in $[c,d]$. Hence
+$m_l+m_r\le k-\dC$ and $m_b+m_t\le k-\dR$.
+\item[(E2)] No border square is occupied.
+\item[(E3)] A square of a horizontal side is needy if and only if its column is empty, and a square of a
+vertical side if and only if its row is empty. Each horizontal side contains exactly $n-|C|$ needy
+squares, each vertical side exactly $n-|R|$, the corners are needy, and the border contains exactly
+$N=2(n-|R|)+2(n-|C|)-4$ needy squares.
+\item[(E4)] A diagonal meets the border in at most two squares.
+\item[(E5)] Suppose $w\ge h$. A diagonal contains at most one square of the vertical sides, except when
+$w=h$: then the difference diagonal $u_0=\{t=c-a\}$ contains the corners $(a,c)$, $(b,d)$ and the sum
+diagonal $v_0=\{s=a+d\}$ contains the corners $(a,d)$, $(b,c)$. Symmetrically, if $h\ge w$ a diagonal
+contains at most one square of the horizontal sides, with the same two exceptions when $w=h$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(E1) holds because $a,b,c,d$ are extreme; the $m_l+m_r$ columns outside $[a,b]$ are occupied, so their
+number is at most $|C|=k-\dC$, and likewise for rows. (E2) A border square lies in column $a$ or $b$ or
+in row $c$ or $d$, all empty. (E3) The row of a square of a horizontal side is $c$ or $d$, which is
+empty, so the square is needy if and only if its column is. By (E1) all $n-|C|$ empty columns lie in
+$[a,b]$, so each horizontal side has exactly $n-|C|$ needy squares; the vertical sides are analogous.
+Adding the four sides counts the four (needy) corners twice. (E4) Parametrise a difference diagonal as
+$(x_0+j,y_0+j)$. Its squares in the box are those with $j$ in an interval $[j_1,j_2]$, and a square is on
+the border only if one of its coordinates attains a bound of the box; the lower bounds can only be
+attained at $j=j_1$ and the upper bounds only at $j=j_2$, since both coordinates increase with $j$. A
+sum diagonal $(x_0+j,y_0-j)$ is handled in the same way. (E5) A diagonal has one square in each column it
+meets. If it contains $(a,y)$ and $(b,y')$ with $c\le y,y'\le d$, then $|y-y'|=w\le h$, so $w=h$ and
+$\{y,y'\}=\{c,d\}$, which gives the four corners as stated.
+\end{proof}
+
+\subsection{Three identities}
+
+For a set $X$ of border squares, a diagonal $L$ and a square $q$, let $\beta_X(L)$ be the number of squares
+of $X$ on $L$, let $m(q)\in\{0,1,2\}$ be the number of occupied diagonals through $q$, and let $U_X$ be the
+number of needy squares $q\in X$ with $m(q)=0$; by (N), $U_X=0$ if $D$ dominates.
+
+\begin{theorem}\label{thm:identities}
+Let $D$ be a set of $k$ squares with at least two empty rows and two empty columns.
+\begin{enumerate}
+\item[(F)] With $X$ the border,
+\begin{multline*}
+  \sum_{L}\bigl(2-\beta_X(L)\bigr)+\#\{(L,q):q\in X\text{ not needy},\ q\in L\}+\#\{q\in X\text{ needy}: m(q)=2\}\\
+  = 8k-4n+4-2(\dR+\dC+\dT+\dS)+U_X,
+\end{multline*}
+where $L$ runs over the occupied diagonals.
+\item[(V)] If $w\ge h$, then with $X$ the vertical sides,
+\begin{multline*}
+  \#\{L:\beta_X(L)=0\}+\#\{(L,q):q\in X\text{ not needy},\ q\in L\}+\#\{q\in X\text{ needy}: m(q)=2\}\\
+  = 4k-2n-\dT-\dS-2\dR+[w=h]\,\sigma+U_X,
+\end{multline*}
+where $L$ runs over the occupied diagonals and $\sigma\in\{0,1,2\}$ is the number of occupied diagonals
+among $u_0$, $v_0$.
+\item[(H)] If $h\ge w$, the same holds for the horizontal sides with $\dC$ in place of $\dR$.
+\end{enumerate}
+All terms on the left-hand sides are non-negative.
+\end{theorem}
+\begin{proof}
+(F) Count the incidences $I$ between occupied diagonals and border squares. By diagonals,
+$I=\sum_L\beta_X(L)=2(|T|+|S|)-\sum_L(2-\beta_X(L))$, and each term $2-\beta_X(L)$ is non-negative by
+(E4). By squares, $I=\sum_{q\in X}m(q)$. A needy square contributes
+$m(q)=1+[m(q)=2]-[m(q)=0]$, and the non-needy squares contribute the number of pairs $(L,q)$ with $q$ not
+needy. With (E3), $I=N+\#\{q\text{ needy}:m(q)=2\}-U_X+\#\{(L,q):q\text{ not needy}\}$. Equating the two
+expressions and substituting $|T|=k-\dT$, $|S|=k-\dS$, $n-|R|=n-k+\dR$ and $n-|C|=n-k+\dC$ gives (F).
+(V) By (E5), $\beta_X(L)\in\{0,1\}$ for every diagonal except $\beta_X(u_0)=\beta_X(v_0)=2$ when $w=h$. So
+counting by diagonals gives $I=|T|+|S|-\#\{L:\beta_X(L)=0\}+[w=h]\sigma$, and counting by squares, with
+the $2(n-|R|)$ needy squares of the vertical sides from (E3), gives
+$I=2(n-|R|)+\#\{q\text{ needy}:m(q)=2\}-U_X+\#\{(L,q):q\text{ not needy}\}$. (H) is (V) for the
+transposed set.
+\end{proof}
+
+For a dominating set the right-hand sides are therefore non-negative, which gives
+\begin{gather*}
+  \dR+\dC+\dT+\dS\le4k-2n+2,\\
+  \dT+\dS+2\dR\le4k-2n+2[w=h]\ \text{ if } w\ge h,\quad
+  \dT+\dS+2\dC\le4k-2n+2[w=h]\ \text{ if } h\ge w.
+\end{gather*}
+For even $n$ and $k=n/2$ the slack $4k-2n$ is $0$: the deficits sum to at most $2$, and if $w>h$ then
+$\dR=\dT=\dS=0$ and all terms of (V) vanish, so every occupied diagonal passes through exactly one needy
+square of the vertical sides, and no needy square of the vertical sides lies on two occupied diagonals.
+For odd $n$ and $k=(n+1)/2$, the case of Theorem~\ref{thm:main}, the slack is $2$: the deficits sum to at
+most $4$, and for $w>h$ at most $2-\dT-\dS-2\dR$ units of waste are allowed on the vertical sides. This
+weaker rigidity is what makes odd boards harder. For odd $n$ and $k=(n-1)/2$ the right-hand side of (V)
+is negative unless $w=h$ and both box diagonals are occupied, and (F) forces all deficits and all waste
+to vanish; this is the configuration of the classical analysis of the cases $n=3,11$ (compare~\cite[Theorem~5.5]{KD}).
+
+\subsection{Cases and their completeness}
+
+A \emph{case} for $(n,k)$ is a frame together with a deficit vector,
+$c=(m_l,m_r,m_b,m_t;\dR,\dC,\dT,\dS)$. Every set of $k$ squares with at least two empty rows and columns
+has exactly one case. The eight symmetries of the board act on cases: the reflection $x\mapsto n-1-x$
+exchanges $m_l$ with $m_r$ and $\dT$ with $\dS$; the reflection $y\mapsto n-1-y$ exchanges $m_b$ with
+$m_t$ and $\dT$ with $\dS$; the transposition exchanges $(m_l,m_r)$ with $(m_b,m_t)$ and $\dR$ with
+$\dC$. A frame is \emph{canonical} if it is lexicographically least among its images. A case is
+\emph{admissible} if each deficit is at most $k-1$, $m_l+m_r\le k-\dC$, $m_b+m_t\le k-\dR$, $w,h\ge1$, and
+the three inequalities displayed after Theorem~\ref{thm:identities} hold. Let $\mathcal L(n,k)$ be the
+list of all admissible cases with a canonical frame. For $(n,k)=(35,18)$ it has $\clframesXXXV$ frames
+and $\clcasesXXXV$ cases.
+
+\begin{proposition}\label{prop:cover}
+Let $1\le k\le n-2$, and suppose that for every case $c\in\mathcal L(n,k)$ no dominating set of $k$
+queens has case $c$. Then $\gamma(Q_n)>k$.
+\end{proposition}
+\begin{proof}
+Let $D$ dominate with $|D|\le k$; adding squares, we may assume $|D|=k$. Then at least $n-k\ge2$ rows and
+columns are empty. Choose a symmetry $g$ for which the frame of $g(D)$ is canonical. The set $g(D)$
+dominates, it has an admissible case by Lemma~\ref{lem:facts}(E1) and Theorem~\ref{thm:identities}
+(each deficit is at most $k-1$ because some line of each kind is occupied), and that case lies in
+$\mathcal L(n,k)$.
+\end{proof}
+
+The list contains every admissible deficit vector for every canonical frame; we do not reduce deficit
+vectors by the stabiliser of the frame, so no symmetry argument beyond frames is needed. For odd $n$ and
+$k=(n+1)/2$, $58$ different deficit vectors occur (for even $n$ and $k=n/2$, at most nine per frame),
+which is one reason why $n=35$ has more than seven times as many cases as $n=36$.
+
+\subsection{The formulas}
+
+For a case $c$, the formula $\Phi(c)$ has a variable $q_{x,y}$ for each square and occupancy variables
+for all lines, and consists of the following clauses.
+\begin{itemize}
+\item[DEF] Each occupancy variable is equivalent to the disjunction of the queen variables on its line.
+\item[DOM] For each square, its row, its column or one of its diagonals is occupied.
+\item[CARD] Exactly $k-\dR$ rows, $k-\dC$ columns, $k-\dT$ difference diagonals and $k-\dS$ sum diagonals
+are occupied, and exactly $k$ queens are placed (this last constraint is omitted when some deficit is
+$0$, where it is implied).
+\item[AMO] For each kind of line with deficit $0$, no two queens on a line of that kind.
+\item[FRAME] The columns $a,b$ and the rows $c,d$ are empty, and all columns outside $[a,b]$ and all rows
+outside $[c,d]$ are occupied.
+\item[(F), (V), (H)] The left-hand sides of the identities of Theorem~\ref{thm:identities}, written as
+sums of ``waste literals'', are at most the right-hand sides with $U_X=0$; (V) only if $w\ge h$ and (H)
+only if $h\ge w$. A diagonal $L$ contributes $2-\beta_X(L)$ copies of its occupancy literal; a non-needy
+pair $(L,q)$ is an auxiliary variable implied by the occupancy of $L$ and the non-neediness of $q$,
+which on a side of the box is a single line literal by (E3); a needy square on two occupied diagonals is
+an auxiliary variable implied by the two occupancies. For $w=h$ the side constraint reads
+$(\text{waste})+[\neg u_0]+[\neg v_0]\le 4k-2n-\dT-\dS-2\dR+2$.
+\end{itemize}
+Cardinality constraints use the sequential counter~\cite{Sinz}, implemented in about twenty lines.
+
+\begin{lemma}\label{lem:sound}
+If a dominating set $D$ of exactly $k$ queens, $k\le n-2$, has case $c$, then $\Phi(c)$ is satisfiable.
+\end{lemma}
+\begin{proof}
+Give every variable its intended meaning: $q$ the indicator of $D$, occupancy variables the occupancy
+of lines, auxiliary variables the conjunctions they stand for, and counter variables
+$s_{i,j}=$``at least $j+1$ of the first $i+1$ literals are true''. DEF holds by definition and DOM because
+$D$ dominates; CARD and AMO hold by the definition of the deficits, FRAME by (E1), and the waste
+constraints by Theorem~\ref{thm:identities} with $U_X=0$ (on the border, non-neediness is expressed
+correctly by (E2), (E3)).
+\end{proof}
+
+By Proposition~\ref{prop:cover} and Lemma~\ref{lem:sound}, if $\Phi(c)$ is unsatisfiable for every
+$c\in\mathcal L(n,k)$, then $\gamma(Q_n)>k$.
+
+\subsection{Residual symmetry and cubes}
+
+Some cases are fixed by non-trivial symmetries of the board. For a case $c$ let $G_c$ be the set of
+symmetries $g$ with $g(c)=c$, and let $v(D)$ be the vector of row and column occupancies
+$(o_R[0..n-1],o_C[0..n-1])$. For each symmetry $g$ there is a fixed permutation $\pi_g$ of coordinates with
+$v(g(D))=\pi_g(v(D))$. Let $\mathrm{SBP}(c)$ be the lex-leader constraints $v\le_{\mathrm{lex}}\pi_g(v)$ for
+$g\in G_c$.
+
+\begin{lemma}\label{lem:R}
+If some dominating set of $k$ queens has case $c$, then $\Phi(c)\wedge\mathrm{SBP}(c)$ is satisfiable.
+\end{lemma}
+\begin{proof}
+If $D$ has case $c$ and $g\in G_c$, then $g(D)$ is a dominating $k$-set with case $g(c)=c$. Choose
+$g\in G_c$ with $v(g(D))$ lexicographically least and put $D'=g(D)$. For $h\in G_c$,
+$\pi_h(v(D'))=v(hg(D))\ge v(D')$ because $hg\in G_c$. By Lemma~\ref{lem:sound} applied to $D'$, with the
+chain variables of the lex-leader constraints set accordingly, the formula is satisfied.
+\end{proof}
+
+So Proposition~\ref{prop:cover} remains valid if $\Phi(c)\wedge\mathrm{SBP}(c)$ is used in place of
+$\Phi(c)$ for any subset of the cases. For a case with box $[a,b]\times[c,d]$, \emph{layer} $j$ consists of
+the four occupancy variables of the rows $c+j$, $d-j$ and the columns $a+j$, $b-j$. The $16$ assignments
+of a layer are exhaustive, so a formula is unsatisfiable if it is unsatisfiable under each of them. Our
+driver solves a hard case with $\mathrm{SBP}$ as a whole and replaces a \emph{cube} (a partial assignment
+of layers $1,\dots,j$) that exceeds the time limit by its $16$ extensions to layer $j+1$; a separate check
+verifies from the records alone that the refuted cubes of each case form such a cover.
+
+\section{The computation for \texorpdfstring{$n=35$}{n=35}}\label{sec:n35}
+
+\paragraph{Upper bound.} The $18$-queen dominating set of $Q_{34}$ of Section~\ref{sec:even} together with
+the corner $(34,34)$ is a $19$-queen dominating set of $Q_{35}$:
+$(1,19)$, $(3,7)$, $(5,27)$, $(7,9)$, $(9,17)$, $(11,1)$, $(13,23)$, $(15,15)$, $(17,31)$, $(19,5)$,
+$(21,13)$, $(23,21)$, $(25,3)$, $(27,33)$, $(29,11)$, $(31,25)$, $(32,32)$, $(33,29)$, $(34,34)$, as
+(column, row). It is not independent. The $19$-set of \"Osterg\aa rd and Weakley~\cite[\S5]{OW} is: in
+centred coordinates $-17,\dots,17$, the squares $(x,y)$ with $x=-17,-15,\dots,17$ and
+$y=3,-17,-9,13,7,-11,1,9,-7,11,-13,-5,15,-15,-1,5,17,-3$, together with $(2,2)$. Our verification script
+checks that both dominate $Q_{35}$ and that the second is independent, so $i(Q_{35})\le19$.
+
+\paragraph{Lower bound.} The list $\mathcal L(35,18)$ has $\clframesXXXV$ canonical frames and
+$\clcasesXXXV$ cases. Every formula $\Phi(c)$ was written as a DIMACS file, its SHA-256 hash recorded,
+and CaDiCaL~\clcadicalVersion~\cite{CaDiCaL} (default options) run on it with a DRAT proof, which
+\texttt{drat-trim} checked in backward mode; the proofs were deleted after checking. The run had three
+phases (Table~\ref{tab:35}). The non-square boxes were run first, then the square boxes with a positive
+deficit, each case with a time limit of $900$\,s. The remaining $\clphaseThreeCasesXXXV$ cases, all with
+deficit vector $0$ (so that the $18$ queens would be pairwise non-attacking), are the square boxes and
+those with $|w-h|=1$ and small margins; they were run with residual symmetry breaking
+(Lemma~\ref{lem:R}) and adaptive cube splitting with a limit of $1800$\,s per cube. Of these,
+$\clrefUnsplitXXXV$ were refuted as a whole and $\clrefSplitXXXV$ by covers of cubes, $76$ of them by the
+$16$ cubes of layer~$1$ and \clsecondLayerXXXV{} with a second layer, using $\clcubesXXXV$ refuted cubes in
+all. The records also contain $\cltimeoutRecXXXV$ time-outs: seven cases that timed out in an earlier pass
+with a $300$\,s limit and were then run in phase~3, and one cube that was replaced by its $16$ children.
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{lrrr}\toprule
+phase & cases & CaDiCaL (CPU h) & \texttt{drat-trim} (CPU h)\\\midrule
+1: non-square boxes & \clphaseOneCasesXXXV & \clphaseOneSolveXXXV & \clphaseOneCheckXXXV\\
+2: square boxes, positive deficit & \clphaseTwoCasesXXXV & \clphaseTwoSolveXXXV & \clphaseTwoCheckXXXV\\
+3: deficit $0$, $|w-h|\le1$ (SBP, cubes) & \clphaseThreeCasesXXXV & \clphaseThreeSolveXXXV & \clphaseThreeCheckXXXV\\\midrule
+total & \clcasesXXXV & \clhSolveXXXV & \clhCheckXXXV\\
+\bottomrule\end{tabular}
+\caption{The computation for $n=35$, $k=18$: every case refuted, every DRAT proof verified. Single-core CPU
+hours on a shared machine, up to eight processes.}\label{tab:35}
+\end{table}
+
+Every case of $\mathcal L(35,18)$ is refuted, by a plain record or by a complete cover of cubes, all
+UNSAT with verified proofs; there is no satisfiable case. The proofs totalled about $\clproofGBXXXV$\,GB, the
+largest $\clmaxProofGBXXXV$\,GB. The slowest plain case took $\clmaxPlainXXXV$\,s to solve, and the slowest case
+in all, solving and checking all its cubes, $\clmaxCaseXXXV$\,s. At the end of the run every one of the
+$\clrehashAllXXXV$ refuting formulas was rebuilt from the case by the encoder and its hash compared with the
+recorded one; the verification script repeats this for a seeded sample of $\clrehashSample$ formulas by
+default and for all of them on request, re-solves a sample of cases with proofs, and checks that the set
+of cases in the records equals $\mathcal L(35,18)$, rebuilt from first principles.
+
+\paragraph{What the proof rests on.} Theorem~\ref{thm:main} follows from Proposition~\ref{prop:cover},
+Lemmas~\ref{lem:sound} and~\ref{lem:R}, the cover argument for cubes, and the explicit sets above. Its
+correctness depends on the proofs of Section~\ref{sec:frame}; on the enumeration of $\mathcal L(n,k)$
+(about $60$ lines of Python, \texttt{code/frame/geom.py}); on the encoder (\texttt{code/frame/enc.py}, about
+$190$ lines including the sequential counter) and the lex-leader clauses
+(\texttt{sbp\_clauses} in \texttt{code/frame/hard\_test.py}); on the coverage check; and on
+\texttt{drat-trim}. It does not depend on CaDiCaL, on any colour argument or on any structure theorem
+from the literature. The reduction (Section~\ref{sec:frame}) and the completeness of the list are
+formalised in Lean (Section~\ref{sec:lean}); the encoder and the SAT certificates are not.
+
+\section{Even boards}\label{sec:even}
+
+We ran the same code, with DRAT proofs, for $k=n/2$ and $n=26,28,32,34,36$, and for $(n,k)=(35,17)$
+(Table~\ref{tab:even}). Every case is unsatisfiable and every proof was verified; no case needed symmetry
+breaking or cubes. Together with explicit sets of $n/2+1$ queens this proves Theorem~\ref{thm:even}. The
+case $(35,17)$ reproduces the known bound $\gamma(Q_{35})\ge18$. The numbers of canonical frames for
+$n=26,28,32,34,36$ equal the numbers of boxes reported in~\cite[Table~1]{HC}.
+
+\begin{table}[ht]\centering\small
+\begin{tabular}{rrrrrrrr}\toprule
+$n$ & $k$ & frames & cases & CaDiCaL (s) & \texttt{drat-trim} (s) & proofs (GB) & slowest case (s)\\\midrule
+\clrowFa
+\clrowFb
+\clrowFc
+\clrowFd
+\clrowFe
+\clrowFf
+\bottomrule\end{tabular}
+\caption{The frame method on further boards: every case UNSAT with a verified DRAT proof. Single-core
+CPU seconds; five or six processes.}\label{tab:even}
+\end{table}
+
+The upper bounds come from sets found by a SAT search for a permutation-like placement on the odd lines
+plus one queen near a corner, checked directly, as (column, row):
+\begin{itemize}
+\item $Q_{32}$, $17$ queens: $(1,23)$, $(3,11)$, $(5,17)$, $(7,27)$, $(9,1)$, $(11,7)$, $(13,15)$, $(15,31)$,
+$(17,21)$, $(19,25)$, $(21,9)$, $(23,3)$, $(25,19)$, $(27,5)$, $(29,13)$, $(30,30)$, $(31,29)$;
+\item $Q_{34}$, $18$ queens: $(1,19)$, $(3,7)$, $(5,27)$, $(7,9)$, $(9,17)$, $(11,1)$, $(13,23)$, $(15,15)$,
+$(17,31)$, $(19,5)$, $(21,13)$, $(23,21)$, $(25,3)$, $(27,33)$, $(29,11)$, $(31,25)$, $(32,32)$, $(33,29)$;
+\item $Q_{36}$, $19$ queens: $(1,27)$, $(3,13)$, $(5,9)$, $(7,25)$, $(9,3)$, $(11,19)$, $(13,35)$, $(15,5)$,
+$(17,31)$, $(19,15)$, $(21,23)$, $(23,1)$, $(25,11)$, $(27,33)$, $(29,21)$, $(31,29)$, $(33,7)$, $(34,34)$, $(35,17)$.
+\end{itemize}
+For $n=26,28$ the sets of Section~\ref{sec:relax} are used. Upper bounds $\gamma(Q_n)\le n/2+1$ for these
+$n$ are also in~\cite{OW,Weakley2022}.
+
+\section{Validation of the frame method}\label{sec:fvalid}
+
+The certificates make the result independent of the solver, but not of the case list, the encoder or the
+proofs of Section~\ref{sec:frame}. These were tested as follows; the verification script reruns or
+rechecks each item.
+\begin{itemize}
+\item \emph{Identities.} Theorems~\ref{thm:identities}(F), (V), (H), in the general form with the term
+$U_X$, and the facts (E3)--(E5) were checked by direct counting on every set of at most $n$ squares
+with a frame for $n\le5$ and on random and random dominating sets up to $n=16$: $82\,466$ sets, $29\,203$ of
+them with $w=1$ or $h=1$. On random sets, the number of true waste literals of the encoder equals the
+corresponding left-hand side.
+\item \emph{Exact solution sets.} For nine pairs $(n,k)$ up to $(10,5)$, including $k>n/2$ and odd $n$, all
+models of all case formulas, closed under the symmetries, are exactly the dominating $k$-sets found by a
+plain enumeration with no frames and no identities. This tests the case list, the symmetry action,
+Proposition~\ref{prop:cover} and the encoder together.
+\item \emph{Known values.} For $k=n/2$ and every even $n\le30$ the formulas of all cases are
+satisfiable for some case exactly when $n\in\{4,6,10,12,18,30\}$, that is, when $\gamma(Q_n)=n/2$. For
+$k=(n-1)/2$ and every odd $n\le31$ they are satisfiable exactly for $n=3,11$. For $k=(n+1)/2$ they are
+satisfiable for $n=5,7,9,13,17,19,21$ and unsatisfiable for $n=15$, where $\gamma(Q_{15})=9$; the runs for
+$n=5,7,9,13,15$ are complete. Every model is checked to be a dominating set with the case it was found
+for. The only negative control among odd boards with $k=(n+1)/2$ is therefore $n=15$.
+\item \emph{Residual symmetry breaking.} For all $3\,566$ cases with a non-trivial stabiliser for the
+eight pairs $(n,k)$ from $(4,2)$ to $(10,5)$, the models of $\Phi\wedge\mathrm{SBP}$, closed under the
+stabiliser, are exactly the models of $\Phi$.
+\item \emph{Second encoding.} For $n=32$, a second encoding written separately (totalizers, ladder
+at-most-one constraints, identities as equalities; \texttt{code/frame/enc\_b.py}) solved with Glucose~4,
+and the first encoding solved with CaDiCaL~1.9.5, give UNSAT on all $11\,466$ cases.
+\item \emph{Planted positives.} Thirty-five known dominating sets, among them Kamenetsky's best known sets
+for $n\le26$, sets of $Q_{27}$, \dots, $Q_{31}$, and our sets of $Q_{32}$, $Q_{34}$ and $Q_{36}$ (at
+$k=n/2+1$), are accepted by the formula of their case in every orientation with a canonical frame, and a
+non-dominating variant of each is rejected (recorded; not rerun by the script).
+\end{itemize}
+
+\section{An independent cross-check for \texorpdfstring{$n=35$}{n=35}}\label{sec:xcheck}
+
+Because the negative controls for odd boards are few, the $n=35$ result was cross-checked with a second
+pipeline, written without reading the first encoder; it shares only the definitions of
+Section~\ref{sec:frame}.
+\begin{itemize}
+\item \emph{Case list.} A separate enumeration of frames and admissible cases computes the action of the
+symmetries on cases geometrically rather than from a table. For $(35,18)$ it gives the same
+$\clcasesXXXV$ cases.
+\item \emph{Encoding X.} Cardinalities by odd-even merge sorting networks restricted to the needed
+outputs~\cite{Batcher}, at-most-one constraints by the product encoding, ``exactly $k$ queens'' always,
+neediness by explicit conjunction variables, and all auxiliary variables fully defined. The identities
+are imposed as equalities in a form derived by a second double count: for a set $X$ of border squares and
+$\mathrm{cap}\in\{1,2\}$,
+$\sum_L o(L)\,(\mathrm{cap}-\nu_X(L))+\#\{q\in X\text{ needy}:m(q)=2\}=\mathrm{cap}(2k-\dT-\dS)-N_X$, where
+$\nu_X(L)$ counts needy squares of $X$ on $L$ and $N_X$ is fixed by the case. Diagonals that meet $X$ more
+than $\mathrm{cap}$ times are encoded exactly, so this form needs neither (E4) nor (E5), and (V) and (H)
+are imposed for every box shape.
+\item \emph{Solver.} Kissat~4.0.4~\cite{Kissat}, default options, without proofs, and \emph{no symmetry
+breaking at all}. A formula that exceeds $4000$\,s is split into $16$ cubes on the occupancy of four
+diagonals (those through the corners of the box first), recursively; a separate script checks from the
+records that every tree is complete.
+\end{itemize}
+
+\paragraph{Controls.} Encoding X reproduces the exact solution sets of a plain enumeration for ten pairs
+$(n,k)$ up to $(11,5)$, and accepts $32$ known dominating sets in every orientation with a canonical frame
+(recorded). In complete runs it refutes every case for $k=(n-1)/2$ and every odd $n=5,\dots,\clxKmMaxN$
+except for one satisfiable case at $n=11$ (the known $5$-set), all $\clxKmCasesXXXV$ cases of $(35,17)$
+included; for $(13,7)$ it finds exactly the $\clxAllThirteenSat$ satisfiable cases of the main pipeline
+among $\clxAllThirteenCases$; and for $(15,8)$ it refutes all $\clxAllFifteen$ cases. On the zero-deficit
+cases of $(13,7)$, $(15,8)$, $(17,9)$ and $(19,10)$ (the type of the hardest $n=35$ cases), the main
+encoder with CaDiCaL~1.9.5 and encoding X with Kissat give the same verdict on every case.
+
+\paragraph{The hard cases and a sample.} The cross-check was run on all $\clxHardCases$ cases of phase~3,
+which the main computation refuted only with symmetry breaking or cubes, and on a stratified sample of
+$\clxSampleCases$ of the other cases ($2000$ uniformly random and the $200$ slowest in the main run).
+\textbf{At the time of writing this run was still in progress}: all cases it had finished were
+unsatisfiable, with no satisfiable formula and no disagreement. The verification script checks its
+records; its gates for the hard cases and the sample fail until the run is complete.
+
+\section{Formalisation in Lean}\label{sec:lean}
+
+The reduction of Section~\ref{sec:frame} is formalised in Lean~4~\cite{Lean4} with Mathlib~\cite{Mathlib}
+(directory \texttt{lean/}, Lean and Mathlib v4.35.0). Squares are elements of
+$\mathrm{Fin}\,n\times\mathrm{Fin}\,n$, domination is defined by attacks along lines and shown to be
+domination in the queen's graph (a \texttt{SimpleGraph}), and $\gamma(Q_n)$ is the least size of a
+dominating set.
+\begin{itemize}
+\item Lemma~\ref{lem:facts}, Theorem~\ref{thm:identities} (as exact identities in $\mathbb Z$, for all
+$n$ and all sets with a frame, dominating or not), the consequences for $k=n/2$ and for odd $n$, the
+action of the symmetries on frames and deficits, Proposition~\ref{prop:cover}, the semantic part of
+Lemma~\ref{lem:sound} and Lemma~\ref{lem:R} are proved for general $n$ and $k\le n-2$. The semantic
+content of $\Phi(c)$ is a structure \texttt{CaseSat n k c D} with one field per clause group.
+\item The enumeration of $\mathcal L(n,k)$ is a Lean function, proved to list exactly the admissible
+cases with canonical frame. For $(32,16)$ and $(35,18)$ it is shown, by $\clleanPieces$ kernel
+computations (\texttt{decide +kernel}, one per pair of horizontal margins), to equal the explicit
+lists of $11\,466$ and $\clcasesXXXV$ cases of the runs.
+\item The $19$-queen set dominates $Q_{35}$ and the $17$-queen set dominates $Q_{32}$.
+\end{itemize}
+The final theorem for $n=35$, \texttt{gamma\_35\_eq\_19\_of\_cases35\_unsat\_mixed}, states
+\begin{multline*}
+  \Bigl(\forall c\in\texttt{cases35}:\ \neg\exists D\ \texttt{CaseSat}\ 35\ 18\ c\ D\ \ \vee\
+  \neg\exists D\ \bigl(\texttt{CaseSat}\ 35\ 18\ c\ D\wedge\texttt{SymBreak}\ c\ D\bigr)\Bigr)\\
+  \Longrightarrow\ \texttt{gamma}\ 35=19,
+\end{multline*}
+where \texttt{cases35} is the list of the run and \texttt{SymBreak} the lex-leader condition; the
+analogous theorem for $n=32$ has the hypothesis without \texttt{SymBreak}. All $\clleanTheorems$ theorems
+of the axiom report, and all kernel computations, depend only on \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}; there is no \texttt{sorry} and no
+\texttt{native\_decide}.
+
+\paragraph{What is not formalised.} The hypothesis \texttt{H} is what the computation establishes, by
+steps outside Lean: (i) that a set $D$ with \texttt{CaseSat n k c D} yields a model of the CNF written by
+the encoder, i.e.\ the syntactic part of Lemma~\ref{lem:sound} (definitional variables, waste variables,
+sequential counters, at-most-one clauses), and the same for the lex-leader clauses and the exhaustiveness
+of cubes; (ii) that each CNF is unsatisfiable, which rests on the DRAT proofs and \texttt{drat-trim}, and
+the identification of each record with its formula by the CNF hash; (iii) that the Lean data file equals
+the set of refuted cases in the records, which a script checks (it also checks the list against the
+Python enumeration).
+
+\section{A second proof for \texorpdfstring{$n=26$ and $n=28$}{n = 26 and n = 28}: a line relaxation}\label{sec:relax}
+
+This section gives a proof of $\gamma(Q_{26})>13$ and $\gamma(Q_{28})>14$ that is independent of the box
+method in its reduction and in its code. It keeps all the chosen empty rows and columns rather than only
+the outermost ones, forgets where the queens are, and records only which diagonals of each colour must
+be occupied to cover the grid of empty rows and columns. The notation of this section is separate from
+that of Sections~\ref{sec:frame}--\ref{sec:lean}.
+
+\subsection{The relaxation}
+
 
 Index rows and columns by $[0,n)=\{0,\dots,n-1\}$ and write $(r,x)$ for the square in row $r$ and
 column $x$. Its \emph{colour} is $r+x\bmod 2$. Its \emph{difference line} is $r-x$ and its \emph{sum
@@ -231,7 +686,7 @@ $\sigma D$ is a dominating $g$-set with the same colour sizes whose queens avoid
 columns $B$, contradicting~(b).
 \end{proof}
 
-\section{The computation}\label{sec:comp}
+\subsection{The computation}\label{sec:comp}
 
 \paragraph{Stage 1 (pairs).} A depth-first search decides membership of rows and columns in $A$ and $B$
 in the order row~$0$, column~$0$, row~$n{-}1$, column~$n{-}1$, row~$1$, column~$1$, \dots, from the
@@ -320,7 +775,7 @@ certificate columns refer to the stage-1 certificate of Section~\ref{sec:cert}, 
 the SAT check of condition~(b), each CaDiCaL plus \texttt{drat-trim}. Single-core CPU seconds.}\label{tab:28}
 \end{table}
 
-\section{Certificates}\label{sec:cert}
+\subsection{Certificates}\label{sec:cert}
 
 The two searches of Section~\ref{sec:comp} are fast but intricate programs. Both conditions of
 Proposition~\ref{prop:complete} were therefore also established by SAT solving with proofs: CaDiCaL
@@ -364,9 +819,16 @@ formulas deterministically, their SHA-256 hashes are recorded in the repository,
 script regenerates and checks a random sample of the proofs. For every $z_0\ge3$ and both $n$ the
 certificate took less CPU time than the stage-1 search itself (Tables~\ref{tab:26} and~\ref{tab:28}).
 
-\paragraph{What the proof rests on.} Our proof of Theorem~\ref{thm:main} follows from Proposition~\ref{prop:complete},
-applied for $n=26$ and for $n=28$ with $\mathcal L$ the respective survivor list, and from the upper bounds
-of~\cite{OW,OEIS} for $n=26$ and of~\cite{LMR} and Section~\ref{sec:valid} for $n=28$. Its correctness depends on
+\paragraph{Complete replay.} The certificate-only mode of the verification script
+(\texttt{--certify-all}) has been run to completion. It rebuilt every stage-1 cube formula and every
+stage-2 formula of both $n$ from the committed survivor lists, solved each with CaDiCaL, checked each proof
+with \texttt{drat-trim} and deleted it. Its compacted records are in the repository; they contain every
+cube and every pair, all UNSAT with verified proofs and with the CNF hashes of the original records, and
+the default run of the script compares them with the original records.
+
+\paragraph{What the proof rests on.} This proof of $\gamma(Q_{26})>13$ and $\gamma(Q_{28})>14$ follows from Proposition~\ref{prop:complete},
+applied for $n=26$ and for $n=28$ with $\mathcal L$ the respective survivor list; with the upper bounds
+of~\cite{OW,OEIS} for $n=26$ and of~\cite{LMR} and Section~\ref{sec:valid} for $n=28$ it gives the two values. Its correctness depends on
 Lemmas~\ref{lem:relax} and~\ref{lem:sym} and Proposition~\ref{prop:complete}, which are proved above;
 on the two CNF encoders (\texttt{relax\_cnf} in \texttt{code/refcheck.py}, about 30 lines using the
 cardinality encodings of PySAT~\cite{PySAT}, and \texttt{build} in \texttt{code/sat\_place.py}, about 40
@@ -378,7 +840,7 @@ $n$, satisfies $F_{z_0}$ without the exclusion clauses, the two known $14$-queen
 $Q_{26}$ satisfy the stage-2 encoding for $g=14$, and the $15$-queen dominating set of $Q_{28}$ below
 satisfies it for $g=15$.
 
-\section{Validation and independent checks}\label{sec:valid}
+\subsection{Validation and independent checks}\label{sec:valid}
 
 \paragraph{Known values.} Table~\ref{tab:valid} shows the pipeline for $g=n/2$ and even $n\le18$. The
 numbers of $n/2$-dominating sets up to the dihedral symmetries agree with the
@@ -392,7 +854,7 @@ $n$ & 4&6&8&10&12&14&16&18&20&22&24&26&28\\\midrule
 number of $n/2$-sets up to symmetry & \clvalFour&\clvalSix&\clvalEight&\clvalTen&\clvalTwelve&\clvalFourteen&\clvalSixteen&\clvalEighteen&0&0&0&\textbf{0}&\textbf{0}\\
 \bottomrule\end{tabular}
 \caption{Numbers of dominating sets of size $n/2$ of $Q_n$ up to the dihedral group, as found by the
-pipeline. The values for $n\le 24$ agree with~\cite{Bird,RB}; those for $n=26,28$ are Theorem~\ref{thm:main}.}\label{tab:valid}
+pipeline. The values for $n\le 24$ agree with~\cite{Bird,RB}; those for $n=26,28$ are part of Theorem~\ref{thm:even}.}\label{tab:valid}
 \end{table}
 
 All $n/2$-sets in Table~\ref{tab:valid} with $n>4$ are monochromatic. To test the pipeline on
@@ -449,7 +911,7 @@ same way. The pinned \texttt{drat-trim} did not compile under GCC~14 (an implici
 this paper stated $\gamma(Q_n)\in\{\lceil n/2\rceil,\lceil n/2\rceil+1\}$ for all $n\le120$, omitting the
 exceptions $n=3,11$. The review's main suggestion, a verification mode that rebuilds every certificate
 formula of both stages from the survivor lists alone, solves it and checks the proof without rerunning
-the searches, is implemented as \texttt{verify.py --certify-all}.
+the searches, is implemented as \texttt{verify.py --certify-all} and has been run to completion.
 
 \paragraph{Upper bounds.} The verification script checks that Kamenetsky's $14$-queen set and the
 independent $14$-queen set of \"Osterg\aa rd and Weakley dominate $Q_{26}$, and that their $14$-queen
@@ -458,92 +920,105 @@ simulated annealing; it is in the repository, and the script checks it. (The val
 of~\cite{LMR} already gives $\gamma(Q_{28})\le15$.) The script also checks the sets used for $n=29,30,31$
 in the proof of Corollary~\ref{cor:oeis}.
 
-\section{Relation to the box method}\label{sec:box}
+\subsection{Comparison with the box method}\label{sec:box}
 
-\emph{Hint and Conquer}~\cite{HC} uses a different decomposition. For a dominating set $D$ of $\gamma$
-queens, let $a,b$ be the leftmost and rightmost empty columns and $c,d$ the lowest and highest empty
-rows. The rectangle they span is the \emph{box} of $D$: its four sides are empty lines, and every row and
-column outside it carries a queen. Counting the active lines through the squares of the two vertical
-sides, and separately of the two horizontal sides, gives two exact identities (\cite[Lemma~1]{HC})
-that bound how much of the coverage of the sides can be wasted, by lines missing the sides or meeting
-a square more than once, in terms of the slack $2(2\gamma-n)$ and the number of lines meeting a side
-twice. These identities are refinements of the border count behind the bound
-$\gamma(Q_n)\ge(n-1)/2$~\cite{RV,Cockayne}; an exact border identity also appears in the proof of
-Theorem~1 of~\cite{Weakley2022}, and Neuhaus~\cite[Ch.~4]{Neuhaus} analysed boxes and loss squares for
-dominating sets of size $n/2$ by hand. \cite{HC} enumerates the boxes up to symmetry ($1\,596$ for
-$n=26$, $2\,080$ for $n=28$), encodes each with the line variables of~\cite{RB} plus the two identities as
-cardinality constraints (the ``counting hints''), and proves every formula unsatisfiable with CaDiCaL
-and \texttt{drat-trim}, in minutes for $n=26,28$ and in about one hour of solving for $n=38$.
-
-Our method relaxes differently. It keeps all $s$ chosen empty rows and columns rather than only the
-outermost ones, forgets where the queens are, and records only which diagonals of each colour must be
-occupied to cover the grid $A\times B$ (Lemma~\ref{lem:relax}); the enumeration of the feasible grids is
-a combinatorial search, certified afterwards by a cube-and-conquer refutation, and the queens are
-placed only in the second stage. It is much slower than the box method (Tables~\ref{tab:26}
-and~\ref{tab:28}), but it shares neither the reduction nor any code with~\cite{HC}, and so gives an
-independent check of its results for $n=26$ and $n=28$. A separate reimplementation of the box method,
-written for this project, which splits each box explicitly by the possible deficits of the four line
-types and checks every formula with \texttt{drat-trim}, also confirms $\gamma(Q_n)=n/2+1$ for
-$n=26,28,32,34,36$; it will be released separately.
+The relaxation is much slower than the box method: for $n=28$ its stage~1 took $\clhStageOneXXVIII$ CPU
+hours and its stage-1 certificate $\clhCertXXVIII$, against well under one CPU hour for the frame method
+(Table~\ref{tab:even}). Its value is its independence. It keeps all $s$ chosen empty rows and columns, not
+only the outermost ones, records only which diagonals of each colour must be occupied, and places the
+queens in a second stage; it shares neither the reduction nor any code with the frame method or
+with~\cite{HC}. For $n=26$ and $n=28$ the two methods agree.
 
 \section{Remarks}
 
-The relaxation of Lemma~\ref{lem:relax} keeps only the line structure of the squares that must be
+For even $n$ and $k=n/2$ the identities leave no slack when the box is not square, and the frame method
+is fast: under two CPU hours for $n=36$ including proof checking. For odd $n$ and $k=(n+1)/2$ there are two
+units of slack in each side identity and up to four in the border identity; the cases with deficit vector
+$0$ and an almost square box, where the $18$ queens would be pairwise non-attacking, account for about
+$40\%$ of the time for $n=35$, and the hardest single case took about an hour. Two further sound
+constraints that we tried on such cases, a colour balance between the diagonals and Weakley's moment
+identities~\cite{Weakley2022} taken modulo small integers, did not help. The odd values of $n<120$ that
+remain open, $47$, $51$, $59$, $63$, $67$, $75$, $79$, $87$, $95$, $103$, $111$ and $119$ (by~\cite{OW}
+and the sets of~\cite{Neuhaus}), are beyond the present computation without new ideas.
+
+The relaxation of Section~\ref{sec:relax} keeps only the line structure of the squares that must be
 covered diagonally, yet it is strong enough that stage~1 leaves only $\clpairsTotal$ candidate pairs for
-$n=26$ and $\clpairsTotalXXVIII$ for $n=28$. The cost grows quickly: from $n=26$ to $n=28$ the stage-1
-search grew from $\clhStageOne$ to $\clhStageOneXXVIII$ CPU hours (part of the latter on slower cores), the
-number of pairs by a factor of about $11$, and the stage-1 certificate from $\clhCert$ to $\clhCertXXVIII$ CPU
-hours. The box method of~\cite{HC} is far more efficient for this task, and it has been carried to
-$n=38$. The value of the present method lies in its independence.
+$n=26$ and $\clpairsTotalXXVIII$ for $n=28$. Its cost grows quickly: from $n=26$ to $n=28$ the stage-1
+search grew from $\clhStageOne$ to $\clhStageOneXXVIII$ CPU hours (part of the latter on slower cores),
+the number of pairs by a factor of about $11$, and the stage-1 certificate from $\clhCert$ to
+$\clhCertXXVIII$ CPU hours.
 
 \section*{Reproducibility}
-The repository\footnote{\repo} contains the C sources of both stages and of the second stage-1 program,
-the CNF encoders, the referee's checks, the driver used for the cloud runs, and for $n=26$ and $n=28$ the
-survivor lists, per-part SHA-256 manifests, the logs of the searches, the per-pair SAT records and the
-per-cube records of the stage-1 certificates. The script \texttt{scripts/verify.py} rebuilds everything
-and, in about twenty minutes on three cores, reruns the validation for small $n$, the referee's checks
-and the stage-1 certificate for $n=16,18$; checks the records and their hashes for $n=26$ and $n=28$,
-including the base formulas of both certificates, rebuilt from the survivor lists; checks the upper
-bounds; and reruns seeded random samples of the two computations against the records ($\clsampleParts$
-and $\clsamplePartsXXVIII$ stage-1 parts, SAT instances and certificate cubes). Every number quoted in this
-paper is generated from a file of claims that the script compares with the computed values. With
-\texttt{--full} it reruns the whole $n=26$ computation, with \texttt{--heavy28} a larger part of the
-$n=28$ computation (about six CPU hours), and with \texttt{--certify-all} it rebuilds every certificate
-formula of both stages for both $n$ from the survivor lists, solves it and checks its proof (about
-$45$ CPU hours). The DRAT proofs themselves (about $25$ and $182$\,GB) are not published; they are
-regenerated by this mode.
+The repository\footnote{\repo} contains, for the frame method, the case enumeration, the encoder, the
+drivers and checkers, the records of every case for $n=26,28,32,34,35,36$ (one JSON line per case or
+cube with the SHA-256 of the formula, the verdict, the checker's status and the CPU times), the records
+of the validation runs, the code and records of the cross-check, and the Lean sources; and, for the
+relaxation, the C sources of both stages and of the second stage-1 program, the CNF encoders, the
+referee's checks, the driver used for the cloud runs, and for $n=26$ and $n=28$ the survivor lists,
+per-part SHA-256 manifests, the logs of the searches, the per-pair SAT records, the per-cube records of
+the stage-1 certificates and the records of the complete replay. The script \texttt{scripts/verify.py}
+rebuilds the programs and, in under an hour on three cores, reruns the validation of the relaxation for
+small $n$, the referee's checks and the stage-1 certificate for $n=16,18$, the tests of the frame
+method, and seeded random samples of the computations; it checks every record set against its manifest or
+against the case list rebuilt from first principles, rebuilds the formulas of a sample of records and
+compares their hashes, checks the Lean data files against the records, the upper bounds, and the
+records of the cross-check. Every number quoted in this paper is generated from a file of claims that
+the script compares with the computed values, and each of fifteen altered copies of the records must
+make it fail. Optional modes rebuild every formula hash of the frame records (\texttt{--frame-rehash-all}),
+build the Lean formalisation and check its axioms (\texttt{--lean}), rerun the whole $n=26$ relaxation
+(\texttt{--full}) or a larger part of $n=28$ (\texttt{--heavy28}), and replay every certificate formula of
+the relaxation (\texttt{--certify-all}, about $45$ CPU hours). The DRAT proofs themselves (about
+$\clproofGBXXXV$\,GB for $n=35$, and $25$ and $182$\,GB for the relaxation certificates for $n=26$ and
+$n=28$) are not published; they are regenerated by solving the recorded formulas again.
 
 \section*{Declaration of AI-generated research and authorship}
 This manuscript is the product of an AI-driven research process. During a broader investigation of
-open problems, initiated by the human author, an AI system identified this problem as a candidate,
-devised the method, wrote and ran the code for the computations, and wrote this manuscript. The AI
-system believed the two values to be open; its literature search missed~\cite{HC} and~\cite{Neuhaus},
-and an earlier version of this paper and of the OEIS entry presented them as new. This was corrected
-when the prior work was pointed out, and the paper is now presented as an independent verification. AI systems
-produced the results and their presentation, including the mathematical exposition, the computations
-and the organisation and writing of the text; the human author directed the AI systems but wrote no
-part of the manuscript. The human author also launched the main cloud computation, using commands prepared
-by the AI system.
-The system was Claude Opus~5.5 (Anthropic), used through Claude Code.
+open problems, initiated by the human author, AI systems identified the problems, devised the methods,
+wrote and ran the code for the computations, wrote the Lean formalisation, and wrote this manuscript. The
+frame/deficit case split was first tried in an earlier, uncertified AI attempt within the same project;
+the version reported here was re-derived, with proofs, and reimplemented from a description of that
+attempt's identities, and was compared with its logs only afterwards (the case lists for $n=28,30,32$
+agree). The line relaxation of Section~\ref{sec:relax} was devised first, when the AI system believed
+$\gamma(Q_{26})$ and $\gamma(Q_{28})$ to be open: its literature search missed~\cite{HC}
+and~\cite{Neuhaus}, and an earlier version of this paper and of the OEIS entry presented those values as
+new. This was corrected when the prior work was pointed out. For $n=35$ the AI system then searched the
+literature, preprint servers, code repositories and the OEIS history and found no statement of the value;
+such a search cannot be exhaustive. AI systems produced the results and their presentation, including
+the mathematical exposition, the computations and the organisation and writing of the text; the human
+author directed the AI systems but wrote no part of the manuscript. The human author also launched the
+main cloud computation for $n=28$, using commands prepared by the AI system. The system was Claude
+Opus~5.5 (Anthropic), used through Claude Code.
 
 The computational claims are reproduced by \texttt{scripts/verify.py}. At the time of writing, the
-mathematics and the code have been checked only by AI systems and by computer verification. These
-checks include an adversarial review by an independent AI referee, who re-derived the proofs of
-Section~\ref{sec:relax}, read the search programs, wrote the independent SAT-based checks of
-Section~\ref{sec:valid} and the stage-1 certificate of Section~\ref{sec:cert}, and an external AI review of
-the code (ChatGPT Pro), whose findings are corrected (Section~\ref{sec:valid}). No independent human
-expert has reviewed the work. The human author has not read this manuscript or checked its arguments.
-The author takes responsibility for the accuracy of this disclosure.
+mathematics, the code and the formalisation have been checked only by AI systems and by computer
+verification. These checks include an adversarial review by an independent AI referee, who re-derived
+the proofs of Section~\ref{sec:relax}, read the search programs, wrote the independent SAT-based checks of
+Section~\ref{sec:valid} and the stage-1 certificate of Section~\ref{sec:cert}; an external AI review of the
+code of the relaxation (ChatGPT Pro), whose findings are corrected (Section~\ref{sec:valid}); the Lean
+formalisation of the frame method; and the separately written cross-check of Section~\ref{sec:xcheck}. No
+independent human expert has reviewed the work. The human author has not read this manuscript or checked
+its arguments. The author takes responsibility for the accuracy of this disclosure.
 
 \raggedright
 \begin{thebibliography}{99}
+\bibitem{Batcher} K.~E.~Batcher, \emph{Sorting networks and their applications}, in: AFIPS Spring Joint
+Computer Conference, 1968, 307--314.
+\href{https://doi.org/10.1145/1468075.1468121}{doi:10.1145/1468075.1468121}.
 \bibitem{CaDiCaL} A.~Biere, T.~Faller, K.~Fazekas, M.~Fleury, N.~Froleyks, F.~Pollitt, \emph{CaDiCaL~2.0},
 in: Computer Aided Verification (CAV 2024), Lecture Notes in Comput.\ Sci., Springer, 2024, 133--152.
 \href{https://doi.org/10.1007/978-3-031-65627-9_7}{doi:10.1007/978-3-031-65627-9\_7}.
+\bibitem{Kissat} A.~Biere et al., \emph{Kissat SAT solver}, version 4.0.4,
+\url{https://github.com/arminbiere/kissat}.
 \bibitem{Bird} W.~H.~Bird, \emph{Computational methods for domination problems}, PhD thesis, University of
 Victoria, 2017. \url{https://dspace.library.uvic.ca/handle/1828/8634}.
+\bibitem{BGMW} S.~Boz\'oki, P.~G\'al, I.~Marosi, W.~D.~Weakley, \emph{Domination of the rectangular queen's
+graph}, Electron.\ J.\ Combin.\ \textbf{26}(4) (2019), \#P4.45.
+\href{https://doi.org/10.37236/6026}{doi:10.37236/6026}.
 \bibitem{Cockayne} E.~J.~Cockayne, \emph{Chessboard domination problems}, Discrete Math.\ \textbf{86}
 (1990), 13--20. \href{https://doi.org/10.1016/0012-365X(90)90344-H}{doi:10.1016/0012-365X(90)90344-H}.
+\bibitem{Lean4} L.~de~Moura, S.~Ullrich, \emph{The Lean~4 theorem prover and programming language}, in:
+Automated Deduction (CADE 28), Lecture Notes in Comput.\ Sci., Springer, 2021, 625--635.
+\href{https://doi.org/10.1007/978-3-030-79876-5_37}{doi:10.1007/978-3-030-79876-5\_37}.
 \bibitem{FW} D.~Finozhenok, W.~D.~Weakley, \emph{An improved lower bound for domination numbers of the
 queen's graph}, Australas.\ J.\ Combin.\ \textbf{37} (2007), 295--300.
 \bibitem{CubeConquer} M.~J.~H.~Heule, O.~Kullmann, S.~Wieringa, A.~Biere, \emph{Cube and conquer:
@@ -557,11 +1032,19 @@ Comput.\ Sci., Springer, 2018, 428--437.
 \bibitem{HC} Anonymous, \emph{Hint and Conquer: new queen domination numbers by SAT solving}, preprint,
 October 2026, file \texttt{doc.pdf} on branch \texttt{hint-and-conquer} of the repository
 \url{https://github.com/TahaRostami/Gamma}.
+\bibitem{BSC} jkolantree, \emph{BSC} (repository), directory \texttt{formal/q26\_grid\_annihilator} and files
+\texttt{applications/Q26\_*}, commits of 11--12 August 2026, \url{https://github.com/jkolantree/BSC}.
+\bibitem{KD} A.~Karandikar, A.~Dutta, \emph{Improved lower bounds for queen's domination via an
+exactly-solvable relaxation}, Electron.\ J.\ Combin.\ \textbf{31}(4) (2024), \#P4.38.
+\href{https://doi.org/10.37236/12003}{doi:10.37236/12003}.
 \bibitem{Kearse} M.~D.~Kearse, P.~B.~Gibbons, \emph{Computational methods and new results for chessboard
 problems}, Australas.\ J.\ Combin.\ \textbf{23} (2001), 253--284.
 \bibitem{LMR} A.~Langlois-R\'emillard, M.~M\"ussig, \'E.~Rold\'an, \emph{Complexity of chess domination
 problems}, Res.\ Math.\ Sci.\ \textbf{12} (2025), no.~1, paper no.~14.
 \href{https://doi.org/10.1007/s40687-024-00492-5}{doi:10.1007/s40687-024-00492-5}.
+\bibitem{Mathlib} The mathlib Community, \emph{The Lean mathematical library}, in: Proceedings of the 9th
+ACM SIGPLAN International Conference on Certified Programs and Proofs (CPP 2020), 2020, 367--381.
+\href{https://doi.org/10.1145/3372885.3373824}{doi:10.1145/3372885.3373824}.
 \bibitem{Neuhaus} S.~Neuhaus, \emph{Eigenschaften kleinster dominierender Mengen und Dominanzzahlen von
 Damengraphen}, Dissertation, Universit\"at zu K\"oln, 2009. \url{https://kups.ub.uni-koeln.de/2916/}.
 \bibitem{OEIS} OEIS Foundation Inc., \emph{The On-Line Encyclopedia of Integer Sequences}, sequence

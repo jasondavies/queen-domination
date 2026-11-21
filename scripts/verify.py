@@ -2,7 +2,8 @@
 """Reproduce every computation and every number in the paper.
 
   .venv/bin/python scripts/verify.py                 # default: about 20 minutes, at most 3 processes
-  .venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|upper|paper
+  .venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|replay|frame|framesample|
+                                            frametests|leandata|xcheck|upper|tamper|paper
   .venv/bin/python scripts/verify.py --full          # default steps + the whole n = 26 computation again
                                                      # (about 15 CPU hours on 3 cores) and n = 16 (g = 9), 20, 22
   .venv/bin/python scripts/verify.py --heavy28       # default steps + a larger n = 28 rerun (about 6 CPU hours):
@@ -12,6 +13,10 @@
                                                      # and n = 28 (about 45 CPU hours): every stage-1 cube and every
                                                      # stage-2 formula rebuilt from the survivor lists, solved and
                                                      # checked; resumable (build/certify, manifest-bound)
+  .venv/bin/python scripts/verify.py --frame-rehash-all  # the frame step rebuilds all 130,111 CNF hashes of n = 35 and all
+                                                     # those of n = 26, 28, 32, 34, 36 (about 1 CPU hour) instead of a sample
+  .venv/bin/python scripts/verify.py --lean          # also builds the Lean formalisation in lean/ (lake exe cache get, lake
+                                                     # build: about 10 minutes and 8 GB of disk) and checks #print axioms
   options: --jobs J (parallel processes, default 3); --write-pdf (copy the reproducible build to paper/)
 
 verification/ is not tracked: a run never modifies tracked files.  The paper is built in build/paper with
@@ -212,7 +217,9 @@ def g_upper():
              'Kamenetsky 14-set dominates Q_26; Ostergard-Weakley 14-set dominates Q_27; their independent 14-set dominates Q_26'),
             (d['ok'] and (d['q28']['queens'], d['q29']['queens'], d['weakley30']['queens'], d['q31']['queens']) == (15, 15, 15, 16)
              and all(d[k]['undominated'] == 0 for k in ('q28', 'q29', 'weakley30', 'q31')) and d['weakley30']['monochromatic'],
-             'a 15-set dominates Q_28; 15-sets dominate Q_29 and Q_30 (Weakley, monochromatic); a 16-set dominates Q_31')]
+             'a 15-set dominates Q_28; 15-sets dominate Q_29 and Q_30 (Weakley, monochromatic); a 16-set dominates Q_31'),
+            (d['ok'] and d['ow35']['queens'] == 19 and d['ow35']['undominated'] == 0 and d['ow35']['independent'],
+             'the 19-set of Ostergard-Weakley is an independent dominating set of Q_35')]
 
 
 def g_records28():
@@ -290,10 +297,147 @@ def g_certify_all():
     return msgs
 
 
+def g_replay():
+    d = J('replay.json')
+    want = {26: (6 * 76 + I('cubesSix'), I('pairsTotal')), 28: (6 * 76 + 2 * I('cubesSix'), I('pairsTotalXXVIII'))}
+    return [(r['all_ok'] and (r['cubes'], r['instances']) == want[r['n']] and r['cubes'] == r['cubes_unsat_verified'] == r['cubes_cnf_hash_equal']
+             and r['instances'] == r['instances_unsat_verified'] == r['instances_cnf_hash_equal'],
+             'n = %d: records of the completed --certify-all replay (data/replay): all %d stage-1 cubes and %d stage-2 formulas UNSAT, '
+             'VERIFIED, with the CNF hashes of the original records' % (r['n'], want[r['n']][0], want[r['n']][1])) for r in d] + \
+        [(sorted(r['n'] for r in d) == [26, 28], 'both n present')]
+
+
+def g_frame():
+    d = {(r['n'], r['k']): r for r in J('frame.json')}
+    T = 'XXXV'
+    r = d[(35, 18)]
+    ph = r['phases']
+    msgs = [(r['keys_equal_case_list'] and r['frames'] == I('frames' + T) and r['cases'] == r['record_keys'] == I('cases' + T),
+             'n = 35, k = 18: case list L(35, 18) rebuilt (%s frames, %s cases); it equals the set of case keys of the records'
+             % (C('frames' + T), C('cases' + T))),
+            (r['ALL_REFUTED'] and r['not_refuted'] == 0 and r['sat_records'] == 0
+             and (r['refuted_plain'], r['refuted_cubes_unsplit'], r['refuted_cubes_split'], r['cube_records_used'], r['split_cases_with_second_layer'])
+             == (I('refPlain' + T), I('refUnsplit' + T), I('refSplit' + T), I('cubes' + T), I('secondLayer' + T)) and r['timeout_records'] == I('timeoutRec' + T),
+             'n = 35: every case refuted: %s by a plain record, %s by an unsplit and %s by a split run with symmetry breaking (%s cube records, '
+             'one case with a second layer); UNSAT + drat-trim VERIFIED; no case open, no SAT record'
+             % (C('refPlain' + T), C('refUnsplit' + T), C('refSplit' + T), C('cubes' + T))),
+            (r['rehash']['mismatches'] == 0 and r['rehash']['plain'] == (I('refPlain' + T) if r['rehash']['mode'] == 'all' else I('rehashSample'))
+             and r['rehash']['plain'] + r['rehash']['cubes'] == (I('rehashAll' + T) if r['rehash']['mode'] == 'all' else r['rehash']['plain'] + r['rehash']['cubes']),
+             'n = 35: CNF rebuilt by enc.py (and run_hard.build) with the recorded SHA-256 for %s'
+             % ('all %s refuting records' % C('rehashAll' + T) if r['rehash']['mode'] == 'all' else 'a seeded sample of %s plain and %d cube records' % (C('rehashSample'), r['rehash']['cubes']))),
+            ((ph['nonsquare']['cases'], rnd(ph['nonsquare']['solve_s'] / 3600, 1), rnd(ph['nonsquare']['check_s'] / 3600, 1),
+              ph['square_deficit']['cases'], rnd(ph['square_deficit']['solve_s'] / 3600, 1), rnd(ph['square_deficit']['check_s'] / 3600, 1),
+              ph['hard']['cases'], rnd(ph['hard']['solve_s'] / 3600, 1), rnd(ph['hard']['check_s'] / 3600, 1))
+             == (I('phaseOneCases' + T), C('phaseOneSolve' + T), C('phaseOneCheck' + T), I('phaseTwoCases' + T), C('phaseTwoSolve' + T),
+                 C('phaseTwoCheck' + T), I('phaseThreeCases' + T), C('phaseThreeSolve' + T), C('phaseThreeCheck' + T))
+             and (rnd(r['t_solve_s'] / 3600, 1), rnd(r['t_check_s'] / 3600, 1), rnd(r['proof_bytes'] / 1e9), rnd(r['max_proof_bytes'] / 1e9, 2),
+                  rnd(r['max_t_solve_plain']), rnd(r['max_case_s'])) == (C('hSolve' + T), C('hCheck' + T), C('proofGB' + T), C('maxProofGB' + T),
+                                                                         C('maxPlain' + T), C('maxCase' + T)),
+             'n = 35: phases %s/%s/%s cases; CPU hours %s + %s; proofs %s GB, at most %s GB; slowest plain case %s s, slowest case %s s'
+             % (C('phaseOneCases' + T), C('phaseTwoCases' + T), C('phaseThreeCases' + T), C('hSolve' + T), C('hCheck' + T), C('proofGB' + T),
+                C('maxProofGB' + T), C('maxPlain' + T), C('maxCase' + T)))]
+    for row in CLAIMS['frame']:
+        r = d[(int(row['n']), int(row['k']))]
+        ok = (r['ALL_REFUTED'] and r['frames'] == int(row['frames']) and r['cases'] == r['record_keys'] == r['refuted_plain'] == int(row['cases'])
+              and r['sat_records'] == 0 and r['rehash']['mismatches'] == 0
+              and (rnd(r['t_solve_s']), rnd(r['t_check_s']), rnd(r['proof_bytes'] / 1e9, 2), rnd(r['max_t_solve_plain'], 1))
+              == (row['solve'], row['check'], row['proofGB'], row['maxSolve']))
+        msgs.append((ok, 'n = %s, k = %s: L(n, k) rebuilt (%s frames, %s cases), one UNSAT + VERIFIED record per case and no other; '
+                     '%s + %s s, %s GB; CNF hashes of a sample rebuilt' % (row['n'], row['k'], row['frames'], row['cases'], row['solve'], row['check'], row['proofGB'])))
+    return msgs
+
+
+def g_framesample():
+    d = J('framesample.json')
+    want = {35: I('resolveXXXV'), 32: I('resolveEven'), 34: I('resolveEven'), 36: I('resolveEven')}
+    return [(r['sample'] == r['reproduced'] == want[r['n']], 'n = %d: %d cases solved again (CaDiCaL + drat-trim): same CNF hash, UNSAT, VERIFIED'
+             % (r['n'], want[r['n']])) for r in d] + [(sorted(r['n'] for r in d) == [32, 34, 35, 36], 'n = 32, 34, 35, 36')]
+
+
+def g_frametests():
+    d = J('frametests.json')
+    return [(d['identities']['ok'], 'identities (F), (V), (H) and facts (E3)-(E5): brute force on all small boards and random sets'),
+            (d['waste']['ok'], 'encoder waste terms equal the left sides of the identities on random sets'),
+            (d['sbp']['ok'], 'residual symmetry breaking keeps exactly the solution orbits (all symmetric cases, n <= 10)'),
+            (d['encoder']['ok'] and d['encoder']['pairs'] == 9, 'frame method = theory-free enumeration of all dominating k-sets for 9 pairs (n, k) up to (10, 5)')]
+
+
+def g_framevalid():
+    d = J('framevalid.json')
+    ev = [d['v_%d_%d' % (n, n // 2)] for n in range(4, 31, 2)]
+    om = [d['om_%d_%d' % (n, n // 2)] for n in range(3, 32, 2)]
+    op = {n: d['o_%d_%d' % (n, (n + 1) // 2)] for n in (5, 7, 9, 13, 15, 17, 19, 21, 23)}
+    ok_models = all(v['models_ok'] for v in d.values())
+    return [(ok_models, 'every recorded model of the validation runs is a dominating k-set of the case it was found for (%d runs)' % len(d)),
+            (all(v['complete'] and (v['sat'] > 0) == (v['n'] in (4, 6, 10, 12, 18, 30)) for v in ev),
+             'k = n/2, every even n = 4..30, complete runs: satisfiable exactly for n = 4, 6, 10, 12, 18, 30 (the known values)'),
+            (all(d[t]['complete'] and d[t]['sat'] == 0 for t in ('v_32_16_pysat', 'vb_32_16')),
+             'n = 32, k = 16: all cases UNSAT also with CaDiCaL 1.9.5 and with the second encoding (enc_b.py) and Glucose 4'),
+            (all(v['complete'] and (v['sat'] > 0) == (v['n'] in (3, 11)) for v in om),
+             'k = (n-1)/2, every odd n = 3..31, complete runs: satisfiable exactly for n = 3, 11'),
+            (all(op[n]['complete'] and op[n]['sat'] > 0 for n in (5, 7, 9, 13)) and op[15]['complete'] and op[15]['sat'] == 0
+             and all(op[n]['sat'] == 1 for n in (17, 19, 21)) and op[23]['sat'] == 0,
+             'k = (n+1)/2: satisfiable for n = 5, 7, 9, 13 (complete runs), 17, 19, 21 (stopped at the first model); '
+             'unsatisfiable for n = 15 (complete run)')]
+
+
+def g_leandata():
+    d = J('leandata.json')
+    d = d if isinstance(d, list) else [d]
+    want = {35: I('casesXXXV'), 32: 11466}
+    return [(r['OK'] and r['lean_cases'] == want[int(r['n'])] and r['equal_to_geom_same_order'] and r['every_lean_case_refuted'],
+             'lean/QueenDom/Cases%sData.lean = L(%s, %s) = the refuted cases of the records (%d cases)' % (r['n'], r['n'], r['k'], want[int(r['n'])]))
+            for r in d] + [(len(d) == 2, 'n = 32 and n = 35')]
+
+
+def g_upper_frame():
+    d = J('upper_frame.json')
+    return [(all(d[q]['on_board'] and d[q]['undominated'] == 0 for q in d) and [d[q]['queens'] for q in ('q32', 'q34', 'q35', 'q36')] == [17, 18, 19, 19],
+             'a 17-set dominates Q_32, an 18-set Q_34, a 19-set Q_35 and a 19-set Q_36 (data/frame)')]
+
+
+def g_xcheck():
+    d = J('xcheck.json')
+    km, a13, a15 = d['km'], d['all_13_7'], d['all_15_8']
+    msgs = [(d['case_list_equal_geom'] and d['case_list_35_18'] == I('casesXXXV'),
+             'separately written case list for (35, 18): %s cases, equal to L(35, 18)' % C('casesXXXV')),
+            (all(v['refuted'] == v['cases'] - (int(n) == 11) and v['sat_cases'] == (int(n) == 11) and v['sat_models_checked'] for n, v in km.items())
+             and sorted(int(n) for n in km) == list(range(5, I('xKmMaxN') + 1, 2)) and km[C('xKmMaxN')]['cases'] == I('xKmCasesXXXV'),
+             'k = (n-1)/2, odd n = 5..%s: every case refuted by encoding X + kissat, except one satisfiable case for n = 11' % C('xKmMaxN')),
+            (a13['cases'] == I('xAllThirteenCases') and a13['sat_cases'] == I('xAllThirteenSat') and a13['refuted'] == a13['cases'] - a13['sat_cases']
+             and a13['sat_cases_equal_main_run'] and a13['sat_models_checked'],
+             '(13, 7), complete: the %s satisfiable cases are those of the main pipeline, models checked; the others refuted' % C('xAllThirteenSat')),
+            (a15['cases'] == a15['refuted'] == I('xAllFifteen') and a15['sat_cases'] == 0, '(15, 8), complete: all %s cases refuted' % C('xAllFifteen')),
+            (all(v['cases'] == v['records'] == v['agree'] and v['same_cases'] and v['models_ok'] for v in d['diff_z0'].values()) and len(d['diff_z0']) == 4,
+             'zero-deficit cases of (13, 7), (15, 8), (17, 9), (19, 10): enc.py + CaDiCaL 1.9.5 and encoding X + kissat agree on every case')]
+    for name, key in (('hard', 'xHardCases'), ('sample', 'xSampleCases')):
+        h = d[name]
+        msgs.append((h.get('cases') == h.get('refuted') == I(key) and h.get('SAT_records') == 0 and h.get('cases_not_in_independent_list') == 0,
+                     'n = 35, %s cases: all %s refuted by encoding X + kissat (complete cube trees), no SAT record%s'
+                     % (name, C(key), '' if h.get('cases') == h.get('refuted') == I(key) else
+                        ' -- NOT YET: %s' % ('records absent (run in progress)' if not h.get('present', True) else '%s of %s refuted' % (h.get('refuted'), h.get('cases'))))))
+    return msgs
+
+
+def g_lean():
+    txt = (LOGS / 'lean_axioms.txt').read_text()
+    lines = [l for l in txt.splitlines() if "' depends on axioms" in l or "' does not depend on any axioms" in l]
+    allowed = {'propext', 'Classical.choice', 'Quot.sound'}
+    bad = [l for l in lines if 'depends on axioms' in l and not set(re.search(r'\[(.*)\]', l).group(1).replace(' ', '').split(',')) <= allowed]
+    names = {re.match(r"'([^']+)'", l).group(1) for l in lines}
+    key = ['QueenDom.gamma_35_eq_19_of_cases35_unsat_mixed', 'QueenDom.gamma_35_eq_19_of_cases35_unsat', 'QueenDom.gamma_35_le',
+           'QueenDom.enumCases_35_18', 'QueenDom.lemmaR', 'QueenDom.gamma_32_eq_17_of_cases32_unsat', 'QueenDom.enumCases_32_16']
+    m = re.search(r'piece theorems checked: (\d+); with an axiom outside \[propext, Classical.choice, Quot.sound\]: (\d+)', txt)
+    return [('lake build: OK' in txt, 'lake build of lean/ succeeded'),
+            (len(lines) == I('leanTheorems') and not bad and all(k in names for k in key),
+             '#print axioms for %s theorems (including %s): only propext, Classical.choice, Quot.sound' % (C('leanTheorems'), ', '.join(k.split('.')[-1] for k in key))),
+            (bool(m) and m.group(1) == C('leanPieces') and m.group(2) == '0', 'all %s kernel-computation pieces of the case lists: no other axiom' % C('leanPieces'))]
+
+
 def g_tamper():
     d = J('tamper.json')
     return [(d['baseline_pass'], 'an unmodified copy of the tracked files passes'),
-            (all(c['failed'] for c in d['cases']) and len(d['cases']) == 10,
+            (all(c['failed'] for c in d['cases']) and len(d['cases']) == 15,
              'each of %d altered copies fails: %s' % (len(d['cases']), ', '.join(c['name'] for c in d['cases'])))]
 
 
@@ -313,10 +457,13 @@ def g_heavy28():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--only', choices=['build', 'small', 'referee', 'records', 'sample', 'records28', 'sample28', 'upper', 'tamper', 'paper'])
+    ap.add_argument('--only', choices=['build', 'small', 'referee', 'records', 'sample', 'records28', 'sample28', 'replay', 'frame', 'framesample',
+                                       'frametests', 'leandata', 'xcheck', 'upper', 'tamper', 'paper'])
     ap.add_argument('--full', action='store_true', help='also rerun the whole n = 26 computation (~15 CPU hours)')
     ap.add_argument('--heavy28', action='store_true', help='also rerun a larger part of the n = 28 computation (~6 CPU hours)')
     ap.add_argument('--certify-all', action='store_true', help='also replay every certificate formula for n = 26, 28 (~45 CPU hours)')
+    ap.add_argument('--frame-rehash-all', action='store_true', help='frame step: rebuild every CNF hash instead of a sample (~1 CPU hour)')
+    ap.add_argument('--lean', action='store_true', help='also build the Lean formalisation and check its axioms (~10 minutes, 8 GB)')
     ap.add_argument('--jobs', type=int, default=3)
     ap.add_argument('--write-pdf', action='store_true', help='copy the reproducible paper build to paper/')
     ap.add_argument('--no-tamper', action='store_true', help=argparse.SUPPRESS)
@@ -335,7 +482,7 @@ def main():
     tmp = LOGS / 'tmp'
     tmp.mkdir(exist_ok=True)
     steps = []
-    if a.only in (None, 'build', 'small', 'referee', 'sample', 'sample28') or a.certify_all:
+    if a.only in (None, 'build', 'small', 'referee', 'sample', 'sample28', 'framesample') or a.certify_all:
         cc = ' && '.join('gcc -O2 -o build/%s code/%s.c' % (p, p) for p in ('stage1', 'stage1_v', 'brute_ab', 'place'))
         steps.append(('build', ['sh', '-c', 'mkdir -p build && %s && sh scripts/get_tools.sh' % cc], ROOT, g_build, None))
     if want('small'):
@@ -367,6 +514,28 @@ def main():
         steps.append(('records28', [PY, 'code/check_records28.py', 'data/n28'], ROOT, g_records28, 'records28.json'))
     if want('sample28'):
         steps.append(('n28_sample', [PY, 'code/run_n28.py', str(ROOT), str(JOBS), str(LOGS / 'n28_sample.json'), 'sample'], ROOT, g_sample28, None))
+    if want('replay'):
+        steps.append(('replay', ['sh', '-c', '%s code/certify_all.py %s --compare 26 ; %s code/certify_all.py %s --compare 28' % (PY, ROOT, PY, ROOT)],
+                      ROOT, g_replay, 'replay.json'))
+    if want('frame'):
+        rh = ['--rehash-all'] if a.frame_rehash_all else ['--rehash-sample', C('rehashSample')]
+        rhe = ['--rehash-all'] if a.frame_rehash_all else ['--rehash-sample', C('rehashSampleEven')]
+        cmd = ' ; '.join(' '.join([PY, 'code/frame/check_frame.py', 'coverage', r['n'], r['k'], 'data/frame'] + (rh if r['n'] == '35' and r['k'] == '18' else rhe)
+                                  + ['--jobs', str(JOBS)]) for r in [{'n': '35', 'k': '18'}] + CLAIMS['frame'])
+        steps.append(('frame', ['sh', '-c', cmd], ROOT, g_frame, 'frame.json'))
+    if want('framesample'):
+        cmd = ' ; '.join('%s code/frame/check_frame.py resolve %d %d data/frame tools/cadical tools/drat-trim %s/resolve --sample %s --seed 1'
+                         % (PY, n, k, tmp, C('resolveXXXV') if n == 35 else C('resolveEven')) for n, k in ((35, 18), (32, 16), (34, 17), (36, 18)))
+        steps.append(('framesample', ['sh', '-c', cmd], ROOT, g_framesample, 'framesample.json'))
+    if want('frametests'):
+        steps.append(('frametests', [PY, 'code/frame/check_frame.py', 'tests'], ROOT, g_frametests, 'frametests.json'))
+        steps.append(('framevalid', [PY, 'code/frame/check_frame.py', 'validation', 'data/frame/validation'], ROOT, g_framevalid, 'framevalid.json'))
+    if want('leandata'):
+        cmd = ' ; '.join('%s -B lean/scripts/check_cases.py %d %d lean/QueenDom/Cases%dData.lean data/frame code/frame --json' % (PY, n, k, n)
+                         for n, k in ((35, 18), (32, 16)))
+        steps.append(('leandata', ['sh', '-c', cmd], ROOT, g_leandata, 'leandata.json'))
+    if want('xcheck'):
+        steps.append(('xcheck', [PY, 'code/xcheck35/check_xcheck.py', 'data/xcheck35', 'data/frame'], ROOT, g_xcheck, 'xcheck.json'))
     if a.heavy28:
         steps.append(('n28_heavy', [PY, 'code/run_n28.py', str(ROOT), str(JOBS), str(LOGS / 'n28_heavy.json'), 'heavy'], ROOT, g_heavy28, None))
     if a.full:
@@ -382,6 +551,11 @@ def main():
                       g_certify_all, 'certify_all.json'))
     if want('upper'):
         steps.append(('upper', [PY, 'code/check_upper.py', 'data/kamenetsky26.txt', 'data/q28_15.txt'], ROOT, g_upper, 'upper.json'))
+        steps.append(('upper_frame', [PY, 'code/frame/check_frame.py', 'upper', 'data/frame'], ROOT, g_upper_frame, 'upper_frame.json'))
+    if a.lean:
+        steps.append(('lean', ['sh', '-c', 'rm -f %s/lean_axioms.txt && cd lean && LEAN_NUM_THREADS=%d lake exe cache get && LEAN_NUM_THREADS=%d lake build '
+                               '&& echo "lake build: OK" > %s/lean_axioms.txt && lake env lean Axioms.lean >> %s/lean_axioms.txt'
+                               % (LOGS, JOBS, JOBS, LOGS, LOGS)], ROOT, g_lean, None))
     if want('tamper') and not a.no_tamper:
         steps.append(('tamper', [PY, 'scripts/tamper.py', str(ROOT)], ROOT, g_tamper, 'tamper.json'))
     bp = BUILD / 'paper'
@@ -407,13 +581,13 @@ def main():
         same = built.exists() and sha(built) == sha(ROOT / 'paper' / 'queen-domination.pdf')
         results.append({'name': 'paper_reproducible', 'ok': same})
         print('%-22s %s' % ('paper_reproducible', 'PASS' if same else 'FAIL (build differs from paper/queen-domination.pdf)'))
-    inputs = sorted(p for p in ROOT.rglob('*') if p.is_file() and (p.suffix in {'.py', '.c', '.sh', '.tex', '.md', '.txt', '.cff', '.json', '.jsonl', '.xz', '.tsv'} or p.name == 'MANIFEST')
-                    and not ({'.git', '.venv', 'verification', 'tools', 'build', '__pycache__'} & set(p.relative_to(ROOT).parts)))
+    inputs = sorted(p for p in ROOT.rglob('*') if p.is_file() and (p.suffix in {'.py', '.c', '.sh', '.tex', '.md', '.txt', '.cff', '.json', '.jsonl', '.xz', '.tsv', '.lean', '.toml', '.log'} or p.name in ('MANIFEST', 'lean-toolchain'))
+                    and not ({'.git', '.venv', 'verification', 'tools', 'build', '__pycache__', '.lake'} & set(p.relative_to(ROOT).parts)))
     import pysat
     cad = subprocess.run([str(ROOT / 'tools' / 'cadical'), '--version'], capture_output=True, text=True).stdout.strip() \
         if (ROOT / 'tools' / 'cadical').exists() else None
     summary = {'time_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'only': a.only, 'full': a.full, 'heavy28': a.heavy28,
-               'certify_all': a.certify_all, 'jobs': JOBS, 'working_tree_dirty': dirty,
+               'certify_all': a.certify_all, 'frame_rehash_all': a.frame_rehash_all, 'lean': a.lean, 'jobs': JOBS, 'working_tree_dirty': dirty,
                'python': sys.version.split()[0], 'python-sat': pysat.__version__, 'cadical': cad,
                'gcc': subprocess.run(['gcc', '--version'], capture_output=True, text=True).stdout.splitlines()[0],
                'results': results, 'inputs_sha256': {str(p.relative_to(ROOT)): sha(p) for p in inputs}}
@@ -422,7 +596,7 @@ def main():
         summary['pdf_sha256'] = sha(pdf)
     allok = all(r['ok'] for r in results)
     summary['overall'] = 'PASS' if allok else 'FAIL'
-    name = ('summary.json' if a.only is None and not (a.full or a.heavy28 or a.certify_all) else 'summary-full.json' if a.only is None else 'summary-partial.json')
+    name = ('summary.json' if a.only is None and not (a.full or a.heavy28 or a.certify_all or a.frame_rehash_all or a.lean) else 'summary-full.json' if a.only is None else 'summary-partial.json')
     (LOGS / name).write_text(json.dumps(summary, indent=1) + '\n')
     print('OVERALL', summary['overall'])
     return 0 if allok else 1
