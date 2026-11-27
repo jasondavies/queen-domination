@@ -1,4 +1,45 @@
-# γ(Q₃₅) = 19 and certified queen domination numbers up to n = 46
+# γ(Q₃₅) = 19, γ(Q₄₇) = 25 and queen domination numbers up to n = 47
+
+## γ(Q₄₇) = i(Q₄₇) = 25 (27 November 2026)
+
+Twenty-four queens cannot occupy or attack every square of a 47 × 47 board, and twenty-five can. Since
+Östergård and Weakley (2001) it had been known only that γ(Q₄₇) ∈ {24, 25}. The paper is
+[`paper/q47-domination.pdf`](paper/q47-domination.pdf) ([LaTeX source](paper/q47-domination.tex)).
+
+Östergård and Weakley’s independent 25-queen placement also gives **i(Q₄₇) = 25**. The verifier checks both placements. [Independent placement](data/frame/q47_independent_25.json) · [Verification guide](data/frame/q47_release/README.md)
+
+After installing the dependencies and pinned tools as described in the guide, run the full verification from this checkout with
+
+```sh
+.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8
+```
+
+- **Upper bound.** 24 queens in columns 0, 2, …, 46 leave only the square (7, 46) uncovered
+  (`data/frame/q47_24_one_hole.json`). A queen there gives the 25-queen set in `data/frame/q47_closeout.json`.
+- **Lower bound.** The frame method of the γ(Q₃₅) paper below, with new odd-board reductions:
+  - A margin bound for odd boards removes 271 298 of the 369 412 canonical frame cases, leaving 98 114.
+  - Board symmetries reduce the 98 114 remaining cases to 91 017 representatives. Their proofs use
+    - SAT refutations with DRAT proofs checked by drat-trim, with cube splitting where needed;
+    - colour-specific perimeter budgets for square frames;
+    - a shared certificate for an orthodox profile;
+    - reuse of verified unsatisfiable cores across sibling cubes.
+  - The last 15 branches, in 13 frames, are excluded by first- and second-moment identities for the
+    diagonals.
+- **Context.** With γ(Q₄₈) = 25 (A. Đukić, OEIS A075458), γ(Q₄₉) = 25 (Östergård–Weakley) and
+  γ(Q₅₀) = 26 ([CosmicCrusader23/queens](https://github.com/CosmicCrusader23/queens)), γ(Q_n) is now known
+  for every n ≤ 50. The smallest open case is n = 51.
+
+**What can be checked from this repository:**
+- `code/frame/check_q47_terminal_enumeration.py` is a separate enumeration of the 15 terminal exclusions.
+  It uses no SAT solver.
+- `data/frame/q47_terminal_moments/` holds the 15 terminal receipts with their CNFs and DRAT proofs, and
+  `terminal-roots.json`, the root hashes of the 13 terminal cases.
+  `data/frame/q47_same_parity/` holds the related same-parity moment certificates. To replay them, follow
+  `data/frame/q47_terminal_moments/README.md`.
+
+**Historical audit.** The closeout checker reconciles the original run ledgers and branch archives in the local `build/` directory. The five-second first pass refuted 87,116 cases and timed out on 10,998. Some early runs retained verification receipts. The Git-only verifier above generates fresh SAT proofs from the release index. The Lean formalisation described below covers the earlier results.
+
+---
 
 This repository holds a paper and its verification material. The main result is **γ(Q₃₅) = 19** (OEIS
 [A075458](https://oeis.org/A075458)): eighteen queens cannot occupy or attack every square of a 35 × 35
@@ -41,9 +82,9 @@ The repository also contains **independent confirmations of known even values**:
 - An earlier version of this repository presented γ(Q₂₆) and γ(Q₂₈) as new; that was wrong and has been
   corrected.
 
-With these values, γ(Q_n) is known for all n ≤ 46. The odd values 37, 39, 41 and 45 are ⌈n/2⌉ by
-Östergård–Weakley. For 43, Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give
-γ(Q₄₃) = 22.
+With these values, γ(Q_n) is known for all n ≤ 46 (and, with γ(Q₄₇) = 25 above and the results cited
+there, for all n ≤ 50). The odd values 37, 39, 41 and 45 are ⌈n/2⌉ by Östergård–Weakley. For 43,
+Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q₄₃) = 22.
 
 ## Results
 

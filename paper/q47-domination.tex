@@ -1,0 +1,576 @@
+\pdfoutput=1
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype}
+\usepackage[hmargin=1in,vmargin=0.9in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Odd-board bounds and the domination number of the 47 by 47 queen's graph},pdfauthor={Jason Davies}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\ind}[1]{\mathbf{1}_{#1}}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\title{Odd-board bounds and the domination number\\of the $47\times47$ queen's graph}
+\author{Jason Davies}
+\date{27 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The domination and independent domination numbers of the $47\times47$
+queen's graph are both 25. The independent upper bound is due to
+\"Osterg{\aa}rd and Weakley. We exhibit a placement and exclude every placement of 24 queens by a
+computer-assisted proof. A geometric bound eliminates 271,298 of 369,412
+cases on canonical frame rectangles. The remaining 98,114 cases have
+91,017 representatives under board symmetry. We close them by SAT
+refutations and arithmetic exclusions. In the final 15 branches the occupied rows and
+columns are forced. The targets on empty lines constrain the diagonal
+values, and their first and second moments rule out every remaining
+combination. We also prove that on a board of order $4m-1$, a nonorthodox
+dominating set of $2m$ queens has at least $m-1$ queens of each colour.
+\end{abstract}
+
+\section{The domination number at order 47}\label{sec:bounds}
+The vertices of $Q_n$ are the squares of the $n\times n$ board. Queens
+dominate the board if every square contains a queen or shares a row,
+column or diagonal with one. Write $\gamma(Q_n)$ for the minimum number
+of queens with this property, and $i(Q_n)$ for the minimum size of a
+dominating set whose queens are pairwise nonattacking.
+\begin{theorem}\label{thm:q47}
+\(\gamma(Q_{47})=i(Q_{47})=25\).
+\end{theorem}
+The lower bound for odd boards gives
+$\gamma(Q_{47})\ge24$ \cite{FW}. For the other direction, number the rows
+and columns from 0 to 46, writing each square as (column, row). Place a queen in column $2i$ and row $r_i$ for
+$0\le i<24$, where the successive rows are
+\[
+\begin{array}{rrrrrrrrrrrr}
+15&9&39&33&11&41&17&9&25&37&43&23\\
+7&1&21&27&3&45&35&29&19&5&31&13 .
+\end{array}
+\]
+Testing the four lines through each square leaves just $(7,46)$ uncovered.
+Adding a queen there proves $\gamma(Q_{47})\le25$. For independent domination,
+\"Osterg{\aa}rd and Weakley \cite[pp.~9--10]{OW} exhibit an independent
+dominating 25-set. The verifier adds 23 to both of their centered coordinates
+and checks that the set occupies 25 distinct lines in each family and
+dominates all 2,209 squares. Thus $25=\gamma(Q_{47})\le i(Q_{47})\le25$
+once the lower bound is established.
+
+The frame method of \cite{Davies}, following the box decomposition of
+Rostami~\cite{HC}, resolved the odd board $Q_{35}$. Its even-board applications
+have since been extended to $Q_{48}$ by \DJ uki\'c \cite{Djukic} and to the
+even boards from 50 through 64 by Chan \cite{Chan}. The latter work counts
+perimeter incidences separately by square colour. We adapt that idea in
+Section~\ref{sec:colour}. At order 47 the geometry allows more unused
+incidences than in the even-board problem with $n/2$ queens. Keeping track
+of where they can occur is useful both before and during SAT solving.
+
+\section{An odd-board reduction before SAT}
+Let $n=2k-1\ge5$ and suppose $k$ queens dominate $Q_n$. The leftmost and
+rightmost empty columns $a,b$ and the lowest and highest empty rows $c,d$
+bound a rectangle called the \emph{frame}. Its spans are $w=b-a$ and
+$h=d-c$. For each of the four families of lines, subtract the number of
+occupied lines from $k$ to obtain deficits $\delta_R,\delta_C,\delta_T,
+\delta_S$ (row, column, difference and sum). An empty row and an empty
+column meet in a square requiring a diagonal attack. Call it a
+\emph{target}. There are $k-1+\delta_R$ empty rows and $k-1+\delta_C$
+empty columns.
+
+\begin{proposition}\label{prop:margin}
+Let $M=a+(n-1-b)+c+(n-1-d)$ and let $L$ count queens $(x,y)$
+with $x\notin[a,b]$ and $y\notin[c,d]$. Then
+\[
+ M-k\le L\le4-\delta_R-\delta_C.
+\]
+When $w\ge h$ we also have $L\le2-2\delta_R+2\ind{w=h}$.
+When $h\ge w$ the corresponding bound uses $\delta_C$.
+\end{proposition}
+\begin{proof}
+All $M$ exterior rows and columns are occupied. A queen contributes at
+most one incidence with these lines except for the $L$ queens counted
+twice. Each of those $L$ queens has a diagonal missing the frame. The
+$2k$ diagonal occurrences therefore cover at most $2(2k-L)$ perimeter
+targets. Counting targets on the four sides and subtracting the four
+corners gives $2(k-1+\delta_R)+2(k-1+\delta_C)-4$. Comparing these counts
+gives the first two inequalities. When $w\ge h$, an occupied diagonal
+can meet the vertical sides in at most one point, apart from the two
+corner-to-corner diagonals when $w=h$. The two sides have
+$2(k-1+\delta_R)$ targets. They receive at most $2k-L+2\ind{w=h}$
+distinct hits. Interchanging the axes finishes the proof.
+\end{proof}
+This refines the exterior-queen count in the rectangular board argument
+of Boz\'oki, G\'al, Marosi and Weakley \cite{BGMW}.
+
+\begin{lemma}\label{lem:grid}
+Let $A,B$ be arbitrary nonempty finite sets of coordinates. Suppose the diagonals of $s$ queens cover
+$A\times B$. Then $|A|+|B|\le2s+2$. At equality both sizes are even.
+\end{lemma}
+\begin{proof}
+If one size is one, at most $2s$ points on that line can be hit. Otherwise
+the border of the grid has $2|A|+2|B|-4$ points, and each of the $2s$
+diagonals hits at most two. At equality $|A|+|B|=2s+2$ is even. It remains to rule out two odd
+sizes. We use the coefficient argument of Alon's Combinatorial
+Nullstellensatz \cite[Theorem~1.2]{Alon}. Consider
+\[
+ P(x,y)=\prod_{(u,v)}\big((x-u)^2-(y-v)^2\big),
+\]
+with a factor for each queen. It vanishes on the grid. Its remainder
+modulo $\prod_{a\in A}(x-a)$ and $\prod_{b\in B}(y-b)$ is identically
+zero by univariate interpolation twice. At equality the monomial
+$x^{|A|-1}y^{|B|-1}$ has degree $2s$ and is already reduced. Its
+coefficient survives reduction, because reducing any other monomial
+strictly lowers its degree. Both exponents are even, so its coefficient
+in $(x^2-y^2)^s$ is a nonzero signed binomial coefficient.
+\end{proof}
+
+Weakley \cite{Weakley} proved $\gamma(Q_{4k+1})\ge2k+1$.
+Burger and Mynhardt \cite{BM} studied dominating sets on $Q_{4k+3}$,
+the congruence class considered here. We distinguish placements by their
+occupied coordinate parities and count queens of each square colour.
+
+Call a cover \emph{orthodox} if it occupies all rows of some parity and all
+columns of some parity, following Neuhaus \cite{Neuhaus}. Colour squares by
+$x+y\bmod2$. Orthodoxy concerns occupied lines, while square colour
+concerns the queens themselves.
+
+\begin{theorem}\label{thm:split}
+On $Q_{4m-1}$, $m\ge2$, the smaller colour class in a dominating set of
+$2m$ queens has size $0$ or $1$ in the orthodox case, and $m-1$ or $m$
+in the nonorthodox case. A nonsquare frame with odd longer span forces
+exactly $m$ queens of each colour.
+\end{theorem}
+\begin{proof}
+Put $k=2m$. In an orthodox cover at most one queen can miss the compulsory
+parity on each axis, since the two parity classes have sizes $k$ and
+$k-1$. Two queens of the opposite colour would have to be distinct
+exceptions, one on each axis. There would then be $k-1$ empty indices of
+the opposite parity on each axis. Their product has the compulsory square
+colour and must be covered by the diagonals of the other $k-2$ queens.
+This attains equality in Lemma~\ref{lem:grid} with two odd sizes.
+
+For a nonorthodox cover, suppose one axis has empty lines of only one
+parity. The other has empty lines of both parities. Two opposite-parity
+empty lines on the latter axis each contain at least $k-1$ targets, of
+one colour on the first and the other colour on the second. Each queen
+hits at most two targets on either line, forcing at least $m$ of each
+colour. Otherwise all four empty parity classes are nonempty. For a
+given square colour the targets consist of two products of these classes.
+Adding Lemma~\ref{lem:grid} over the two products counts each empty
+index once and yields $4m-2+\delta_R+\delta_C\le4s+4$, where $s$ is the
+number of queens of this colour. Thus $s\ge m-1$.
+
+Finally, orient the longer span horizontally. If it is odd, every empty
+row meets the two extreme columns in one target of each colour. A diagonal
+can reach at most one of the two vertical sides. Each colour therefore
+needs at least $\lceil(k-1+\delta_R)/2\rceil\ge m$ queens.
+\end{proof}
+
+At $n=47$ the two possible nonorthodox splits are $11+13$ and $12+12$.
+Neuhaus reports an integer-programming exclusion of orthodox 24-queen
+covers \cite[\S3.6, p.~59]{Neuhaus}. Thus a nonorthodox solution would
+require moving at least eleven of the monochromatic queens displayed in
+Section~\ref{sec:bounds}. Our exhaustive search includes the orthodox
+cases and verifies their exclusion independently of that result.
+
+\section{Square frames and colour-specific perimeter counts}\label{sec:colour}
+For a square frame translate its lower left corner to the origin and write
+$w$ for its span. Pair each interior offset $i$ with $w-i$, counting the
+middle offset only once. For each resulting set $J$, let $r_J,c_J$ count
+its empty rows and empty columns. Put $E=\sum_J|r_J-c_J|$.
+
+\begin{proposition}\label{prop:profile}
+We have $E\le4-\delta_R-\delta_C-\delta_T-\delta_S$. When $w$ is odd,
+the number $z$ of queens of either colour satisfies
+$2z\ge k-2+(\delta_R+\delta_C+E)/2$.
+\end{proposition}
+\begin{proof}
+For $1\le i<w$, group together the points
+$(0,i),(i,0),(w,w-i),(w-i,w)$. A diagonal through any such point can
+meet the perimeter only within its group, at most once on a vertical
+side and once on a horizontal side. If a group has $v_i,h_i$ vertical
+and horizontal targets it needs at least $\max(v_i,h_i)$ distinct
+diagonals. The corners need at least two more. Now
+\[
+ \sum v_i=2(k-3+\delta_R),\qquad
+ \sum h_i=2(k-3+\delta_C),\qquad \sum |v_i-h_i|=2E .
+\]
+For the last identity use the two groups indexed by each reflected pair.
+At a middle offset each empty line contributes two targets. Summing
+$\max(v_i,h_i)=(v_i+h_i+|v_i-h_i|)/2$ and comparing with the
+$2k-\delta_T-\delta_S$ occupied diagonals gives the first bound. When
+$w$ is odd the two groups of a reflected pair have opposite colours
+and equal target counts. Each colour also needs one diagonal for its
+corners. The same count for a single colour gives the second bound.
+\end{proof}
+
+We next specialise to a square frame with zero deficits. Each queen then
+has a different line in each of the four families. Fix one colour. Let
+$z$ be its queen count, $v,h$ its numbers of vertical- and horizontal-side
+targets, $c_0$ its number of corners, and $b_0$ the number of occupied
+corner-to-corner diagonals of this colour. Define waste as the capacity
+for diagonal hits less the number of distinct targets covered. On the full
+perimeter each occupied diagonal has capacity two. On opposite sides it
+has capacity one, increased to two for a corner-to-corner diagonal.
+Missing a side, hitting a nontarget or hitting a target twice can all
+use up capacity. In a cover the three wastes are exactly
+\[
+ W_F=4z-v-h+c_0,\qquad W_V=2z+b_0-v,\qquad W_H=2z+b_0-h .
+\]
+Indeed the $z$ queens supply $2z$ distinct diagonals. All $v+h-c_0$
+perimeter targets must be hit, with each corner counted once. The
+side identities follow by counting targets on the two sides in question.
+
+For odd $w$, $v=h=k-1$ and $c_0=2$ for each colour. Thus at order 47 a
+colour represented by eleven queens has $W_F=0$. Every one of its 22
+diagonals must reach two distinct targets and all 44 targets must be
+covered once. For even $w$ all corners have the same colour. For the
+other colour $v,h$ are even and $b_0=c_0=0$, so $W_V,W_H$ are even and
+$W_F=W_V+W_H$. The total full-perimeter waste across colours is eight.
+The total on either pair of sides is two plus the number of occupied
+corner-to-corner diagonals. The encoder enumerates the nonnegative integer waste counts satisfying
+these identities and bounds and enforces the counts for the selected
+budget of each colour.
+
+\section{A shared certificate for an orthodox profile}\label{sec:orthodox}
+Consider placements with all 24 even rows and all 23 odd columns occupied
+and no queen in any other column. Each even row carries one queen. One
+odd column $x_*$ carries two, and every other odd column carries one.
+An entire family of frame branches forcing this pattern can use the
+same exclusion, also after transposing the board.
+
+For each queen put $T=y-x$ and $S=x+y-46$. The targets form the product
+of the even columns with the odd rows. A target $(x,y)$ requires its
+$T$ or $S$ to occur among the queen indices. For each target difference
+$t$, list the sum indices $N(t)$ compatible with it. Solving $y-x=t$, $x+y-46=s$ for a target gives
+$s\equiv t-46\pmod4$, $|s-t|\le46$ and $|s+t|\le44$.
+For $t>0$ the interval for $s$ is centered at $-1$, and for $t<0$
+at $1$, in both cases with radius $45-|t|$. Within a fixed residue
+class of $t$ the admissible $s$ have the same residue. Distinct values
+of $|t|$ differ by at least two, which is at least the distance between
+the centers. Thus the neighbourhoods are nested in order of increasing
+$|t|$.
+Before the first absent difference in this order all differences are
+compulsory. At that first absence all sums in $N(t)$ are compulsory. An
+additional choice represents the case where every difference occurs.
+Choose a prefix independently for the two residue classes. Allowing the
+first absent difference back into a multiset completion only enlarges the
+set of candidates.
+
+Complete each compulsory list to a multiset of 24 indices, allowing repeats.
+With $u=23$ and $A=\sum_{i=0}^{46}(i-u)^2$, necessary conditions are
+\[
+ \sum T=u-x_*,\qquad \sum S=-\sum T,\qquad
+ \sum T^2+\sum S^2=2\big(A+(x_*-u)^2\big).
+\]
+The linear sums follow by adding the known row and column coordinates.
+The quadratic identity follows from $T^2+S^2=2[(x-u)^2+(y-u)^2]$.
+Moreover $T\equiv S\bmod4$ for a queen in an odd column, so the
+multiplicities in residue class one agree. For each prefix pair the
+generator enumerates the two completions separately over the odd indices
+from $-45$ through $45$, and compares their
+linear sum, square sum and residue count. Every placement would yield
+one matching pair of keys.
+
+After the list-length test there are 70 prefix choices. The generated
+formula has 10,920 variables and 10,921 clauses. At least one prefix must
+be selected, and a selected prefix must have a compatible key. The
+enumeration rules out every such key. A 563-byte DRAT trace eliminates the
+70 selectors and derives the empty clause. Its small size reflects the
+work done by the multiset enumerator. Checking the trace establishes
+unsatisfiability of this formula. Applying it to a branch also requires
+the frame and its fixed line occupancies to imply the stated profile.
+The trace checks the generated clauses. The multiset enumeration supplies
+their mathematical justification. A second checker enumerates unions
+of the difference-neighbourhoods of omitted sums directly on the grid.
+Each such union is compulsory. Every sum with a neighbour outside the
+union must be present. This produces a subcover of every possible
+placement. Completing these subcovers to multisets gives 70 support
+choices and no matching moment keys, independently of the prefix order,
+CNF generator and DRAT checker.
+
+\begin{proposition}\label{prop:axis}
+For a branch, enumerate the occupied row and column counts of each parity
+consistent with the layer bits and the prescribed line totals. For each
+choice, distribute 24 queens over the four row--column parity classes.
+Each occupied line requires at least one queen. A parity class with no
+occupied lines carries no queens. If there are $a>0$ empty rows of parity $p$ and $b>0$
+empty columns of parity $q$, require at least $\lceil\max(a,b)/2\rceil$
+queens of colour $p+q\bmod 2$. If no distribution survives, the branch
+is impossible. If all survivors have a profile excluded for the prescribed diagonal
+deficits, the corresponding profile proof closes the branch.
+\end{proposition}
+\begin{proof}
+Every placement supplies one of the enumerated distributions. On any fixed
+empty line, a queen can hit at most two targets diagonally, and can hit
+only targets of its colour. Apply this observation to a row and to a
+column of the indicated grid. This proves the required lower bound and
+both conclusions.
+\end{proof}
+
+For example, suppose $\delta_R=0$ and $\delta_C=1$. If the prescribed
+occupancies already force $r$ distinct even rows and $s$ distinct odd
+columns, at most $U=(24-r)+(24-s)$ queens can have even square colour:
+each such queen misses at least one of these two coordinate parities.
+An empty even row would have at least $1+s$ targets in even columns,
+since at most $23-s$ even columns are occupied. Hence $1+s>2U$ forces
+all even rows to be occupied. Similarly, an empty odd column would meet
+at least $r-1$ empty odd rows, so $r-1>2U$ forces all odd columns to
+be occupied. Either deduction tightens the count for the other. Once
+all odd columns are occupied, the even-colour queens must lie in odd
+rows and there are at most $24-r$ of them. These tests certify the
+profile, for example, in the case with margins $(0,0,1,1)$, deficits
+$(0,1,0,0)$ and the 76-bit cube $(11110000)^9\,1111$ in the layer
+ordering below.
+
+\section{Diagonal moments on the final 15 branches}\label{sec:terminal}
+In 15 branches from 13 frames, the fixed layer bits and line counts
+determine both sets of occupied coordinates. Six branches occupy exactly
+the even coordinates on both axes, three occupy exactly the odd coordinates
+on both axes, and six occupy all odd coordinates and one even coordinate
+on each axis.
+
+For the first two families write each queen as $(p+2i,p+2j)$ with
+$p=0$ or $1$. Set $L=23-p$, $D=i-j$ and $H=i+j-L$.
+When $p=0$, each axis uses the ranks $0,\ldots,L$ once, so
+$\sum D=\sum H=0$. When $p=1$, one column rank $I$ and one row rank
+$J$ occur twice. Then $\sum D=I-J$ and $\sum H=I+J-L$.
+In both families,
+\[
+ \sum D^2+\sum H^2-(\sum D)^2-(\sum H)^2
+ =\sum_{i=0}^L(2i-L)^2 .
+\]
+Indeed, $D^2+H^2=((2i-L)^2+(2j-L)^2)/2$. For the odd axes the two
+repeated ranks add $((2I-L)^2+(2J-L)^2)/2$, exactly the sum of the
+squared first moments.
+
+In the mixed family every occupied line carries one queen. If distinct
+queens occupied the two even lines, both queens would have odd square
+colour. The $23\times23$ product of empty even lines would have to be
+covered by the diagonals of the other 22 queens. This contradicts the
+equality case of Lemma~\ref{lem:grid}. The queen on the even column
+therefore lies on the even row. Removing it leaves a permutation on the
+23 odd coordinates. Its diagonal ranks satisfy $\sum D=\sum H=0$ and
+$\sum(D^2+H^2)=\sum_{i=0}^{22}(2i-22)^2=4048$.
+
+To check a branch, label each target $(x,y)$ by its diagonal ranks
+$((x-y)/2,(x+y-46)/2)$. In the mixed case first remove targets hit by
+the queen on the two even lines. Every remaining pair requires its
+difference or its sum to be present. Omitting a difference therefore
+forces every sum paired with it. Complete the selected diagonal values
+to multisets, with exactly the repetitions allowed by the frame deficits,
+including any overlap with the removed queen. Retain the required first
+and second moments and the parity relation $H-D\equiv L\pmod 2$ for each
+queen on the parity grid. Every placement gives compatible multiset
+counts and moments. None of the 15 branches has a compatible combination.
+
+We checked this finite exclusion in two ways. The first implementation
+builds a CNF encoding compatibility of the enumerated summaries and
+checks a DRAT refutation. A separate enumeration checks all even-axis
+permutations by testing their candidate diagonal supports for uncovered
+targets. For the odd and mixed families it starts from omitted sum
+values, forces the corresponding differences, and checks the multiset
+conditions directly. Each receipt identifies its original root and branch
+by SHA-256 so the occupied axes can be reconstructed.
+
+The same mixed-family argument applies before the two occupied even
+lines have been identified. For each possible count of occupied lines
+of each parity consistent with a cube, let $r,s$ be the numbers of empty
+rows and columns of a given parity pair. If both are positive, at least
+$\lceil\max(r,s)/2\rceil$ queens of the corresponding square colour
+are needed: a queen can cover at most two targets on a fixed empty line.
+On 25 cubes across six frames, enumerating the row, column and queen
+colour counts under these bounds forces all 23 odd lines and one even
+line to be occupied on each axis. For each even row and column consistent
+with the cube, we place the exceptional queen at their intersection and
+apply the mixed-family moment test above. None of the 94 combinations of
+intersection and diagonal deficits passes. These 25 exclusions cover
+895 leaves of the earlier proof partition, including 34 SAT leaves.
+
+\section{Computation and verification}
+The initial SAT case is specified by the four exterior margins and the
+four deficits. We enumerate frame rectangles up to the eight board
+symmetries, then enumerate admissible deficit vectors as in \cite{Davies}.
+At $n=47$, Proposition~\ref{prop:margin} removes 271,298 of 369,412 cases,
+leaving 98,114. The parity and frame tests force a $12+12$ split in
+65,512 of the retained cases. In the order used by the census, 40,807
+have a nonsquare frame with odd longer span, 1,792 have an odd-span
+square frame and $\delta_R+\delta_C>0$, and 22,913 additional cases
+pass the nonorthodox deficit test ($\delta_R+\delta_C>2$, or $\delta_R+\delta_C=2$
+with $\delta_R\ne\delta_C$). For example, in the nonorthodox $11+13$
+case adding the two grid bounds gives $\delta_R+\delta_C\le2$. At
+equality all four parity classes have even size by Lemma~\ref{lem:grid},
+so $\delta_R=\delta_C=1$. Orthodoxy is possible only with margins
+$(0,0),(1,1),(0,2)$ or $(2,0)$ on each axis: all empty indices must
+have one parity, and at least 23 indices are empty. These tests together
+with Theorem~\ref{thm:split} and Proposition~\ref{prop:profile} use only
+the eight case parameters.
+
+The baseline formula records queen locations and occupied lines. Each
+square requires at least one of its four lines to be occupied. We impose
+the prescribed line counts, the frame, and the perimeter bounds of
+\cite{Davies}. A family of zero deficit has at most one queen per line.
+Otherwise, when all four deficits are positive, a truncated unary counter
+enforces exactly 24 queens. The baseline also uses symmetry breaking within
+the case stabilizer, the square-frame bound on $E$ where applicable, and
+the forced colour count where it can be read off a zero-deficit diagonal
+family. For a difficult case we fix the occupation bits of the next inner
+pair of rows and pair of columns. At depth $j$ the bits correspond in
+order to rows $c+j,d-j$ and columns $a+j,b-j$, and a one means occupied.
+All 16 assignments cover the parent whenever the two rows and two columns
+are distinct.
+Repeated splits give a tree of partial assignments, or \emph{cubes}.
+
+For eligible square cases the solver can retry a timed-out cube with
+the two-colour budgets of Section~\ref{sec:colour} before splitting
+again. The extra clauses count wasted incidences by colour with truncated
+totalizers. For a dominating placement, set each waste indicator to the
+actual value of its geometric condition and select its actual budget.
+The capacity identities then extend the placement to a satisfying
+assignment. This implication is what permits a refutation of the
+strengthened formula to close the original cube.
+
+The paired timing experiment is reported in Appendix~\ref{app:pilot}.
+
+\paragraph{Completion of the lower bound.}
+The reconciled ledger closes all 98,114 retained roots. A root is covered
+by a checked exclusion of the root itself or by exclusions covering every
+assignment in its splits. A colour retry records digests for the baseline
+cube and the strengthened formula. A profile exclusion links its shared
+certificate to the line occupancies forced by the branch. For a reusable core the checker verifies the DRAT trace
+against the core CNF itself. Each clause in that CNF must occur in the
+hashed root or be a signed layer unit specified by the core mask.
+The root's symmetry-breaking clauses are computed once from its
+stabilizer before any splitting, so all its sibling cubes inherit them. The core therefore excludes every completion of its mask.
+A leaf can use several masks if their union covers every completion of
+the leaf, as checked recursively on the unfixed bits.
+
+The original search finished with the 15 certificates in
+Section~\ref{sec:terminal}. In the released partition five of these
+branches belong to roots proved by whole-board symmetry. The other ten
+are covered by four even-permutation, two odd-repeat and four mixed
+moment exclusions.
+Together with the 271,298 geometric exclusions this accounts for all
+369,412 cases on canonical rectangles and rules out 24 queens. The placement in
+Section~\ref{sec:bounds} gives the matching upper bound, proving
+Theorem~\ref{thm:q47}.
+
+\paragraph{Verification record.}
+The closeout checker regenerates the canonical case census, reconciles
+the original run ledgers and branch archives, replays the terminal
+certificates and checks the 25-queen placement square by square. Some
+early distributed runs discarded raw traces after successful DRAT checks.
+For those cases the audit uses the verification receipts recorded at
+solve time. For independent replay, retain the complete census and map each
+eight-parameter case to its lexicographically least image under the eight
+board symmetries. Transforming a placement transforms its extreme empty
+lines and permutes its four deficits. Hence a dominating placement in a
+referred case would give one in the representative. The representative's
+own stabilizer can then put it in the orientation required by its SAT
+formula. This argument applies to whole roots. The checker recomputes
+each of the 7,097 references and requires its representative to have a
+direct proof partition.
+
+The 91,017 representatives have 131,547 leaves. Of these, 3,203 use
+1,527 shared core certificates, 17 use mixed moments and 182 use
+Proposition~\ref{prop:axis}. Of these, 171 have no surviving parity distribution,
+five force the even permutation, three force the odd repeat and three
+force the orthodox profile. The remaining 128,145 are SAT leaves.
+In stored replay the index distinguishes 126,101 frame, 1,982 colour
+and 62 historical formulas. The last group uses the earlier
+\file{run_hard.py} encoder with symmetry breaking. In fresh replay those
+62 use 16 current frame and 46 colour formulas. In all, fresh replay
+uses 122,250 frame formulas and 5,895 colour formulas. It checks each
+released formula digest, generates a DRAT proof and checks the proof
+before discarding it. Instructions are in
+\file{data/frame/q47_release/README.md}.
+
+\paragraph{Implementation.}
+At verifier revision \texttt{c409ac2} of \cite{software}, \file{code/frame/odd_margin_bounds.py}
+reproduces the case counts and \file{odd_square_profile.py} adds the
+reflected-line constraints. In the same directory,
+\file{odd_colour_perimeter.py} builds the strengthened formula and
+\file{q47_orthodox.py} rebuilds the shared certificate and checks a branch
+receipt. The placement in Section~\ref{sec:bounds} is also recorded in
+\file{data/frame/q47_24_one_hole.json}. From the repository root, run
+\file{code/frame/check_q47_terminal_enumeration.py} for the separate
+arithmetic check and \file{code/frame/check_q47_closeout.py} for the
+ledger audit. The expected counts and placement are in
+\file{data/frame/q47_closeout.json}. AI assistance was used in drafting the manuscript, implementing
+the arithmetic reductions and verification software, and examining
+the computational records. The release includes the executable checks,
+the independent enumerations described above and their inputs.
+
+\appendix
+\section{Paired timing experiment}\label{app:pilot}
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{llrrrr}
+\toprule
+Margins $(l,r,b,t)$ & Cube & \multicolumn{2}{c}{Baseline (s)}
+ & \multicolumn{2}{c}{Colour budgets (s)}\\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+ & & Solve & Check & Solve & Check\\
+\midrule
+$(0,14,2,12)$ & \texttt{0110}         & cap   & ---  & 9.14  & 2.80\\
+$(0,14,2,12)$ & \texttt{1111}         & cap   & ---  & 15.64 & 4.45\\
+$(4,7,5,6)$   & \texttt{1010}         & cap   & ---  & 13.42 & 4.69\\
+$(4,7,5,6)$   & \texttt{111110011001} & 14.55 & 4.62 & 2.00  & 0.55\\
+\bottomrule
+\end{tabular}
+\caption{A paired local pilot on selected zero-deficit cubes. Each solve
+had a 40 CPU-second limit. Check is CPU time for \texttt{drat-trim}.
+A cap produced no proof to check.}\label{tab:pilot}
+\end{table}
+
+Table~\ref{tab:pilot} includes three previously timed-out cubes and one
+solved control. Both encodings used the same CaDiCaL and checker binaries
+on one pinned logical CPU. The 16 baseline child proofs for cube
+\texttt{0110} totalled 59.71 MB and took 18.75 checker CPU-seconds in the search records. The
+single strengthened proof was 9.30 MB and checked in 2.80 CPU-seconds.
+On four whole frames in a separate ten-second pilot both encodings reached
+the limit. The measurements quantify the benefit on these selected
+branches. An overall speed estimate would require a representative sample.
+
+\begin{thebibliography}{99}
+\bibitem{Alon} N.~Alon, \emph{Combinatorial Nullstellensatz},
+Combin.\ Probab.\ Comput.\ \textbf{8} (1999), 7--29.
+\href{https://doi.org/10.1017/S0963548398003411}{doi:10.1017/S0963548398003411}.
+\bibitem{BM} A.~P.~Burger, C.~M.~Mynhardt, \emph{Properties of dominating
+sets of the queens graph $Q_{4k+3}$}, Utilitas Math.\ \textbf{57} (2000),
+237--253. \href{https://combinatorialpress.com/um/vol57/}{Journal archive}.
+\bibitem{Weakley} W.~D.~Weakley, \emph{Domination in the queen's graph}, in:
+Graph Theory, Combinatorics, and Algorithms, vol.~2,
+Y.~Alavi and A.~Schwenk (eds.), Wiley, 1995, 1223--1232.
+\bibitem{BGMW} S.~Boz\'oki, P.~G\'al, I.~Marosi, W.~D.~Weakley,
+\emph{Domination of the rectangular queen's graph},
+Electron.\ J.\ Combin.\ \textbf{26}(4) (2019), \#P4.45.
+\href{https://doi.org/10.37236/6026}{doi:10.37236/6026}.
+\bibitem{Chan} E.~Chan, \emph{Color-split frame reductions for queen domination
+on even boards of sizes 50 through 64}, Hexagon, 2026.
+\href{https://hexagonmath.org/pdf/2611.01169v1}{2611.01169v1}.
+\href{https://github.com/CosmicCrusader23/queens/tree/0965e89b9ae745b1f96a86c6f8bbc509015684cb}{Computational records}.
+\bibitem{Davies} J.~Davies, \emph{$\gamma(Q_{35})=19$ and certified queen
+domination numbers up to $n=46$}, Hexagon, 2026.
+\href{https://hexagonmath.org/2611.00830v1}{2611.00830v1}.
+\bibitem{software} J.~Davies, \emph{Queen domination} (repository),
+\href{https://github.com/jasondavies/queen-domination/tree/c409ac2745c01d89b119d98125fb52e13406c5a8}{verifier revision \texttt{c409ac2}}.
+\bibitem{Djukic} A.~\DJ uki\'c, \emph{The Queen Domination Number of the
+$48\times48$ Chessboard: $\gamma(Q_{48})=25$}, Zenodo, 2026.
+\href{https://doi.org/10.5281/zenodo.24537290}{doi:10.5281/zenodo.24537290}.
+\bibitem{FW} D.~Finozhenok, W.~D.~Weakley, \emph{An improved lower bound for
+domination numbers of the queen's graph}, Australas.\ J.\ Combin.\
+\textbf{37} (2007), 295--300.
+\href{https://ajc.maths.uq.edu.au/pdf/37/ajc_v37_p295.pdf}{Journal PDF}.
+\bibitem{HC} T.~Rostami, \emph{Hint and Conquer: New Queen Domination Numbers
+by SAT Solving}, preprint, 2026.
+\href{https://github.com/TahaRostami/Gamma/blob/hint-and-conquer/doc.pdf}{Manuscript}.
+\bibitem{Neuhaus} S.~Neuhaus, \emph{Eigenschaften kleinster dominierender
+Mengen und Dominanzzahlen von Damengraphen}, Dissertation, Universit\"at
+zu K\"oln, 2009. \url{https://kups.ub.uni-koeln.de/2916/}.
+\bibitem{OW} P.~R.~J.~\"Osterg\aa rd, W.~D.~Weakley, \emph{Values of domination
+numbers of the queen's graph}, Electron.\ J.\ Combin.\ \textbf{8} (2001), \#R29.
+\href{https://doi.org/10.37236/1573}{doi:10.37236/1573}.
+\end{thebibliography}
+\end{document}
