@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
+import time
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
@@ -31,6 +33,7 @@ from q47_core_reuse import covered
 import q47_same_parity
 import q47_terminal_moments
 import run_hard
+from q47_replay_record import ReplayRecord, manifest
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -281,6 +284,90 @@ def audited_rows(index, selected_cases, cube, index_only, counts):
         raise ValueError("symmetry representative has no direct proof partition")
 
 
+CERTIFICATE_RULES = {"core", "axis", "mixed-moments"}
+SAT_RULES = {"frame", "legacy", "colour"}
+
+
+def run(args, archive, selected_cases, record):
+    check_witness()
+    counts = Counter()
+    fresh = args.regenerate or args.certificates_only
+    frames = audited_rows(args.index, selected_cases, args.cube, args.index_only, counts)
+    previous = dict(record.completed) if record else {}
+    last_progress = time.monotonic()
+
+    def progress():
+        nonlocal last_progress
+        if time.monotonic() - last_progress >= 60:
+            print(json.dumps({"progress": dict(counts)}), file=sys.stderr, flush=True)
+            last_progress = time.monotonic()
+
+    def count(n):
+        counts["checked_leaves"] += n
+        if args.certificates_only:
+            counts["roots_with_checked_certificates"] += 1
+        elif args.cube is None:
+            counts["checked_roots"] += 1
+
+    def jobs():
+        for case, h, leaves in frames:
+            progress()
+            if args.certificates_only or record:
+                rules = {r["rule"] for _, r in leaves}
+                if rules - (CERTIFICATE_RULES | SAT_RULES):
+                    raise ValueError("unknown public release rule")
+            if args.certificates_only:
+                leaves = [(b, r) for b, r in leaves if r["rule"] in CERTIFICATE_RULES]
+                if not leaves:
+                    if args.cube is not None:
+                        raise ValueError("selected leaf uses a SAT rule")
+                    continue
+            if case in previous:
+                if previous.pop(case) != (h, len(leaves)):
+                    raise ValueError("root receipt differs from index")
+                count(len(leaves))
+                continue
+            yield case, h, leaves
+
+    def success(case, h, n):
+        if record:
+            record.append({"case": list(case), "root": h, "leaves": n})
+        count(n)
+
+    if args.workers == 1 or args.index_only or len(selected_cases) == 1:
+        for case, h, leaves in jobs():
+            success(case, h, replay_case(case, h, leaves, archive, fresh))
+    else:
+        with ProcessPoolExecutor(args.workers) as pool:
+            pending = {}
+
+            def collect():
+                done = set()
+                while not done:
+                    done, _ = wait(pending, timeout=60, return_when=FIRST_COMPLETED)
+                    progress()
+                for future in done:
+                    success(*pending.pop(future), future.result())
+
+            for case, h, leaves in jobs():
+                future = pool.submit(replay_case, case, h, leaves, archive, fresh)
+                pending[future] = (case, h)
+                if len(pending) >= 2 * args.workers:
+                    collect()
+            while pending:
+                collect()
+    if previous:
+        raise ValueError("checkpoint contains roots outside this selection")
+    if record:
+        scope = "certificates" if args.certificates_only else "full"
+        if selected_cases:
+            scope = "selected-certificates" if args.certificates_only else "selected-proofs"
+        final = {"result": scope, "inputs_sha256": record.inputs_hash, "counts": dict(counts)}
+        if record.last != final:
+            record.append(final)
+    print(json.dumps(counts))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("index", type=Path)
@@ -288,6 +375,9 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--index-only", action="store_true")
     mode.add_argument("--regenerate", action="store_true", help="Generate and check temporary SAT proofs using the bundled certificates")
+    mode.add_argument("--certificates-only", action="store_true",
+                      help="Check every bundled core and arithmetic leaf, skipping SAT leaves")
+    parser.add_argument("--record", type=Path, help="Write or resume a local JSONL replay record")
     parser.add_argument(
         "--case",
         action="append",
@@ -306,35 +396,24 @@ def main():
     args = parser.parse_args()
     if args.workers < 1:
         parser.error("--workers must be positive")
-    if args.regenerate and args.payload_dir is not None:
+    if not __debug__:
+        parser.error("proof checks require Python assertions")
+    if (args.regenerate or args.certificates_only) and args.payload_dir is not None:
         parser.error("--regenerate uses the bundled certificates; omit --payload-dir")
     selected_cases = set(args.case or ())
     if args.cube is not None and (len(selected_cases) != 1 or args.index_only):
         parser.error("--cube requires --case and proof replay")
     archive = (args.payload_dir or REPO).resolve()
-    check_witness()
-    counts = Counter()
-    frames = audited_rows(
-        args.index, selected_cases, args.cube, args.index_only, counts
-    )
-    if args.workers == 1 or args.index_only or len(selected_cases) == 1:
-        for case, h, leaves in frames:
-            counts["checked_leaves"] += replay_case(case, h, leaves, archive, args.regenerate)
-            if args.cube is None:
-                counts["checked_roots"] += 1
-    else:
-        with ProcessPoolExecutor(args.workers) as pool:
-            pending = set()
-            # Keep only a bounded number of future roots and their leaf records in memory.
-            for case, h, leaves in frames:
-                pending.add(pool.submit(replay_case, case, h, leaves, archive, args.regenerate))
-                if len(pending) >= 2 * args.workers:
-                    done, pending = wait(pending, return_when=FIRST_COMPLETED)
-                    counts["checked_leaves"] += sum(f.result() for f in done)
-                    counts["checked_roots"] += len(done)
-            counts["checked_leaves"] += sum(f.result() for f in pending)
-            counts["checked_roots"] += len(pending)
-    print(json.dumps(counts))
+    if args.record is None:
+        run(args, archive, selected_cases, None)
+        return
+    if not (args.certificates_only or args.regenerate):
+        parser.error("--record requires --regenerate or --certificates-only")
+    replay_mode = "certificates" if args.certificates_only else "regenerate"
+    inputs = manifest(REPO, args.index, replay_mode, selected_cases, args.cube)
+    args.record.parent.mkdir(parents=True, exist_ok=True)
+    with args.record.open("a+b") as stream:
+        run(args, archive, selected_cases, ReplayRecord(stream, inputs))
 
 
 if __name__ == "__main__":

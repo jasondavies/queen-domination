@@ -1,7 +1,7 @@
 """Check the two-hole Q47 even-even permutation and a matching lower bound.
 
 Run with Python 3 from any directory. Coordinates are zero-based. The proof of
-completeness of the finite enumeration is in paper/q47-even-permutation.tex.
+completeness of the finite enumeration is in the diagonal-moments section of paper/q47-domination.tex.
 """
 import json
 from functools import lru_cache

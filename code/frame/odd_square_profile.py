@@ -1,9 +1,9 @@
-"""Additional CNF clauses for the square-frame bound in odd-frame-bounds.tex.
+"""Additional CNF clauses for the square-frame bound in the square-frame section of paper/q47-domination.tex.
 
 Call square_profile(base, case, new, clauses) after building the original
 formula. The positive test literals count differences between the numbers
 of occupied rows and columns in each reflected pair of indices.
-Run this file directly to reproduce the bounded Q35 pilot in the note.
+Run this file directly to reproduce the bounded Q35 pilot.
 """
 from itertools import count
 from pathlib import Path
