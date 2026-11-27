@@ -1,29 +1,32 @@
 # γ(Q₃₅) = 19, γ(Q₄₇) = 25 and queen domination numbers up to n = 47
 
+This repository accompanies two papers. The [first paper](paper/queen-domination.pdf) develops the frame
+method, proves γ(Q₃₅) = 19, and certifies values through n = 46. The [follow-up](paper/q47-domination.pdf)
+extends the method to prove γ(Q₄₇) = 25. Each paper has its own verifier.
+
 ## γ(Q₄₇) = i(Q₄₇) = 25 (27 November 2026)
 
-Twenty-four queens cannot occupy or attack every square of a 47 × 47 board, and twenty-five can. Since
-Östergård and Weakley (2001) it had been known only that γ(Q₄₇) ∈ {24, 25}. The paper is
-[`paper/q47-domination.pdf`](paper/q47-domination.pdf) ([LaTeX source](paper/q47-domination.tex)).
+Twenty-four queens cannot occupy or attack every square of a 47 × 47 board. Since Östergård and Weakley
+(2001), the known bounds had allowed either 24 or 25. [Paper](paper/q47-domination.pdf) ·
+[LaTeX source](paper/q47-domination.tex)
 
-Östergård and Weakley’s independent 25-queen placement also gives **i(Q₄₇) = 25**. The verifier checks both placements. [Independent placement](data/frame/q47_independent_25.json) · [Verification guide](data/frame/q47_release/README.md)
-
-- **Upper bound.** In zero-based (column, row) coordinates, 24 queens in columns 0, 2, …, 46 leave only the square (7, 46) uncovered
-  (`data/frame/q47_24_one_hole.json`). A queen there gives the 25-queen set in `data/frame/q47_closeout.json`.
-- **Lower bound.** The frame method of the γ(Q₃₅) paper below, with new odd-board reductions:
-  - A margin bound for odd boards removes 271 298 of the 369 412 cases on canonical frame rectangles, leaving 98 114.
-  - Board symmetries reduce the 98 114 remaining cases to 91 017 representatives. Their proofs use
-    - SAT refutations with DRAT proofs checked by drat-trim, with cube splitting where needed;
-    - colour-specific perimeter budgets for square frames;
-    - a shared certificate for an orthodox profile;
-    - reuse of verified unsatisfiable cores across sibling cubes.
-  - First- and second-moment identities for the diagonals closed the last 15 branches of the original
-    search, across 13 frames. After combining branches and applying board symmetries, the published
-    index includes 182 leaves closed by the axis rule and 17 by the mixed-moment rule.
-- **Context.** Đukić established γ(Q₄₈) = 25, Östergård and Weakley gave γ(Q₄₉) = 25, and Chan
+- **Upper bound.** In zero-based (column, row) coordinates, a set of 24 queens in the even columns leaves
+  exactly one square uncovered, (7, 46). Adding a queen there gives a dominating set of 25. Östergård and
+  Weakley’s independent 25-queen placement also gives i(Q₄₇) = 25. The verifier
+  [replay_q47_archive.py](code/frame/replay_q47_archive.py) checks both placements.
+  [24-queen placement](data/frame/q47_24_one_hole.json) · [Independent placement](data/frame/q47_independent_25.json)
+- **Lower bound.** The frame is the rectangle bounded by the outermost empty rows and columns.
+  The initial census chooses one rectangle per symmetry class. For each rectangle it lists the
+  possible deficits, the differences between 24 and the numbers of occupied rows, columns and diagonals
+  of each slope. A margin bound excludes 271,298 of the 369,412 cases. A symmetry preserving a rectangle
+  can still exchange its row and column deficits, or its two diagonal deficits. Identifying these
+  equivalent cases gives 91,017 representatives for the 98,114 survivors.
+- **Context.** Đukić established γ(Q₄₈) = 25, Östergård and Weakley gave γ(Q₄₉) = 25, and E. Chan (2026)
   established γ(Q₅₀) = 26 as part of his results for even boards through 64. Together with Q₄₇,
   these give every value through n = 50. As of 27 November 2026, the smallest open case is n = 51.
-  [Đukić on Q₄₈](https://doi.org/10.5281/zenodo.24537290) · [Östergård and Weakley](https://doi.org/10.37236/1573) · [Chan on even boards from 50 through 64](https://hexagonmath.org/pdf/2611.01169v1)
+  [Đukić on Q₄₈](https://doi.org/10.5281/zenodo.24537290) ·
+  [Östergård and Weakley](https://doi.org/10.37236/1573) ·
+  [Chan on even boards from 50 through 64](https://hexagonmath.org/pdf/2611.01169v1)
 
 ### Verify the Q₄₇ result
 
@@ -36,22 +39,62 @@ and checks the symmetry references and branch partitions.
 ```
 
 Full verification also checks the arithmetic exclusions and core certificates, and regenerates and checks
-the SAT proofs. The estimated runtime is about 35 hours on eight fully occupied cores, based on component timings.
+the SAT proofs. Component timings suggest about 35 hours on eight fully occupied cores. Scratch space
+depends on the proofs being checked concurrently. Set `TMPDIR` to select a scratch disk.
 
 ```sh
 .venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8
 ```
 
-The original 15 terminal exclusions can also be checked separately.
+### What the Q₄₇ proof relies on
 
-- `code/frame/check_q47_terminal_enumeration.py` is a separate enumeration of the 15 terminal exclusions.
-  It uses no SAT solver.
-- `data/frame/q47_terminal_moments/` holds the 15 terminal receipts with their CNFs and DRAT proofs, and
-  `terminal-roots.json`, the root hashes of the 13 terminal cases.
-  `data/frame/q47_same_parity/` holds the related same-parity moment certificates. To replay them, follow
-  `data/frame/q47_terminal_moments/README.md`.
+The paper proves the geometric exclusions and the conditions for each branch rule. The verifier
+checks the placements, reconstructs the surviving cases, and checks that the branches partition each
+representative. The 131,547 leaves in the published index have six rule labels.
 
-**Historical audit.** The closeout checker reconciles the original run ledgers and branch archives in the local `build/` directory. The five-second first pass refuted 87,116 cases and timed out on 10,998. Some early runs retained verification receipts. The Git-only verifier above generates fresh SAT proofs from the release index. The Lean formalisation described below covers the earlier results.
+| Index rule | Leaves | How the branch is closed |
+| --- | ---: | --- |
+| `frame` | 126,101 | Refute the ordinary frame SAT formula under the branch assumptions. |
+| `colour` | 1,982 | Add separate perimeter bounds for the two square colours before refuting the formula. |
+| `legacy` | 62 | The stored proof uses the historical `run_hard.py` formula with symmetry breaking. |
+| `core` | 3,203 | Check a DRAT proof for a subset of clauses. Branches of the same root that fix all the assumptions used by that proof share the exclusion. |
+| `axis` | 182 | Enumerate occupied row and column counts by parity. Exclude the branch if no queen distribution survives or every survivor has an excluded profile. |
+| `mixed-moments` | 17 | Force a queen at the intersection of the exceptional even row and column, then rule out the remaining diagonal ranks by their sums and sums of squares. |
+
+The table records the stored encodings. In fresh replay, the 128,145 SAT leaves use 122,250 ordinary
+formulas and 5,895 colour-strengthened formulas. Each proof is checked by drat-trim against a formula
+whose digest the verifier checks. The mathematical conclusion also depends on the frame census being
+complete, the encoders representing every possible placement, and the arithmetic enumerations covering
+every allowed profile. These Q₄₇ reductions are justified in the paper and checked by the Python
+programs. The Lean development covers the earlier frame results.
+
+For example, an *orthodox* placement occupies all rows of one parity and all columns of one parity.
+For the shared orthodox certificate, the 563-byte DRAT trace checks the formula produced by the
+diagonal enumerator. The enumerator supplies the reason each candidate can be eliminated. A separately
+written checker enumerates the diagonal choices directly from the grid and checks the same exclusion.
+[Independent orthodox check](code/frame/check_q47_orthodox_enumeration.py)
+
+**Historical audit.** The last 15 branches of the original search, in 13 frames, were closed by
+diagonal moment identities. In the published index, five of those branches belong to roots covered by
+symmetry. Of the other ten, four use the even-permutation exclusion, two the odd-repeat exclusion, and
+four the mixed-moment rule. The original closeout checker uses local ledgers and branch archives under
+`build/`. The five-second first pass closed 87,116 cases and timed out on 10,998.
+Some early runs discarded their raw traces after a successful DRAT check and retained only the
+verification receipt. Fresh replay generates and checks new proofs from the committed release files.
+
+### Files for the Q₄₇ paper
+
+- The [release directory](data/frame/q47_release/) contains the proof index, the core certificates,
+  replacement formula hashes and replay instructions.
+- The [margin bound](code/frame/odd_margin_bounds.py) supplies the geometric filter. The
+  [colour encoder](code/frame/odd_colour_perimeter.py) adds perimeter bounds to square-frame formulas.
+- The [axis checker](code/frame/check_q47_axis_reduction.py) checks parity propagation and invokes
+  the relevant profile exclusion. The [terminal moment code](code/frame/q47_terminal_moments.py)
+  implements the diagonal tests.
+- The [terminal certificates](data/frame/q47_terminal_moments/) and
+  [same-parity certificates](data/frame/q47_same_parity/) preserve the original arithmetic evidence.
+  A [separate enumeration](code/frame/check_q47_terminal_enumeration.py) checks all 15 original
+  terminal branches without a SAT solver.
 
 ## γ(Q₃₅) = i(Q₃₅) = 19 and certified values through n = 46
 
@@ -59,19 +102,19 @@ The first paper proves that eighteen queens cannot occupy or attack every square
 board, and nineteen can. [Paper](paper/queen-domination.pdf) · [LaTeX source](paper/queen-domination.tex) · [OEIS A075458](https://oeis.org/A075458)
 
 Since Östergård and Weakley (Electron. J. Combin. 8 (2001) #R29) it had been known
-only that γ(Q₃₅) ∈ {18, 19}. Their 19-queen set is independent, so also i(Q₃₅) = 19, and 35 is the smallest
-odd n > 15 with γ(Q_n) = ⌈n/2⌉ + 1.
+only that γ(Q₃₅) ∈ {18, 19}. Their 19-queen set is independent, so also i(Q₃₅) = 19, and Corollary 1.2 of the first paper
+shows that 35 is the smallest odd n > 15 with γ(Q_n) = ⌈n/2⌉ + 1.
 
 The lower bound is computer-assisted:
 - A dominating set is split by the box of its outermost empty rows and columns (the *frame*) and by the
   deficits of occupied lines.
-- Exact counting identities for the border and the sides of the box make each of the 128 941 cases a
+- Exact counting identities for the border and the sides of the box make each of the 128,941 cases a
   small SAT problem.
 - Every case is refuted by CaDiCaL with a DRAT proof checked by drat-trim.
 
 The reduction and the completeness of the case list are formalised in Lean 4 (`lean/`), modulo the CNF
 encoding and the SAT certificates. A separately written second encoding, solved with Kissat and without
-symmetry breaking, independently refutes the 585 hardest cases and a sample of 2200 others.
+symmetry breaking, independently refutes the 585 hardest cases and a sample of 2,200 others.
 
 The same method, with DRAT proofs, gives **γ(Q₄₀) = 21, γ(Q₄₂) = 22, γ(Q₄₄) = 23 and γ(Q₄₆) = 24**. These are
 the first certified values for these boards. They confirm the claims in S. Neuhaus's 2009 dissertation
@@ -84,8 +127,9 @@ The repository also contains **independent confirmations of known even values**:
 - For n = 26, 28 there is also a second, completely independent two-stage method: a line relaxation plus
   SAT, with DRAT certificates for both stages and a complete certificate replay.
 
-**The even values are not new.**
-- They were first established, with DRAT-checked SAT proofs, in the preprint *Hint and Conquer: New
+**Prior work on the even confirmations**
+
+- The values for n = 26, 28, 32, 34 and 36 were first established, with DRAT-checked SAT proofs, in the preprint *Hint and Conquer: New
   Queen Domination Numbers by SAT Solving* (October 2026; `doc.pdf` on branch `hint-and-conquer` of
   [github.com/TahaRostami/Gamma](https://github.com/TahaRostami/Gamma)), together with γ(Q₃₈) = 20. Its
   box split with counting hints is the basis of the frame method here.
@@ -97,8 +141,7 @@ The repository also contains **independent confirmations of known even values**:
 - An earlier version of this repository presented γ(Q₂₆) and γ(Q₂₈) as new; that was wrong and has been
   corrected.
 
-With these values, γ(Q_n) is known for all n ≤ 46 (and, with γ(Q₄₇) = 25 above and the results cited
-there, for all n ≤ 50). The odd values 37, 39, 41 and 45 are ⌈n/2⌉ by Östergård–Weakley. For 43,
+For n = 37, 39, 41 and 45, Östergård and Weakley give γ(Q_n) = ⌈n/2⌉. For n = 43,
 Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q₄₃) = 22.
 
 ### Results of the first paper
@@ -107,17 +150,17 @@ Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q
   - **Upper bound.** Two explicit 19-sets, checked by the script. One is ours. The other is the
     independent set of Östergård–Weakley.
   - **Lower bound (paper, Sections 2–3).**
-    - The list L(35, 18) has 5050 canonical frames and 128 941 cases.
-    - 128 356 cases are refuted by a plain formula.
+    - The list L(35, 18) has 5,050 canonical frames and 128,941 cases.
+    - 128,356 cases are refuted by a plain formula.
     - The remaining 585 zero-deficit cases need residual symmetry breaking (Lemma 2.5). Of these, 508 are
-      refuted whole and 77 by verified 16-way cube covers (1755 cubes).
+      refuted whole and 77 by verified 16-way cube covers (1,755 cubes).
     - Every proof was checked by drat-trim, and there is no satisfiable case.
     - The run took 53.1 + 27.6 CPU hours (solve + check), and the proofs came to about 232 GB.
-    - All 130 111 formulas were rebuilt and their SHA-256 hashes compared with the records.
+    - All 130,111 formulas were rebuilt and their SHA-256 hashes compared with the records.
 - **Theorem 1.3** (claimed by Neuhaus). γ(Q₄₀) = 21, γ(Q₄₂) = 22, γ(Q₄₄) = 23, γ(Q₄₆) = 24.
-  - The frame method gives 24 871, 29 447, 34 854 and 40 728 cases, all UNSAT with drat-trim-verified
+  - The frame method gives 24,871, 29,447, 34,854 and 40,728 cases, all UNSAT with drat-trim-verified
     proofs.
-  - No case timed out at 1800 s, so neither symmetry breaking nor cubes were used.
+  - No case timed out at 1,800 s, so neither symmetry breaking nor cubes were used.
   - The case lists were also rebuilt by a separate enumeration with a Burnside check of the frame counts
     (`code/frame/final_check40.py`).
   - Upper-bound sets:
@@ -155,15 +198,15 @@ Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q
     - zero-deficit differential tests against the main encoder.
   - **The 585 hard cases:** all refuted. 14 needed cube splitting, giving 795 UNSAT leaves; the run took
     76.5 CPU hours.
-  - **A sample of 2200 other cases** (2000 random and the 200 slowest in the main run): all UNSAT.
+  - **A sample of 2,200 other cases** (2,000 random and the 200 slowest in the main run): all UNSAT.
   - There is no SAT formula and no disagreement with the main computation.
-  - The script rebuilds all 809 + 2200 formulas and compares their hashes.
+  - The script rebuilds all 809 + 2,200 formulas and compares their hashes.
 - **Line relaxation for n = 26, 28 (paper, Section 8).** Take a dominating set D of n/2 queens, with z_q
   queens of colour q. Choose n/2 empty rows A and n/2 empty columns B.
   - Every colour-q square of A × B is attacked diagonally, so these squares are covered by at most z_q
     difference diagonals and at most z_q sum diagonals of colour q.
   - Stage 1 enumerates the pairs (A, B) that pass this test, up to the four colour-preserving symmetries:
-    10 888 pairs for n = 26 and 118 765 for n = 28.
+    10,888 pairs for n = 26 and 118,765 for n = 28.
   - Stage 2 shows that for none of these pairs do n/2 queens outside the rows A and columns B dominate
     the board.
   - Both stages are certified by DRAT proofs checked with drat-trim:
@@ -173,6 +216,8 @@ Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q
   - Second programs, the cloud ledger and the validation are described in the paper (Section 8.4).
 
 ### Reproduce the Q₃₅ paper and its results through n = 46
+
+The driver for this paper is `scripts/verify.py`. For Q₄₇, use the [separate verifier](data/frame/q47_release/README.md).
 
 You need:
 - Python 3.12 with `python-sat==1.9.dev24` (`requirements.txt`). It bundles the CaDiCaL 1.9.5 used for
@@ -203,8 +248,10 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 stage-1 cube formula and every stage-2 placement formula from the committed survivor lists, solves each
 with CaDiCaL, checks each DRAT proof with drat-trim and deletes it. It does not rerun the searches,
 which the certificates do not depend on. Its work directory `build/certify/` is bound to a manifest of
-n, g, the survivor-list hash, the solver, checker and encoder hashes and T. An interrupted run resumes,
-and a directory made for different inputs is refused. A completed replay writes compacted records to
+the board size n, queen count g, hashes of the survivor list, solver, checker and encoders, and the
+stage-1 splitting depth T for each colour split. Each level fixes two row choices and two column
+choices, giving $16^T$ branches before symmetry reduction. An interrupted run resumes from the
+matching manifest. A completed replay writes compacted records to
 `data/replay/` and compares them with the original records.
 
 `scripts/verify.py` works as follows:
@@ -234,7 +281,7 @@ The default run covers the following steps.
     including the external reviewer's example.
 - **records:** consistency of the committed n = 26 records in `data/n26/`:
   - per-part SHA-256 against `MANIFEST`;
-  - every one of the 3360 stage-1 parts present;
+  - every one of the 3,360 stage-1 parts present;
   - the two stage-1 programs give the same orbits;
   - one UNSAT, DRAT-verified SAT record per survivor;
   - the certificate's base-CNF hash rebuilt from the survivor list, and a verified record for every cube.
@@ -243,7 +290,7 @@ The default run covers the following steps.
   - SAT instances;
   - certificate cubes, compared by CNF hash, UNSAT and VERIFIED.
 - **records28:** consistency of the committed n = 28 records in `data/n28/`:
-  - every one of the 16 800 stage-1 parts present, with per-part SHA-256 against `MANIFEST`;
+  - every one of the 16,800 stage-1 parts present, with per-part SHA-256 against `MANIFEST`;
   - one UNSAT, DRAT-verified SAT record per survivor, and nothing else;
   - for every z₀ = 0..7, the certificate's base-CNF hash rebuilt from the survivor list, the cube-orbit
     cover, and a verified record for every cube;
@@ -253,7 +300,7 @@ The default run covers the following steps.
   instances and 16 certificate cubes, compared with the records.
 - **replay:** the records of the completed `--certify-all` replay in `data/replay/`, compared with the
   original records (`code/certify_all.py --compare`):
-  - every one of the 1528 + 2600 stage-1 cubes and 10 888 + 118 765 stage-2 formulas is present;
+  - every one of the 1,528 + 2,600 stage-1 cubes and 10,888 + 118,765 stage-2 formulas is present;
   - each is UNSAT and VERIFIED, with the original CNF hash.
 - **frame:** the frame-method records in `data/frame/` (`code/frame/check_frame.py coverage`):
   - for (n, k) = (35, 18), the case list L(35, 18) is rebuilt from first principles and must equal the set
@@ -261,8 +308,8 @@ The default run covers the following steps.
   - every case is refuted, by a plain UNSAT + VERIFIED record or by a complete cover of verified cube
     records, and there is no SAT record;
   - the counts, CPU hours and proof sizes match the claims;
-  - the CNFs of a seeded sample of 2000 plain and 200 cube records are rebuilt by `enc.py` (and
-    `run_hard.build`) and their hashes compared (all 130 111 with `--frame-rehash-all`);
+  - the CNFs of a seeded sample of 2,000 plain and 200 cube records are rebuilt by `enc.py` (and
+    `run_hard.build`) and their hashes compared (all 130,111 with `--frame-rehash-all`);
   - the same checks (300 sampled formulas each) for (32, 16), (34, 17), (36, 18), (40, 20), (42, 21),
     (44, 22), (46, 23), (26, 13), (28, 14) and (35, 17).
 - **framesample:** re-solves 8 cases for n = 35 and 3 each for n = 32, 34, 36 with CaDiCaL + drat-trim:
@@ -285,8 +332,8 @@ The default run covers the following steps.
   - the negative controls k = (n−1)/2 for n = 5..35;
   - the complete runs (13, 7) and (15, 8);
   - the zero-deficit differential tests;
-  - the 585 hard cases and the 2200-case sample: all refuted by complete cube trees, with no SAT record;
-  - every CNF of the trees (809 + 2200) rebuilt by `encx.py` and compared by hash.
+  - the 585 hard cases and the 2,200-case sample: all refuted by complete cube trees, with no SAT record;
+  - every CNF of the trees (809 + 2,200) rebuilt by `encx.py` and compared by hash.
 - **upper:**
   - Kamenetsky's 14-queen set and the independent 14-set of Östergård–Weakley dominate Q₂₆. Their 14-set
     dominates Q₂₇.
@@ -315,12 +362,12 @@ The default run covers the following steps.
 
 `--full` additionally reruns the following, comparing every output with the records:
 - n = 20 and 22, and (n, g) = (16, 9);
-- the whole n = 26 computation: stage 1 (3360 parts), stage 2, the second stage-1 program (1080 parts),
-  SAT + DRAT on all 10 888 pairs, and all 1528 certificate cubes.
+- the whole n = 26 computation: stage 1 (3,360 parts), stage 2, the second stage-1 program (1,080 parts),
+  SAT + DRAT on all 10,888 pairs, and all 1,528 certificate cubes.
 
 `--heavy28` additionally reruns, for n = 28:
-- stage 1 on all 7200 parts with z₀ ≤ 5 and on 24 random parts with z₀ = 6, 7;
-- SAT + DRAT on 2000 random survivors;
+- stage 1 on all 7,200 parts with z₀ ≤ 5 and on 24 random parts with z₀ = 6, 7;
+- SAT + DRAT on 2,000 random survivors;
 - the whole stage-1 certificate for z₀ ≤ 6 and 40 random cubes for z₀ = 7.
 
 The full n = 28 stage 1 (about 80 CPU hours) is not part of the script.
@@ -328,8 +375,8 @@ The full n = 28 stage 1 (about 80 CPU hours) is not part of the script.
 `--full` has not been run end to end from this repository. Its parts were run when the records
 were made, and the default run reruns a sample of each part.
 
-The DRAT proofs of the stage-1 certificates (about 25 GB for n = 26 and 182 GB for n = 28) are not stored. They are regenerated deterministically
-from the same CNF with the same solver version and options. The records give each CNF's SHA-256.
+The DRAT proofs of the stage-1 certificates (about 25 GB for n = 26 and 182 GB for n = 28) are discarded after checking.
+Replay regenerates them from the same CNF with the same solver version and options. The records give each CNF's SHA-256.
 
 ### What is proved and computed in the first paper
 
@@ -361,7 +408,7 @@ also checked against a separate enumeration.
 
 **Cross-checked:**
 - by a separately written enumeration and encoding with Kissat (`code/xcheck35/`): the 585 hard cases and
-  a 2200-case sample;
+  a 2,200-case sample;
 - for n = 32, by `enc_b.py` with Glucose 4.
 
 #### Line relaxation (n = 26, 28)
@@ -379,9 +426,11 @@ reduction to conditions (a) and (b) (Proposition 8.4), and the symmetry argument
 
 #### Literature
 
-**From the literature:**
-- the upper-bound constructions, which are checked here; the 15-set for Q₂₈ and the sets for Q₃₂, Q₃₄,
-  Q₃₅, Q₃₆, Q₄₀, Q₄₂, Q₄₆ were found here;
+This work found the 15-set for Q₂₈ and placements for Q₃₂, Q₃₄, Q₃₅, Q₃₆, Q₄₀, Q₄₂ and Q₄₆.
+The verifier also checks published upper-bound placements, including the independent set for Q₃₅.
+
+**Results used from the literature**
+
 - the Q₄₃ set of Neuhaus used for Q₄₄;
 - the odd values of Proposition 1.5 for n = 33, 37, 39, 41, 45 (Östergård–Weakley) and the upper bound for
   n = 43 (Neuhaus);
@@ -389,7 +438,7 @@ reduction to conditions (a) and (b) (Proposition 8.4), and the symmetry argument
 - γ(Q_n) ≥ ⌈n/2⌉ for all n except 3 and 11. The first paper uses this bound in Proposition 1.5.
 
 **External review.** An external AI review (ChatGPT Pro) of the code regenerated all 15 base formulas
-and all 4128 cube formulas of the stage-1 certificates (1528 for n = 26, 2600 for n = 28) from the
+and all 4,128 cube formulas of the stage-1 certificates (1,528 for n = 26, 2,600 for n = 28) from the
 survivor lists, and their hashes are equal to the recorded ones. It found three defects, now corrected,
 none of which affected the claimed values:
 - When resumed, `code/cert_stage1.py` reused recorded cubes without checking the header, the base
@@ -399,7 +448,7 @@ none of which affected the claimed values:
 - The paper omitted the exceptions n = 3, 11 when stating the range of γ(Q_n) for n ≤ 120.
 
 Every recorded cube's formula hash was computed from the exact CNF text given to the solver. The n = 28,
-z₀ = 7 certificate run was stopped once, after 292 of its 1072 cubes, and resumed with the same
+z₀ = 7 certificate run was stopped once, after 292 of its 1,072 cubes, and resumed with the same
 arguments and the same, unchanged survivor list; only the number of processes changed.
 
 **Main residual risks:**
@@ -465,7 +514,7 @@ No independent human review has been recorded.
 - `lean/`: the Lean 4 formalisation; see `lean/README.md` (build, map from the proofs to Lean, what is
   outside Lean) and `lean/AXIOMS.txt`.
 - `data/n26/`: the n = 26 records:
-  - `survivors.txt`: the 10 888 pairs;
+  - `survivors.txt`: the 10,888 pairs;
   - `MANIFEST`: per-part SHA-256 of the stage-1 and stage-2 outputs;
   - `stage1_parts.txt` and `stage2_logs.txt`: logs of the two stages;
   - `stage2_place.txt`: stage-2 results;
@@ -473,7 +522,7 @@ No independent human review has been recorded.
   - `sat_stage2.txt`: the SAT/DRAT records;
   - `cert_stage1_z*.jsonl`: the certificate records.
 - `data/n28/`: the n = 28 records (`.xz` files are xz-compressed text):
-  - `survivors.txt.xz`: the 118 765 pairs;
+  - `survivors.txt.xz`: the 118,765 pairs;
   - `MANIFEST`: per-part SHA-256 of the stage-1 outputs, in the order of `survivors.txt.xz`;
   - `stage1_parts.txt.xz`: stage-1 logs, one per part, with where the part ran;
   - `sat_stage2.txt.xz`: the SAT/DRAT records;
@@ -526,11 +575,15 @@ Author: Jason Davies.
   (Claude for web), run by the author. It was re-derived, proved and reimplemented here, and compared
   with that attempt's logs only afterwards.
 - An independent AI referee reviewed the work and wrote the SAT-based checks and the stage-1
-  certificate. An external AI review (ChatGPT Pro) of the code
-found the defects listed above. The AI system's literature search missed the prior work of Hint and
-Conquer and of Neuhaus, so the first published version of this repository and of the OEIS entry
-presented the values as new; this was corrected. The author has not read the manuscript or checked the
-arguments; see the declaration in the paper.
+  certificate. An external AI review (ChatGPT Pro) of the code found the defects listed above.
+  The AI system's literature search missed the prior work of Hint and Conquer and of Neuhaus, so the
+  first published version of this repository and of the OEIS entry presented the values as new. This
+  was corrected. In the Q₃₅ paper, the author declared that he had not read that manuscript or checked
+  its arguments.
+
+The Q₄₇ paper gives its own disclosure in the implementation paragraph. It records AI assistance in
+drafting the paper, implementing the arithmetic reductions and verification software, and examining
+the computational records.
 
 ## License
 
