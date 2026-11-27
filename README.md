@@ -8,28 +8,42 @@ Twenty-four queens cannot occupy or attack every square of a 47 × 47 board, and
 
 Östergård and Weakley’s independent 25-queen placement also gives **i(Q₄₇) = 25**. The verifier checks both placements. [Independent placement](data/frame/q47_independent_25.json) · [Verification guide](data/frame/q47_release/README.md)
 
-After installing the dependencies and pinned tools as described in the guide, run the full verification from this checkout with
-
-```sh
-.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8
-```
-
-- **Upper bound.** 24 queens in columns 0, 2, …, 46 leave only the square (7, 46) uncovered
+- **Upper bound.** In zero-based (column, row) coordinates, 24 queens in columns 0, 2, …, 46 leave only the square (7, 46) uncovered
   (`data/frame/q47_24_one_hole.json`). A queen there gives the 25-queen set in `data/frame/q47_closeout.json`.
 - **Lower bound.** The frame method of the γ(Q₃₅) paper below, with new odd-board reductions:
-  - A margin bound for odd boards removes 271 298 of the 369 412 canonical frame cases, leaving 98 114.
+  - A margin bound for odd boards removes 271 298 of the 369 412 cases on canonical frame rectangles, leaving 98 114.
   - Board symmetries reduce the 98 114 remaining cases to 91 017 representatives. Their proofs use
     - SAT refutations with DRAT proofs checked by drat-trim, with cube splitting where needed;
     - colour-specific perimeter budgets for square frames;
     - a shared certificate for an orthodox profile;
     - reuse of verified unsatisfiable cores across sibling cubes.
-  - The last 15 branches, in 13 frames, are excluded by first- and second-moment identities for the
-    diagonals.
-- **Context.** With γ(Q₄₈) = 25 (A. Đukić, OEIS A075458), γ(Q₄₉) = 25 (Östergård–Weakley) and
-  γ(Q₅₀) = 26 ([CosmicCrusader23/queens](https://github.com/CosmicCrusader23/queens)), γ(Q_n) is now known
-  for every n ≤ 50. The smallest open case is n = 51.
+  - First- and second-moment identities for the diagonals closed the last 15 branches of the original
+    search, across 13 frames. After combining branches and applying board symmetries, the published
+    index includes 182 leaves closed by the axis rule and 17 by the mixed-moment rule.
+- **Context.** Đukić established γ(Q₄₈) = 25, Östergård and Weakley gave γ(Q₄₉) = 25, and Chan
+  established γ(Q₅₀) = 26 as part of his results for even boards through 64. Together with Q₄₇,
+  these give every value through n = 50. As of 27 November 2026, the smallest open case is n = 51.
+  [Đukić on Q₄₈](https://doi.org/10.5281/zenodo.24537290) · [Östergård and Weakley](https://doi.org/10.37236/1573) · [Chan on even boards from 50 through 64](https://hexagonmath.org/pdf/2611.01169v1)
 
-**What can be checked from this repository:**
+### Verify the Q₄₇ result
+
+Install the dependencies and pinned tools following the [verification guide](data/frame/q47_release/README.md).
+From the repository root, this quick check verifies both placements, counts the 98,114 surviving cases,
+and checks the symmetry references and branch partitions.
+
+```sh
+.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --index-only
+```
+
+Full verification also checks the arithmetic exclusions and core certificates, and regenerates and checks
+the SAT proofs. The estimated runtime is about 35 hours on eight fully occupied cores, based on component timings.
+
+```sh
+.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8
+```
+
+The original 15 terminal exclusions can also be checked separately.
+
 - `code/frame/check_q47_terminal_enumeration.py` is a separate enumeration of the 15 terminal exclusions.
   It uses no SAT solver.
 - `data/frame/q47_terminal_moments/` holds the 15 terminal receipts with their CNFs and DRAT proofs, and
@@ -39,11 +53,12 @@ After installing the dependencies and pinned tools as described in the guide, ru
 
 **Historical audit.** The closeout checker reconciles the original run ledgers and branch archives in the local `build/` directory. The five-second first pass refuted 87,116 cases and timed out on 10,998. Some early runs retained verification receipts. The Git-only verifier above generates fresh SAT proofs from the release index. The Lean formalisation described below covers the earlier results.
 
----
+## γ(Q₃₅) = i(Q₃₅) = 19 and certified values through n = 46
 
-This repository holds a paper and its verification material. The main result is **γ(Q₃₅) = 19** (OEIS
-[A075458](https://oeis.org/A075458)): eighteen queens cannot occupy or attack every square of a 35 × 35
-board, and nineteen can. Since Östergård and Weakley (Electron. J. Combin. 8 (2001) #R29) it had been known
+The first paper proves that eighteen queens cannot occupy or attack every square of a 35 × 35
+board, and nineteen can. [Paper](paper/queen-domination.pdf) · [LaTeX source](paper/queen-domination.tex) · [OEIS A075458](https://oeis.org/A075458)
+
+Since Östergård and Weakley (Electron. J. Combin. 8 (2001) #R29) it had been known
 only that γ(Q₃₅) ∈ {18, 19}. Their 19-queen set is independent, so also i(Q₃₅) = 19, and 35 is the smallest
 odd n > 15 with γ(Q_n) = ⌈n/2⌉ + 1.
 
@@ -86,7 +101,7 @@ With these values, γ(Q_n) is known for all n ≤ 46 (and, with γ(Q₄₇) = 25
 there, for all n ≤ 50). The odd values 37, 39, 41 and 45 are ⌈n/2⌉ by Östergård–Weakley. For 43,
 Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q₄₃) = 22.
 
-## Results
+### Results of the first paper
 
 - **Theorem 1.1.** γ(Q₃₅) = i(Q₃₅) = 19.
   - **Upper bound.** Two explicit 19-sets, checked by the script. One is ours. The other is the
@@ -157,11 +172,7 @@ Neuhaus's explicit 22-set (checked here) and the lower bound ⌈n/2⌉ give γ(Q
   - The complete certificate replay (`--certify-all`) has been run. Its records are in `data/replay/`.
   - Second programs, the cloud ledger and the validation are described in the paper (Section 8.4).
 
-## Read
-
-- [Manuscript](paper/queen-domination.pdf) and its [LaTeX source](paper/queen-domination.tex).
-
-## Reproduce
+### Reproduce the Q₃₅ paper and its results through n = 46
 
 You need:
 - Python 3.12 with `python-sat==1.9.dev24` (`requirements.txt`). It bundles the CaDiCaL 1.9.5 used for
@@ -179,7 +190,8 @@ You need:
 ```sh
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python scripts/verify.py                   # default: about an hour, at most 3 processes
-.venv/bin/python scripts/verify.py --only build|small|referee|records|sample|records28|sample28|replay|frame|framesample|frametests|leandata|xcheck|upper|tamper|paper
+.venv/bin/python scripts/verify.py --only upper      # check the upper-bound placements
+.venv/bin/python scripts/verify.py --help            # list the other verification steps
 .venv/bin/python scripts/verify.py --frame-rehash-all  # the frame step rebuilds every formula hash (~1 CPU hour)
 .venv/bin/python scripts/verify.py --lean            # also builds lean/ and checks its axioms (~11 minutes)
 .venv/bin/python scripts/verify.py --full            # also reruns the whole n = 26 computation (~15 CPU hours)
@@ -319,9 +331,9 @@ were made, and the default run reruns a sample of each part.
 The DRAT proofs of the stage-1 certificates (about 25 GB for n = 26 and 182 GB for n = 28) are not stored. They are regenerated deterministically
 from the same CNF with the same solver version and options. The records give each CNF's SHA-256.
 
-## What is proved, and what is computed
+### What is proved and computed in the first paper
 
-### Frame method (n = 35 and the even confirmations)
+#### Frame method (n = 35 and the even confirmations)
 
 **Proved in the paper (Section 2):** facts (E1)–(E5) (Lemma 2.1), the identities (F), (V), (H)
 (Theorem 2.2), the covering Proposition 2.3, the soundness of the formulas (Lemma 2.4), residual symmetry
@@ -352,7 +364,7 @@ also checked against a separate enumeration.
   a 2200-case sample;
 - for n = 32, by `enc_b.py` with Glucose 4.
 
-### Line relaxation (n = 26, 28)
+#### Line relaxation (n = 26, 28)
 
 **Proved in the paper:** the line relaxation (Lemma 8.2), the symmetry reduction (Lemma 8.3), the
 reduction to conditions (a) and (b) (Proposition 8.4), and the symmetry argument for the cube reduction.
@@ -365,7 +377,7 @@ reduction to conditions (a) and (b) (Proposition 8.4), and the symmetry argument
 - `rep_cubes` and `check_cover` in `code/cert_stage1.py`;
 - drat-trim.
 
-### Literature
+#### Literature
 
 **From the literature:**
 - the upper-bound constructions, which are checked here; the 15-set for Q₂₈ and the sets for Q₃₂, Q₃₄,
@@ -374,7 +386,7 @@ reduction to conditions (a) and (b) (Proposition 8.4), and the symmetry argument
 - the odd values of Proposition 1.5 for n = 33, 37, 39, 41, 45 (Östergård–Weakley) and the upper bound for
   n = 43 (Neuhaus);
 - i(Q₂₈) = 15;
-- γ(Q_n) ≥ ⌈n/2⌉, which is used only for Proposition 1.5 (known values).
+- γ(Q_n) ≥ ⌈n/2⌉ for all n except 3 and 11. The first paper uses this bound in Proposition 1.5.
 
 **External review.** An external AI review (ChatGPT Pro) of the code regenerated all 15 base formulas
 and all 4128 cube formulas of the stage-1 certificates (1528 for n = 26, 2600 for n = 28) from the
@@ -402,7 +414,7 @@ arguments and the same, unchanged survivor list; only the number of processes ch
 
 No independent human review has been recorded.
 
-## Layout
+### Files for the first paper
 
 - `paper/`: manuscript, generated `claims.tex`.
 - `code/`:
@@ -421,10 +433,11 @@ No independent human review has been recorded.
   - `certify_all.py`: the certificate-only full replay (`verify.py --certify-all`);
   - `test_resume.py`: resume regression tests for `cert_stage1.py`;
   - `modal_stage1.py`: the cloud driver used for part of the n = 28 stage 1.
-  - `frame/`: the frame method, copied from the working directory of the runs. The only changes are the
-    tool paths, the record directory (`QD_FRAME_OUT`) and an import-time side effect of `hard_test.py`.
-    `enc.py` and `geom.py` are byte-identical to the files of the n = 35 run (hashes in
-    `data/frame/SHA256SUMS_code_n35run.txt`).
+  - `frame/`: the frame method. The original Q₃₅ versions of `enc.py` and `geom.py` are in
+    [revision bc37cb0](https://github.com/jasondavies/queen-domination/tree/bc37cb0a1c0d1f70ba93fe1c6c7eb04d6773e25e/code/frame).
+    Both match the [recorded source hashes](data/frame/SHA256SUMS_code_n35run.txt).
+    The current `geom.py` still matches. The current `enc.py` accepts an optional
+    `queen_cardinality` argument and uses the original `exactly` function by default.
     - `geom.py`: frames, the action of the symmetries on cases, admissibility, `cases_by_frame` = L(n, k);
     - `enc.py`: the formula Φ(case), with its own sequential counter;
     - `enc_b.py`: the second encoding used for n = 32;
@@ -504,7 +517,7 @@ No independent human review has been recorded.
   `code/check_upper.py`.
 - `verification/` (not tracked): outputs of verification runs.
 
-## Authorship and AI disclosure
+### Authorship and AI disclosure for the Q₃₅ paper
 
 Author: Jason Davies.
 - AI systems produced the mathematics, the code, the Lean formalisation and the manuscript: Claude Opus 5.5
