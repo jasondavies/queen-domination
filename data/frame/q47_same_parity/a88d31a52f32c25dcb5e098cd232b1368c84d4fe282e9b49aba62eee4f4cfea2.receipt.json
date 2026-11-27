@@ -1,0 +1,25 @@
+{
+  "case": [
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1
+  ],
+  "cube": "1111000011110000111100001111000011110000111100001111000011110000111100001111000011110000",
+  "root_sha256": "29b65b316acc21c415411b693a8c0433f780823e08c391617cde1596a35b871c",
+  "cube_sha256": "a88d31a52f32c25dcb5e098cd232b1368c84d4fe282e9b49aba62eee4f4cfea2",
+  "cnf_sha256": "0d20dd53fae7b6d532a06a8993acd0d867b52f11bc5b008f47dee4997302e65d",
+  "parity": 1,
+  "constant": 4048,
+  "profiles": 12,
+  "compatible_pairs": 0,
+  "proof_sha256": "08468ddfa251e7b6d3e9a8fa39e1888b6c61f2c53a544ffe6805ef7f368abc3d",
+  "proof_bytes": 187,
+  "drat": "VERIFIED",
+  "replayed_locally": true,
+  "rule": "same-parity-moments-v1"
+}

@@ -1,0 +1,130 @@
+{
+  "board": 47,
+  "root_partitions_checked": 98114,
+  "reference_manifest_sha256": "cd2780595f1ec6356b9bd81093c4943650f3015d2f986e21baf38681846dae51",
+  "compact_manifest_sha256": "710a05b5cb6c02e78ccd04967edbb9be275cbaea3075fd6fccf033cee2d97fb5",
+  "reference_leaves": 145514,
+  "compact_leaves": 143219,
+  "original_traces_to_regenerate": 95676,
+  "arithmetic_receipts": {
+    "file": "q47_axis_reductions.json.gz",
+    "bytes": 4197,
+    "independently_checked": 904
+  },
+  "unique_cores_replayed": 2149,
+  "core_covered_leaves": 4521,
+  "fresh_core_trials": 128,
+  "fresh_generalised_cores": 125,
+  "colour": {
+    "complete_16_child_groups_tested": 101,
+    "smaller_verified_parents": 99,
+    "children_zstd_bytes_in_replaced_groups": 6243241854,
+    "parent_zstd_bytes_in_replaced_groups": 1199953664
+  },
+  "changed_file_comparison": {
+    "added_files": 6087,
+    "added_zstd_bytes": 1204414431,
+    "change_bytes": 13772664370,
+    "compact_manifest_bytes": 14884813,
+    "reference_manifest_bytes": 15373108,
+    "removed_files": 6799,
+    "removed_zstd_bytes": 14977078801,
+    "codec": "same zstd level 3 applied to each decompressed payload stream; common paths cancel"
+  },
+  "regeneration_pilot": {
+    "roots": 64,
+    "original_zstd_bytes": 26585703,
+    "selected_zstd_bytes": 4916189
+  },
+  "note": "The changed-file comparison covers retained evidence. Regenerated historical payloads are accounted for separately. The compact manifest and payload size measurements describe the historical archive before the mixed moment reduction. The portable index and bundled verification files describe the current release.",
+  "retained_subset_as_stored_bytes": {
+    "reference": 354575555042,
+    "compact": 334942469758,
+    "description": "Unique selected paths in the working archives, with their original mix of raw, gzip and zstd encodings. Missing traces are excluded."
+  },
+  "completed_archive": {
+    "date": "2026-11-27",
+    "roots": 98114,
+    "selected_leaves": 131547,
+    "regenerated_traces_verified": 95676,
+    "regenerated_on_modal": 61887,
+    "regenerated_locally": 33789,
+    "historical_digest_matched": 95630,
+    "historical_digest_unrecorded": 46,
+    "regenerated_original_bytes": 206260509614,
+    "selected_trimmed_traces": 95652,
+    "unique_regenerated_payloads": 89338,
+    "compressed_regenerated_payload_bytes": 25956143773,
+    "retained_trace_files_checked_against_historical_verification_digests": 41236,
+    "portable_replay_index": {
+      "bytes": 12153915,
+      "index": "proof-index.jsonl.zst",
+      "rules": {
+        "axis": 182,
+        "colour": 1982,
+        "core": 3203,
+        "frame": 126101,
+        "legacy": 62,
+        "mixed-moments": 17
+      },
+      "sha256": "28639822825bbf88d19eca3f168c22771dbd02f82d6ed503b358f6b7def49fdb"
+    },
+    "complete_proof_payload_transfer_bytes": 276768624448,
+    "largest_individual_transfer_bytes": 279986076,
+    "transfer_method": "Keep selected compressed files and apply zstd level 3 to selected raw DRAT when smaller. The measured payload total excludes the index and release metadata.",
+    "bundled_cores": {
+      "file": "core-certificates.zip",
+      "certificates": 1527,
+      "bytes": 4260410,
+      "sha256": "f5b7201999c3471699e4ca48c52924befcad08a294eefcb6cbabd1ebcc94ca04"
+    },
+    "regeneration_formulas": {
+      "file": "regeneration-formulas.json",
+      "bytes": 695420,
+      "sha256": "cfb2a38f5fb6273622e8dc1721b7af9038d38ec5ebf1008e7c7199f26f68c4f1",
+      "previously_legacy_leaves": 62,
+      "frame": 16,
+      "colour": 3913,
+      "previously_frame_leaves": 3867,
+      "wider_colour_pass": {
+        "eligible_leaves": 3868,
+        "frames": 202,
+        "verified": 3868,
+        "historical_plain_solve_cpu_seconds": 65310.356,
+        "historical_plain_check_cpu_seconds": 26125.121,
+        "local_colour_solve_and_check_cpu_seconds": 11234.82,
+        "local_eight_worker_wall_seconds": 1440.352
+      }
+    },
+    "mixed_moment_reduction": {
+      "frames": 6,
+      "new_branches": 25,
+      "exceptional_site_and_deficit_combinations": 94,
+      "replaced_leaves": {
+        "axis": 667,
+        "core": 188,
+        "frame": 34,
+        "terminal-moments": 6
+      },
+      "previous_index_sha256": "9d11e4a2c77705e91e27bfd67dc3d65b371a6773996a86f3fb552a5a3d290fdc"
+    },
+    "whole_root_symmetry": {
+      "previous_index_sha256": "da069864be62331d659f0a6da79c4368d905fb90f1261d319d77444096fcad47",
+      "representatives": 91017,
+      "represented_roots": 7097,
+      "removed_leaves": {
+        "axis": 55,
+        "core": 1130,
+        "frame": 9609,
+        "mixed-moments": 8
+      },
+      "representative_leaf_rules_on_regeneration": {
+        "axis": 182,
+        "colour": 5895,
+        "core": 3203,
+        "frame": 122250,
+        "mixed-moments": 17
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ def exactly(lits, k, new, cls):
 class Base:
     """the part of the formula that depends only on (n, k, deficits)"""
 
-    def __init__(self, n, k, dv, use_amo=True):
+    def __init__(self, n, k, dv, use_amo=True, queen_cardinality=exactly):
         self.n, self.k, self.dv = n, k, dv
         dR, dC, dT, dS = dv
         self.nv = 0
@@ -89,7 +89,7 @@ class Base:
                         for v in range(u + 1, len(qs)):
                             cls.append([-qs[u], -qs[v]])
         if not (use_amo and zero):
-            exactly([q[x][y] for x in range(n) for y in range(n)], k, self.new, cls)
+            queen_cardinality([q[x][y] for x in range(n) for y in range(n)], k, self.new, cls)
         self.text = ''.join(' '.join(map(str, c)) + ' 0\n' for c in cls)
 
     def new(self):

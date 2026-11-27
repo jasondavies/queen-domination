@@ -1,0 +1,24 @@
+{
+  "case": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+  ],
+  "cube": "1111000011110000111100001111000011110000111101011111000011110000111100001111000011110000",
+  "root_sha256": "1c3b4f376bcb8339f8376b4aa635e4e5acc35bc31a2a5f6edfb2730d4b843810",
+  "cube_sha256": "98627ce60eb35d6611f846fe5a86df63fd302d37a332f11d956b81ff9184fa6b",
+  "profiles": 1,
+  "compatible_keys": 0,
+  "kind": "exception",
+  "even_column": 34,
+  "even_row": 34,
+  "cnf_sha256": "ba1921e7aedfa4ad3d36a20019057ab111bbb1747e67dc69b71b44853cf2b3bd",
+  "proof_sha256": "4dbd5d2cf8967e9bd74062ccc41303c311d37cd4e88e710f4d0cc112e86f24a6",
+  "proof_bytes": 11622,
+  "rule": "q47-terminal-diagonal-moments-v1"
+}
