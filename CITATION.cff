@@ -1,17 +1,28 @@
 cff-version: 1.2.0
-message: "Please cite the accompanying paper when using this work, and identify the commit used for computational results."
+message: >-
+  Cite the Q47 follow-up for the 47 by 47 result, or the first paper for the
+  results through n = 46. For computational checks, also cite this software
+  and identify the verifier revision used.
 type: software
-title: "gamma(Q35) = 19 and certified queen domination numbers up to n = 46"
+title: "Queen domination: frame methods and certificates"
 authors:
-  - family-names: "Davies"
-    given-names: "Jason"
+  - family-names: Davies
+    given-names: Jason
 license: Apache-2.0
 repository-code: "https://github.com/jasondavies/queen-domination"
-preferred-citation:
-  type: unpublished
-  title: "gamma(Q35) = 19 and certified queen domination numbers up to n = 46"
-  authors:
-    - family-names: "Davies"
-      given-names: "Jason"
-  year: 2026
-  notes: "Preprint draft."
+references:
+  - type: unpublished
+    authors:
+      - family-names: Davies
+        given-names: Jason
+    title: "γ(Q₄₇) = 25 and bounds for queen domination on odd boards"
+    year: 2026
+    url: "https://github.com/jasondavies/queen-domination/blob/main/paper/q47-domination.pdf"
+    notes: "The public replay driver cited in this paper is at commit 1ea84dfec92c2ed1584d2ca59550768a7dd34bd2."
+  - type: unpublished
+    authors:
+      - family-names: Davies
+        given-names: Jason
+    title: "γ(Q₃₅) = 19 and certified queen domination numbers up to n = 46"
+    year: 2026
+    url: "https://hexagonmath.org/2611.00830v1"

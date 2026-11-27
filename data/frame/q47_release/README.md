@@ -18,6 +18,16 @@ For a quick check, verify both placements, the census of surviving frames, every
 .venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --index-only
 ```
 
+To check the census and every core and arithmetic exclusion, run
+
+```sh
+.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst \
+  --certificates-only --workers 4 --record build/q47-certificates.jsonl
+```
+
+This checks 3,203 core leaves, 182 axis leaves and 17 mixed-moment leaves in 166 representatives.
+The 128,145 SAT leaves require separate replay. [Recorded certificate check](certificate-replay.json)
+
 To try a complete frame, regenerate its SAT proof and check it with drat-trim.
 
 ```sh
@@ -27,10 +37,24 @@ To try a complete frame, regenerate its SAT proof and check it with drat-trim.
 For the full verification, use
 
 ```sh
-.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8
+.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8 --record build/q47-replay.jsonl
 ```
 
 A successful full run reports 98,114 indexed roots, 7,097 symmetry roots, 91,017 checked roots and 131,547 checked leaves. For each SAT leaf the verifier rebuilds the indexed formula, checks its SHA-256, runs CaDiCaL and independently checks the fresh DRAT proof before discarding it. Temporary space scales with the proofs being checked concurrently. Set `TMPDIR` to choose a scratch disk.
+
+The optional `--record` file supports restarts for fresh SAT replay and for certificate-only checks.
+Repeat the command with the same record to resume. The first JSONL entry identifies the mode, case
+and cube selection, Python version, and hashes of the index, release inputs, loaded verifier sources,
+PySAT components and tools used. Each successfully checked root selection is appended and synced to
+disk. An interrupted root is checked again. Every invocation checks the witnesses, census, symmetry
+and partitions again before reporting success. The worker count may change between invocations.
+
+The final entry gives the manifest digest, counts and scope: `full`, `certificates`,
+`selected-proofs` or `selected-certificates`. Each line is a pair containing an entry and its
+checksum. A missing final result means the run is incomplete. Use a separate file for each selection
+and treat the resume file as your own local verification record. Its checksums detect accidental
+damage; accepting someone else's completed-root entries would rely on their checks. To verify
+independently, start with a new record. Parallel replay writes progress counts to standard error.
 
 The verifier computes the lexicographically least eight-parameter case under rotations and reflections. Each symmetry reference must point directly to that case, which must have its own proof partition. Selecting a whole root with `--case` replays its representative. For `--cube`, use the representative’s coordinates.
 

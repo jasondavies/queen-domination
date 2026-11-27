@@ -1,0 +1,60 @@
+{
+  "counts": {
+    "checked_leaves": 3402,
+    "indexed_roots": 98114,
+    "roots_with_checked_certificates": 166,
+    "symmetry_roots": 7097
+  },
+  "inputs": {
+    "cases": [],
+    "cube": null,
+    "files": {
+      "code/frame/check_q47_axis_reduction.py": "bf7241e351fbfb192e48c43258e14249d3fed07e738427de71eece46b31627ac",
+      "code/frame/check_q47_cube_core.py": "c8895e1a9f9ad5dda119c8646aeca61843c0a481f59331fa624e946ec0b0da6d",
+      "code/frame/check_q47_even_permutation.py": "b808b8a1e7cfaae0017b3cbe4bc1103064204072b5ea0cca7d2992247e2bc978",
+      "code/frame/check_q47_orthodox_enumeration.py": "f02fc242c7fac8e7f2ef645922e66659f312f78d85e4a59be6ed2c6ec601285b",
+      "code/frame/check_q47_terminal_enumeration.py": "abef744e271c6c1396b102eda131af954a182b6bdc9874b3c177959e166a2dcb",
+      "code/frame/enc.py": "1b1ee48b8432a7442d3ab8fbc56dbd12e3334ed4dafbb3f73b24a16569c14f86",
+      "code/frame/geom.py": "ba0cac1ff5183dd06f4f373786edda1f79d77213cf8ea28c09c1d8338325e692",
+      "code/frame/hard_test.py": "41a579d0bb102b1f0045d5ec752dd1c20a6fb922f72b8efd1ade468e7c08a7ca",
+      "code/frame/odd_colour_perimeter.py": "c5af8c2f40b58e00673742641b8f63c97ed66140bc32fcbbad086474f0e14c39",
+      "code/frame/odd_margin_bounds.py": "1a9a5adc5d8d6dddb9b4290259e619284e078c0ff7a66d7da654cc7b554549b8",
+      "code/frame/odd_square_profile.py": "2b269f17429b7834ac0ab9823df117352d994d87dec836916aff5e3cffc7b3ae",
+      "code/frame/q47_batch.py": "f3cafec2e3c7762ddf3fdf0443113fa9d8f1d73c0b6aedac2fb6bad1726c9b1b",
+      "code/frame/q47_core_reuse.py": "c635a202162a01e5ba9892ef704cb3e014fa121db20ad4adf7944fa822d8f7f8",
+      "code/frame/q47_orthodox.py": "487f41250a66ae4096a4a36db6e9d0590709c6d13dcb1e8dd5cd9a9c2f62d852",
+      "code/frame/q47_replay_record.py": "5c58a7a722bb44adf2d474af0d799c8e3b4ea5f50b87774c3167531b8a1626a8",
+      "code/frame/q47_same_parity.py": "bdf538b86759c18b49322354dd7224c8f6d109cedb18884a50052329be1f903b",
+      "code/frame/q47_terminal_moments.py": "cf07d4d37dc407bef03c64b9eaa17d3d7e2bb845636cca087ba0b93e834eed5a",
+      "code/frame/replay_q47_archive.py": "dcff1b474503ec2da6ab61d988c6d04c11fcc2f56cd061f64450b2673acf8b89",
+      "code/frame/run_hard.py": "67f9be00bc6b84f029fb7e6f32eefac20b90f147645c3b72280623c3b8a6d50c",
+      "data/frame/q47_24_two_holes.json": "e930420ee2c91efb802887461e39579281b01df435978004ff0cb46fd9a8f309",
+      "data/frame/q47_closeout.json": "0fdefad0503bb852219ffd6337e920b0a85cf2e39e462ab38f10ebb9d3789c70",
+      "data/frame/q47_independent_25.json": "d8406d89f6aab3eca45fcbed4c4767248e73e8dbdf9c87f7b0974bb5a2def409",
+      "data/frame/q47_release/core-certificates.zip": "f5b7201999c3471699e4ca48c52924befcad08a294eefcb6cbabd1ebcc94ca04",
+      "data/frame/q47_release/regeneration-formulas.json": "cfb2a38f5fb6273622e8dc1721b7af9038d38ec5ebf1008e7c7199f26f68c4f1",
+      "tools/drat-trim": "890a7f1d66f482265518096a433a07cc949fdfba3595602755a018ca20ce2fdc"
+    },
+    "format": 1,
+    "index_sha256": "28639822825bbf88d19eca3f168c22771dbd02f82d6ed503b358f6b7def49fdb",
+    "mode": "certificates",
+    "pysat": {
+      "pycard": "f2b48822558f75d1c74195bd5caee4092d34623bdd8c4b9c0546d5b5fc8f819c",
+      "pysat": "cb4a31a53f254af3a7d14125be5352c4707c11f94951105b0d8fb8573add89f8",
+      "pysat._fileio": "a5744618068fed4f2bddba67e5286c78248744e5ea8bbca06987ba4fa40e46da",
+      "pysat._utils": "e1cbf8d29ef414abe30932aaf06ab34bf8e5c45ef8729fe5a234d94a29bfa891",
+      "pysat.card": "a683ba71f65d530a1eefc0b179c2c758d4709a81cf95b2b21a72902315960ebb",
+      "pysat.formula": "aad003a5abe5e66fa91d10e767b3c3122a2c4fb4db682c2a63fc69bfffbe365c"
+    },
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "zstd_sha256": "7c5468b370f7c47eda07281e3437fafc568f95d10420051e3aa522709f9342c5"
+  },
+  "inputs_sha256": "5bcdfb0dc1a2ac619c1f4b99928f9b88578ae285a4c5f35de73bdd55313349ec",
+  "leaves_by_rule": {
+    "axis": 182,
+    "core": 3203,
+    "mixed-moments": 17
+  },
+  "result": "certificates",
+  "verifier_commit": "1ea84dfec92c2ed1584d2ca59550768a7dd34bd2"
+}

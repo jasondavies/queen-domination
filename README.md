@@ -39,12 +39,17 @@ and checks the symmetry references and branch partitions.
 .venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --index-only
 ```
 
+An intermediate check replays all 3,402 core and arithmetic leaves in 166 representatives.
+The release guide documents `--certificates-only` and includes its recorded result.
+
 Full verification also checks the arithmetic exclusions and core certificates, and regenerates and checks
 the SAT proofs. Component timings suggest about 35 hours on eight fully occupied cores. Scratch space
-depends on the proofs being checked concurrently. Set `TMPDIR` to select a scratch disk.
+depends on the proofs being checked concurrently. Set `TMPDIR` to select a scratch disk. Rerun the
+command with the same local record to resume.
 
 ```sh
-.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8
+.venv/bin/python code/frame/replay_q47_archive.py data/frame/q47_release/proof-index.jsonl.zst --regenerate --workers 8 \
+  --record build/q47-replay.jsonl
 ```
 
 ### What the Q₄₇ proof relies on

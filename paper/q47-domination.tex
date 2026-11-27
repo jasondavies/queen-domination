@@ -5,13 +5,14 @@
 \usepackage[hmargin=1in,vmargin=0.9in]{geometry}
 \usepackage{amsmath,amssymb,amsthm,booktabs}
 \usepackage[hidelinks]{hyperref}
-\hypersetup{pdftitle={Odd-board bounds and the domination number of the 47 by 47 queen's graph},pdfauthor={Jason Davies}}
+\hypersetup{pdftitle={γ(Q₄₇) = 25 and bounds for queen domination on odd boards},pdfauthor={Jason Davies}}
 \newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}[theorem]{Corollary}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
 \newcommand{\ind}[1]{\mathbf{1}_{#1}}
 \newcommand{\file}[1]{\nolinkurl{#1}}
-\title{Odd-board bounds and the domination number\\of the $47\times47$ queen's graph}
+\title{$\gamma(Q_{47})=25$ and bounds for queen domination on odd boards}
 \author{Jason Davies}
 \date{27 November 2026}
 \begin{document}
@@ -52,7 +53,7 @@ $0\le i<24$, where the successive rows are
 \]
 Testing the four lines through each square leaves just $(7,46)$ uncovered.
 Adding a queen there proves $\gamma(Q_{47})\le25$. For independent domination,
-\"Osterg{\aa}rd and Weakley \cite[pp.~9--10]{OW} exhibit an independent
+\"Osterg{\aa}rd and Weakley \cite[pp.~10--11]{OW} exhibit an independent
 dominating 25-set. The verifier adds 23 to both of their centered coordinates
 and checks that the set occupies 25 distinct lines in each family and
 dominates all 2,209 squares. Thus $25=\gamma(Q_{47})\le i(Q_{47})\le25$
@@ -134,6 +135,12 @@ Call a cover \emph{orthodox} if it occupies all rows of some parity and all
 columns of some parity, following Neuhaus \cite{Neuhaus}. Colour squares by
 $x+y\bmod2$. Orthodoxy concerns occupied lines, while square colour
 concerns the queens themselves.
+
+For even $n\ge14$, Neuhaus \cite[Lemma~4.4]{Neuhaus} proved that in a
+nonorthodox dominating set of $n/2$ queens, each colour class has size
+between $n/4-1/2$ and $n/4+1/2$. His proof counts diagonal coverage on
+products of empty lines of specified parity. The following odd-board
+analogue uses the obstruction to odd--odd equality in Lemma~\ref{lem:grid}.
 
 \begin{theorem}\label{thm:split}
 On $Q_{4m-1}$, $m\ge2$, the smaller colour class in a dominating set of
@@ -354,25 +361,100 @@ therefore lies on the even row. Removing it leaves a permutation on the
 23 odd coordinates. Its diagonal ranks satisfy $\sum D=\sum H=0$ and
 $\sum(D^2+H^2)=\sum_{i=0}^{22}(2i-22)^2=4048$.
 
-To check a branch, label each target $(x,y)$ by its diagonal ranks
-$((x-y)/2,(x+y-46)/2)$. In the mixed case first remove targets hit by
-the queen on the two even lines. Every remaining pair requires its
-difference or its sum to be present. Omitting a difference therefore
-forces every sum paired with it. Complete the selected diagonal values
-to multisets, with exactly the repetitions allowed by the frame deficits,
-including any overlap with the removed queen. Retain the required first
-and second moments and the parity relation $H-D\equiv L\pmod 2$ for each
-queen on the parity grid. Every placement gives compatible multiset
-counts and moments. None of the 15 branches has a compatible combination.
+Write the rank pair of a target $(x,y)$ as
+$(d,h)=((x-y)/2,(x+y-46)/2)$. A target on two empty lines
+requires its difference or its sum in the corresponding diagonal multiset.
 
-We checked this finite exclusion in two ways. The first implementation
-builds a CNF encoding compatibility of the enumerated summaries and
-checks a DRAT refutation. A separate enumeration checks all even-axis
-permutations by testing their candidate diagonal supports for uncovered
-targets. For the odd and mixed families it starts from omitted sum
-values, forces the corresponding differences, and checks the multiset
-conditions directly. Each receipt identifies its original root and branch
-by SHA-256 so the occupied axes can be reconstructed.
+\begin{lemma}\label{lem:pure-enum}
+For either same-parity family every cover occurs among the following
+pairs of multiset completions. In each parity class of target differences
+choose the least magnitude at which some signed difference is absent,
+or the next magnitude of that parity if all occur. Require all target
+differences of smaller magnitude in that class, and require the sum
+neighbours at the chosen magnitude (none for the final choice).
+\end{lemma}
+\begin{proof}
+Swapping the two coordinates of a target exchanges $d$ and $-d$ and
+preserves $h$. Thus the required sums are the same whichever sign is
+missing. A cover supplies an enumerated pair of magnitudes and contains
+both required sets. For a diagonal family of deficit $\delta$, extend
+its required set to every support of size $24-\delta$ in the integer
+interval $[-L,L]$. Adjoin $\delta$ entries from this support in every
+nondecreasing sequence, allowing repetition. This includes its actual
+multiset, since the support uses one occurrence of each distinct value.
+
+Test the quadratic identity above. For even axes both first moments
+vanish. For odd axes the first moments $u,v$ must satisfy
+$|u|+|v|\le22$ and $u\equiv v\bmod2$, by the formulas for $I,J$.
+The odd-entry counts in the two families sum to 24 when $L=23$ and
+agree when $L=22$, since $H-D=2j-L$. A placement would pass all
+these tests. Exhaustion gives zero compatible keys for each of the six
+even-axis and three odd-axis terminal branches.
+\end{proof}
+
+\begin{lemma}\label{lem:mixed-enum}
+Once the exceptional queen is fixed, every cover in the mixed family
+supplies a pair of complementary signatures in the enumeration below.
+\end{lemma}
+\begin{proof}
+Remove all targets attacked by the exceptional queen and denote its
+ranks by $d_0,h_0$. The remaining 23 queens have ranks in $[-22,22]$,
+with $D,H$ of the same parity for each queen. Each remaining target has
+ranks of opposite parity. For $b=0,1$ form the target graph with
+difference vertices of parity $b$ and sum vertices of parity $1-b$.
+Each body queen contributes exactly one entry to each graph.
+
+In one graph enumerate the difference support by including or omitting
+each available difference. Every omission forces all adjacent sum
+vertices. A target with an endpoint outside the rank domain forces
+the other endpoint, and one with both endpoints outside is impossible.
+Extend the forced sums by every subset of the remaining sum vertices.
+Give each selected vertex one entry, then distribute all remaining entries
+among these vertices, with repetition, to make 23 entries in the graph.
+This includes the support and multiplicity of every cover.
+For each family count repetitions beyond the first occurrence and add one
+if its exceptional rank also occurs in the body support.
+
+Record the signature $(a,u,v,q,r,s)$ consisting of the number of
+difference entries, the difference and sum first moments, the combined
+square sum, and the two repetition counts just defined. Across both
+graphs the signature must total $(23,0,0,4048,\delta_T,\delta_S)$.
+Conversely the test only needs this necessary condition: matching
+signatures could still fail to give a placement. The computed
+intersection of one signature set with the complements of the other is
+empty for each of the six mixed terminal branches.
+\end{proof}
+
+The original certificates encode the finite key comparisons as CNFs.
+Independent code for the odd and mixed families starts from the omitted
+\emph{sums} instead. For any actual cover let $F$ be the differences forced
+by unavailable sums or adjacent to an omitted sum. Every member of $F$
+is present. Every sum adjacent to a difference outside $F$ must be
+present as well. Enumerating these unions and adjoining arbitrary extra
+entries to each resulting subcover therefore includes the actual
+multisets. Each terminal receipt identifies its original root and branch
+by SHA-256. A separate test for even axes also gives a sharp bound.
+
+\begin{corollary}\label{cor:twoholes}
+Among permutations on the 24 even rows and 24 even columns of $Q_{47}$,
+the minimum number of uncovered squares is two.
+\end{corollary}
+\begin{proof}
+The $23^2$ odd--odd targets have $|d|+|h|\le22$ and $d\equiv h\bmod2$;
+the inverse target coordinates are $(23+h+d,23+h-d)$.
+Use the first missing magnitudes from Lemma~\ref{lem:pure-enum}. For a
+missing difference of magnitude $a$, every sum of the same parity with
+$|h|\le22-a$ is a neighbour. Each missing required sum leaves at least
+one distinct target uncovered. Thus for at most one hole it suffices to
+allow zero or one omission from the union of required sums. Complete
+both lists to 24 entries from $[-23,23]$ in nondecreasing order of the
+added entries, allowing arbitrary repetitions. Keep zero first moments,
+combined square sum 4600 and combined odd count 24. The checker obtains
+554 distinct ordered support pairs. Testing the targets for each pair
+leaves none with at most one hole. For attainment, the permutation in
+\file{data/frame/q47_24_two_holes.json} misses just $(1,5)$ and $(41,45)$
+by direct inspection of the four line families at every square.
+\end{proof}
 
 The same mixed-family argument applies before the two occupied even
 lines have been identified. For each possible count of occupied lines
@@ -446,10 +528,21 @@ stabilizer before any splitting, so all its sibling cubes inherit them. The core
 A leaf can use several masks if their union covers every completion of
 the leaf, as checked recursively on the unfixed bits.
 
-The original search finished with the 15 certificates in
-Section~\ref{sec:terminal}. In the released partition five of these
-branches belong to roots proved by whole-board symmetry. The other ten
-are covered by four even-permutation, two odd-repeat and four mixed
+The partitions changed as arithmetic exclusions and symmetries were added.
+The counts below refer to different stages of the same computation.
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Stage & Coverage \\
+\midrule
+Original search & 15 terminal branches across 13 frames (Section~\ref{sec:terminal})\\
+Mixed-family reduction & 25 branches replace 895 former leaves in six frames\\
+Published representatives & 17 mixed-moment leaves after whole-root symmetry\\
+\bottomrule
+\end{tabular}
+\end{center}
+Of the original 15 branches, five belong to roots covered by symmetry.
+The other ten use four even-permutation, two odd-repeat and four mixed
 moment exclusions.
 Together with the 271,298 geometric exclusions this accounts for all
 369,412 cases on canonical rectangles and rules out 24 queens. The placement in
@@ -487,17 +580,34 @@ before discarding it. Instructions are in
 \file{data/frame/q47_release/README.md}.
 
 \paragraph{Implementation.}
-At verifier revision \texttt{c409ac2} of \cite{software}, \file{code/frame/odd_margin_bounds.py}
+At verifier revision \texttt{1ea84df} of \cite{software}, \file{code/frame/odd_margin_bounds.py}
 reproduces the case counts and \file{odd_square_profile.py} adds the
 reflected-line constraints. In the same directory,
 \file{odd_colour_perimeter.py} builds the strengthened formula and
 \file{q47_orthodox.py} rebuilds the shared certificate and checks a branch
 receipt. The placement in Section~\ref{sec:bounds} is also recorded in
-\file{data/frame/q47_24_one_hole.json}. From the repository root, run
-\file{code/frame/check_q47_terminal_enumeration.py} for the separate
-arithmetic check and \file{code/frame/check_q47_closeout.py} for the
-ledger audit. The expected counts and placement are in
-\file{data/frame/q47_closeout.json}. AI assistance was used in drafting the manuscript, implementing
+\file{data/frame/q47_24_one_hole.json}.
+After installing the dependencies and pinned tools listed in
+\file{data/frame/q47_release/README.md}, a referee can run the public
+verification from the repository root:
+\begin{verbatim}
+.venv/bin/python code/frame/replay_q47_archive.py \
+  data/frame/q47_release/proof-index.jsonl.zst \
+  --regenerate --workers 8 --record build/q47-replay.jsonl
+\end{verbatim}
+This reconstructs the SAT formulas, checks fresh DRAT proofs, and checks
+the applicability of each arithmetic and shared-core exclusion. The
+record permits a restart after interruption. For the placements, census,
+symmetry references and partitions alone, replace the final line with
+\file{--index-only}. For those checks plus all 3,402 core and arithmetic
+leaves, use \texttt{--certificates-only --workers 4}.
+The separate program \file{code/frame/check_q47_terminal_enumeration.py}
+checks the 15 original terminal branches. The historical ledger audit
+with \file{code/frame/check_q47_closeout.py} additionally requires the
+author's original ledgers and branch archives under \file{build/};
+a clean checkout supplies the public replay above.
+
+AI assistance was used in drafting the manuscript, implementing
 the arithmetic reductions and verification software, and examining
 the computational records. The release includes the executable checks,
 the independent enumerations described above and their inputs.
@@ -535,7 +645,7 @@ branches. An overall speed estimate would require a representative sample.
 
 \begin{thebibliography}{99}
 \bibitem{Alon} N.~Alon, \emph{Combinatorial Nullstellensatz},
-Combin.\ Probab.\ Comput.\ \textbf{8} (1999), 7--29.
+Combin.\ Probab.\ Comput.\ \textbf{8} (1999), 7--29.\newline
 \href{https://doi.org/10.1017/S0963548398003411}{doi:10.1017/S0963548398003411}.
 \bibitem{BM} A.~P.~Burger, C.~M.~Mynhardt, \emph{Properties of dominating
 sets of the queens graph $Q_{4k+3}$}, Utilitas Math.\ \textbf{57} (2000),
@@ -555,7 +665,7 @@ on even boards of sizes 50 through 64}, Hexagon, 2026.
 domination numbers up to $n=46$}, Hexagon, 2026.
 \href{https://hexagonmath.org/2611.00830v1}{2611.00830v1}.
 \bibitem{software} J.~Davies, \emph{Queen domination} (repository),
-\href{https://github.com/jasondavies/queen-domination/tree/c409ac2745c01d89b119d98125fb52e13406c5a8}{verifier revision \texttt{c409ac2}}.
+\href{https://github.com/jasondavies/queen-domination/tree/1ea84dfec92c2ed1584d2ca59550768a7dd34bd2}{verifier revision \texttt{1ea84df}}.
 \bibitem{Djukic} A.~\DJ uki\'c, \emph{The Queen Domination Number of the
 $48\times48$ Chessboard: $\gamma(Q_{48})=25$}, Zenodo, 2026.
 \href{https://doi.org/10.5281/zenodo.24537290}{doi:10.5281/zenodo.24537290}.
